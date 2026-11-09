@@ -2,16 +2,20 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLiveVoice, type LiveEvent } from "@/hooks/use-live-voice";
 import { AssessPanel } from "@/components/AssessPanel";
+import { FlippingWord } from "@/components/FlippingWord";
+import { DotPattern } from "@/components/ui/dot-pattern";
+
+const HEADLINE_WORDS = ["democratise", "open up", "demystify", "widen access to"];
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Geography Interview Sparring Partner | Oxbridge Practice" },
+      { title: "We are here to democratise Oxbridge" },
       {
         name: "description",
         content: "A voice tutor asks Cambridge-style geography questions and challenges your reasoning like a real interviewer.",
       },
-      { property: "og:title", content: "Geography Interview Sparring Partner" },
+      { property: "og:title", content: "We are here to democratise Oxbridge" },
       {
         property: "og:description",
         content: "Practise your Oxbridge geography interview out loud, then replay the transcript.",
@@ -67,20 +71,37 @@ function Index() {
   const showReplay = idle && lines.length > 0;
 
   return (
-    <main className="mx-auto min-h-screen max-w-2xl px-6 py-16">
-      <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">Oxbridge practice · Geography</p>
-      <h1 className="mt-3 font-serif text-5xl font-semibold leading-tight">Interview sparring partner</h1>
-      <p className="mt-4 text-muted-foreground">
-        Practise a Cambridge-style geography interview out loud. Dr Hale is an AI tutor who will challenge your reasoning. Think aloud — that's the point.
-      </p>
-      <ol className="mt-6 grid gap-3 text-sm sm:grid-cols-3">
-        <li className="rounded-md border p-3"><span className="font-bold">1. Talk.</span> About 20 minutes, using your microphone.</li>
-        <li className="rounded-md border p-3"><span className="font-bold">2. Read back.</span> See the transcript of how you argued.</li>
-        <li className="rounded-md border p-3"><span className="font-bold">3. Get feedback.</span> Find out where your reasoning slipped.</li>
-      </ol>
+    <div className="relative min-h-[100svh] overflow-hidden">
+    <DotPattern className="h-[100svh] [mask-image:radial-gradient(520px_circle_at_center,white,transparent)]" />
+    <main className="relative z-10 mx-auto flex min-h-[100svh] max-w-2xl flex-col justify-center px-6 py-16">
+      <div className="text-center">
+        <p className="text-xs font-medium uppercase tracking-[0.25em] text-muted-foreground">Oxbridge practice · Geography</p>
+        <h1
+          aria-label="We are here to democratise Oxbridge"
+          className="mt-4 text-4xl font-medium leading-tight tracking-tighter sm:text-6xl"
+        >
+          <span aria-hidden="true" className="block">We are here to</span>
+          <span aria-hidden="true" className="block"><FlippingWord words={HEADLINE_WORDS} /></span>
+          <span aria-hidden="true" className="block">Oxbridge</span>
+        </h1>
+        <div className="mx-auto mt-6 max-w-xl bg-background shadow-[0_0_20px_16px_var(--background)]">
+          <p className="text-lg font-medium">Built by Cambridge students for applicants, based on real context.</p>
+          <p className="mt-3 text-foreground/90">
+            Preparing for an Oxbridge interview has been too hard for too long. We change that.
+          </p>
+          <p className="mt-2 text-foreground/90">
+            Practise out loud with Dr Hale, an AI tutor informed by real Cambridge geography notes, who will challenge your reasoning.
+          </p>
+        </div>
+        <ol className="mt-8 grid gap-3 text-left text-sm sm:grid-cols-3">
+          <li className="rounded-md border bg-card p-3"><span className="font-medium">1. Talk.</span> <span className="text-muted-foreground">About 20 minutes, using your microphone.</span></li>
+          <li className="rounded-md border bg-card p-3"><span className="font-medium">2. Read back.</span> <span className="text-muted-foreground">See the transcript of how you argued.</span></li>
+          <li className="rounded-md border bg-card p-3"><span className="font-medium">3. Get feedback.</span> <span className="text-muted-foreground">Find out where your reasoning slipped.</span></li>
+        </ol>
+      </div>
 
-      <section className="mt-10 rounded-md border bg-card p-6">
-        <div className="flex flex-wrap items-center gap-3">
+      <section className="mt-6 rounded-md border bg-card p-6">
+        <div className="flex flex-wrap items-center justify-center gap-3">
           {idle ? (
             <button
               onClick={start}
@@ -151,5 +172,6 @@ function Index() {
         />
       )}
     </main>
+    </div>
   );
 }
