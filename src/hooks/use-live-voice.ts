@@ -119,6 +119,18 @@ export function useLiveVoice(
   return { ...call, audioRef, start, stop, setMuted, resumePlayback };
 }
 
+function nextOpeningTurn() {
+  const randomTurn = Math.floor(Math.random() * 1000) + 1;
+  try {
+    const saved = Number(localStorage.getItem("compass-opening-turn"));
+    const turn = Number.isSafeInteger(saved) && saved > 0 ? saved + 1 : randomTurn;
+    localStorage.setItem("compass-opening-turn", String(turn));
+    return turn;
+  } catch {
+    return randomTurn;
+  }
+}
+
 type LiveOptions = {
   url: string;
   audio: HTMLAudioElement;
@@ -351,7 +363,7 @@ function createLiveVoice(options: LiveOptions) {
       deadline = setTimeout(() => fail("Voice session did not start"), 50_000);
       socket.onopen = () => {
         if (!starting()) return release();
-        send({ type: "app.start", sdp });
+        send({ type: "app.start", sdp, openingTurn: nextOpeningTurn() });
       };
       socket.onmessage = ({ data }) => {
         try {

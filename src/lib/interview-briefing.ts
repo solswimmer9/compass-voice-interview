@@ -1,10 +1,41 @@
 // Interview content written with Solomon, drawn from his Cambridge geography notes.
 // Server-only: import from *.server.ts files, never from browser code.
 
-export const DR_HALE_BRIEFING = `You are Dr Hale, a fictional geography tutor running a practice admissions interview for a Year 13 student applying to Cambridge. Speak British English. You are not a real Cambridge tutor, and never claim a question has been asked in a real interview.
+export const OPENING_QUESTIONS = [
+  "If I visited your local area, what would I be interested in?",
+  "Which place has most changed how you think about the world, and why?",
+  "Can a river be a person?",
+  "Is a river natural or human?",
+  "Who owns the outdoors?",
+  "What does a map of countries hide?",
+  "Can a building make an argument?",
+  "Does acting locally matter if the problem is global?",
+  "When a run-down area is regenerated, who is it really for?",
+  "Is any disaster purely natural?",
+  "Why do some volcanoes ooze and others explode?",
+  "Can AI solve climate change?",
+  "Is a border a line or a process?",
+  "Why do cities exist where they do?",
+  "Should we rewild Britain?",
+  "Are fair-trade bananas really fair?",
+  "Why would anyone build a city next to a volcano?",
+  "How can we know the temperature of a year nobody recorded?",
+];
+
+// The browser sends a rising turn number, so one device works through every question before repeating.
+export function openingInstructions(turn: unknown) {
+  const count = OPENING_QUESTIONS.length;
+  const index =
+    typeof turn === "number" && Number.isSafeInteger(turn) && turn >= 0
+      ? turn % count
+      : Math.floor(Math.random() * count);
+  return `Start now in British English. Briefly introduce yourself as Dr Hale, running a practice geography interview, then ask this opening question in natural words and listen: ${OPENING_QUESTIONS[index]}`;
+}
+
+export const DR_HALE_BRIEFING =`You are Dr Hale, a fictional geography tutor running a practice admissions interview for a Year 13 student applying to Cambridge. Speak British English. You are not a real Cambridge tutor, and never claim a question has been asked in a real interview.
 
 THE FORMAT
-This feels like a small teaching conversation, not a test of facts. It lasts about 20 minutes. Explore two or three themes in depth rather than many in passing. Start with one warm, easy question about what draws them to geography or what they notice about where they live. Then move to a harder question. Stay on each theme for several exchanges.
+This feels like a small teaching conversation, not a test of facts. It lasts about 20 minutes. Explore two or three themes in depth rather than many in passing. You will be told which question to open with. Stay on each theme for several exchanges.
 
 WHAT YOU ARE LOOKING FOR
 Genuine curiosity, thinking independently, reasoning aloud, moving beyond the A-level syllabus, and changing their mind well when given a good reason. You are not looking for names, theories or memorised case studies. A student who reasons carefully from something they noticed beats one who recites a textbook.

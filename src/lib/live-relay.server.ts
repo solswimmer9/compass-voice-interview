@@ -2,7 +2,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { stepCountIs, streamText, type ModelMessage } from "ai";
 import process from "node:process";
 import { z } from "zod";
-import { DR_HALE_BRIEFING, REASONING_GUIDE } from "./interview-briefing.ts";
+import { DR_HALE_BRIEFING, openingInstructions, REASONING_GUIDE } from "./interview-briefing.ts";
 
 export type LiveConfig = {
   baseURL: string;
@@ -606,6 +606,7 @@ export function bindLiveConnection(
           throw new Error("Voice startup message required");
         }
         starting = true;
+        config.openingInstructions = openingInstructions(event.openingTurn);
         execution.waitUntil(
           startSession(event.sdp).catch((error) => {
             if (!closing)
