@@ -66,7 +66,8 @@ export function AssessPanel({ initialTranscript }: { initialTranscript: string }
     <section className="mt-12 rounded-md border bg-card p-6">
       <h2 className="font-serif text-3xl font-semibold">Assess my reasoning</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Submit your replay (paste a transcript, add a video of yourself answering, or both) for AI feedback.
+        Submit your replay (paste a transcript, add a video of yourself answering, or both) for AI
+        feedback.
       </p>
       <textarea
         value={transcript}
@@ -93,14 +94,27 @@ export function AssessPanel({ initialTranscript }: { initialTranscript: string }
           {busy ? "Assessing…" : "Get feedback"}
         </button>
         {busy && (
-          <button onClick={() => abortRef.current?.abort()} className="rounded-full border px-4 py-2 text-sm">
+          <button
+            onClick={() => abortRef.current?.abort()}
+            className="rounded-full border px-4 py-2 text-sm"
+          >
             Stop
           </button>
         )}
       </div>
-      {error && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}
-      {busy && !output && <p className="mt-6 text-sm text-muted-foreground">Reading your answers…</p>}
-      {output && <div className="mt-6 whitespace-pre-wrap leading-relaxed">{output.replace(/^#+\s?/gm, "").replace(/\*\*/g, "")}</div>}
+      {error && (
+        <p role="alert" className="mt-4 text-sm text-destructive">
+          {error}
+        </p>
+      )}
+      {busy && !output && (
+        <p className="mt-6 text-sm text-muted-foreground">Reading your answers…</p>
+      )}
+      {output && (
+        <div className="mt-6 whitespace-pre-wrap leading-relaxed">
+          {output.replace(/^#+\s?/gm, "").replace(/\*\*/g, "")}
+        </div>
+      )}
     </section>
   );
 }

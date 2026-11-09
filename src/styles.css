@@ -124,16 +124,33 @@
 }
 
 @keyframes pulse-ring {
-  0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 45%, transparent); }
-  100% { box-shadow: 0 0 0 18px transparent; }
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 45%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 18px transparent;
+  }
 }
-.live-pulse { animation: pulse-ring 1.6s ease-out infinite; }
+.live-pulse {
+  animation: pulse-ring 1.6s ease-out infinite;
+}
 
 @keyframes flip-in {
-  from { opacity: 0; transform: perspective(600px) rotateX(-85deg); }
-  to { opacity: 1; transform: perspective(600px) rotateX(0deg); }
+  from {
+    opacity: 0;
+    transform: perspective(600px) rotateX(-85deg);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(600px) rotateX(0deg);
+  }
 }
-.flip-word { animation: flip-in 0.5s ease-out; transform-origin: 50% 80%; }
+.flip-word {
+  animation: flip-in 0.5s ease-out;
+  transform-origin: 50% 80%;
+}
 @media (prefers-reduced-motion: reduce) {
-  .flip-word { animation: none; }
+  .flip-word {
+    animation: none;
+  }
 }

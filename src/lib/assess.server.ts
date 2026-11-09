@@ -4,6 +4,7 @@ import process from "node:process";
 import { createLovableAiGatewayProvider } from "./ai/gateway-helpers.ts";
 import { createLovableAiGatewayRunIdFetch } from "./ai/run-id.ts";
 import { REASONING_GUIDE } from "./interview-briefing.ts";
+import { limitMessage, takeFeedback, visitorKey } from "./rate-limit.server.ts";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1";
 const TEXT_MODEL = "openai/gpt-6-astra";
@@ -27,16 +28,29 @@ export async function handleAssess(request: Request) {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) return Response.json({ error: "AI is not configured" }, { status: 500 });
 
+  const allowed = takeFeedback(visitorKey(request));
+  if (!allowed.ok) {
+    return Response.json(
+      { error: limitMessage("feedback", allowed.retryAfterMinutes) },
+      { status: 429 },
+    );
+  }
+
   let body: { transcript?: unknown; video?: unknown; videoType?: unknown };
   try {
     body = await request.json();
   } catch {
     return Response.json({ error: "Invalid request" }, { status: 400 });
   }
-  const transcript = typeof body.transcript === "string" ? body.transcript.trim().slice(0, 40_000) : "";
+  const transcript =
+    typeof body.transcript === "string" ? body.transcript.trim().slice(0, 40_000) : "";
   const video = typeof body.video === "string" ? body.video : "";
-  const videoType = typeof body.videoType === "string" && body.videoType.startsWith("video/") ? body.videoType : "video/mp4";
-  if (!transcript && !video) return Response.json({ error: "Add a transcript or a video" }, { status: 400 });
+  const videoType =
+    typeof body.videoType === "string" && body.videoType.startsWith("video/")
+      ? body.videoType
+      : "video/mp4";
+  if (!transcript && !video)
+    return Response.json({ error: "Add a transcript or a video" }, { status: 400 });
   if (video && video.length * 0.75 > MAX_VIDEO_BYTES) {
     return Response.json({ error: "Video must be under 20 MB" }, { status: 413 });
   }
@@ -48,7 +62,10 @@ export async function handleAssess(request: Request) {
     {
       role: "user",
       content: video
-        ? [{ type: "text", text: intro }, { type: "file", data: video, mediaType: videoType }]
+        ? [
+            { type: "text", text: intro },
+            { type: "file", data: video, mediaType: videoType },
+          ]
         : intro,
     },
   ];
@@ -102,12 +119,16 @@ export async function handleAssess(request: Request) {
           }
         }
       } catch {
-        if (!request.signal.aborted) controller.enqueue(encoder.encode("\n\n[[error]]The assessment could not be completed."));
+        if (!request.signal.aborted)
+          controller.enqueue(encoder.encode("\n\n[[error]]The assessment could not be completed."));
       }
       controller.close();
     },
   });
   return new Response(stream, {
-    headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-cache, no-transform" },
+    headers: {
+      "content-type": "text/plain; charset=utf-8",
+      "cache-control": "no-cache, no-transform",
+    },
   });
 }
