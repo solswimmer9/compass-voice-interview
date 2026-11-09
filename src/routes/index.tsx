@@ -27,7 +27,6 @@ type Line = { role: "user" | "assistant"; text: string };
 
 function Index() {
   const [lines, setLines] = useState<Line[]>([]);
-  const [ended, setEnded] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -60,24 +59,25 @@ function Index() {
 
   const start = () => {
     setLines([]);
-    setEnded(false);
     setNote(null);
     call.start();
   };
-  const stop = () => {
-    setEnded(true);
-    call.stop();
-  };
 
-  const showReplay = ended && idle && lines.length > 0;
+  // Also true after a dropped call, so an interview that ended early can still be assessed.
+  const showReplay = idle && lines.length > 0;
 
   return (
     <main className="mx-auto min-h-screen max-w-2xl px-6 py-16">
       <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">Oxbridge practice · Geography</p>
       <h1 className="mt-3 font-serif text-5xl font-semibold leading-tight">Interview sparring partner</h1>
       <p className="mt-4 text-muted-foreground">
-        Dr Hale asks a Cambridge-style question, then pushes back on your reasoning. Think aloud — that's the point.
+        Practise a Cambridge-style geography interview out loud. Dr Hale is an AI tutor who will challenge your reasoning. Think aloud — that's the point.
       </p>
+      <ol className="mt-6 grid gap-3 text-sm sm:grid-cols-3">
+        <li className="rounded-md border p-3"><span className="font-bold">1. Talk.</span> About 20 minutes, using your microphone.</li>
+        <li className="rounded-md border p-3"><span className="font-bold">2. Read back.</span> See the transcript of how you argued.</li>
+        <li className="rounded-md border p-3"><span className="font-bold">3. Get feedback.</span> Find out where your reasoning slipped.</li>
+      </ol>
 
       <section className="mt-10 rounded-md border bg-card p-6">
         <div className="flex flex-wrap items-center gap-3">
@@ -86,7 +86,7 @@ function Index() {
               onClick={start}
               className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition hover:opacity-90"
             >
-              {ended ? "Start a new interview" : "Start interview"}
+              {showReplay ? "Start a new interview" : "Start interview"}
             </button>
           ) : (
             <>
@@ -105,7 +105,7 @@ function Index() {
               </button>
               <button
                 disabled={call.status === "stopping"}
-                onClick={stop}
+                onClick={call.stop}
                 className="rounded-full bg-destructive px-4 py-2 text-sm text-destructive-foreground disabled:opacity-40"
               >
                 End interview
@@ -120,7 +120,7 @@ function Index() {
         </div>
         {call.error && <p role="alert" className="mt-4 text-sm text-destructive">{call.error}</p>}
         {note && <p className="mt-4 text-sm text-muted-foreground">{note}</p>}
-        <audio ref={call.audioRef} controls className="mt-4 h-8 w-full opacity-60" />
+        <audio ref={call.audioRef} className="hidden" />
       </section>
 
       {lines.length > 0 && (
@@ -145,9 +145,9 @@ function Index() {
         </section>
       )}
 
-      {(idle || showReplay) && (
+      {showReplay && (
         <AssessPanel
-          initialTranscript={showReplay ? lines.map((l) => `${l.role === "assistant" ? "Dr Hale" : "You"}: ${l.text.trim()}`).join("\n\n") : ""}
+          initialTranscript={lines.map((l) => `${l.role === "assistant" ? "Dr Hale" : "You"}: ${l.text.trim()}`).join("\n\n")}
         />
       )}
     </main>

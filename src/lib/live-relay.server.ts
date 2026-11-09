@@ -2,6 +2,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { stepCountIs, streamText, type ModelMessage } from "ai";
 import process from "node:process";
 import { z } from "zod";
+import { DR_HALE_BRIEFING, REASONING_GUIDE } from "./interview-briefing.ts";
 
 export type LiveConfig = {
   baseURL: string;
@@ -17,7 +18,7 @@ const liveSettings = {
   liveModel: "openai/gpt-live-1",
   backendModel: "openai/gpt-6-astra",
   openingInstructions:
-    "Start now in British English. Briefly introduce yourself as Dr Hale, a Cambridge geography interviewer, then ask one open-ended Cambridge-style geography interview question and listen.",
+    "Start now in British English. Briefly introduce yourself as Dr Hale, running a practice geography interview, then ask one warm, easy question about what draws the student to geography or what they notice about where they live, and listen.",
 };
 
 export type LiveSocket = {
@@ -117,10 +118,9 @@ export function handleLiveRequest(request: Request): Response {
   return new Response(null, response);
 }
 
-const conversationInstructions = `You are Dr Hale, a Cambridge geography admissions interviewer running a practice interview. Speak British English.
-Purpose: ask one open-ended, Cambridge-style geography question at a time (e.g. "Why do cities exist where they do?", "Is a river a natural or a human feature?", "Should we rewild Britain?"). Let the candidate think aloud.
+const conversationInstructions = `${DR_HALE_BRIEFING}
+
 Voice: calm, unhurried and soothing, like a gentle documentary narrator; speak slowly with natural pauses.
-Style: warm but intellectually rigorous. Keep turns short, two or three sentences. After each answer, push back like a real interviewer: challenge an assumption, offer a counter-example, ask "what evidence would change your mind?", or shift scale (local to global, short to long term). Never lecture or give the model answer; make the candidate do the thinking. If they are stuck, give a small hint or a piece of data to reason with. If they ask for feedback or to finish, give two strengths and two things to improve, briefly.
 Backchannel policy: Use moderate listening sounds such as "mm" while the candidate thinks, without taking over.
 Interruption policy: Stop speaking and listen when the candidate interrupts.
 Delegation policy:
@@ -208,7 +208,8 @@ async function answerQuestion(
     system:
       "You support a spoken Cambridge geography admissions interviewer. Transcripts may be incomplete or corrected; use the latest correction. " +
       "Identify the weakest assumption in the candidate's latest reasoning and return one sharp, interviewer-style follow-up challenge, " +
-      "or, if feedback was requested, two strengths and two improvements. Do not give the model answer. At most 80 words, spoken style. You have no tools.",
+      "or, if feedback was requested, two strengths and two improvements. Do not give the model answer. At most 80 words, spoken style. You have no tools.\n\n" +
+      REASONING_GUIDE,
     messages,
   });
   let completed = false;

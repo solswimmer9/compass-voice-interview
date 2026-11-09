@@ -3,6 +3,7 @@ import { streamText, type ModelMessage } from "ai";
 import process from "node:process";
 import { createLovableAiGatewayProvider } from "./ai/gateway-helpers.ts";
 import { createLovableAiGatewayRunIdFetch } from "./ai/run-id.ts";
+import { REASONING_GUIDE } from "./interview-briefing.ts";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1";
 const TEXT_MODEL = "openai/gpt-6-astra";
@@ -18,7 +19,9 @@ Assess the candidate's reasoning, not their knowledge alone. Use British English
 ## Targeted improvements (3 concrete, practicable actions for next time)
 ## Try this next (one follow-up question to practise)
 If a video is provided, also briefly comment on delivery: pace, thinking aloud, composure and body language.
-Be honest, specific and encouraging. Under 400 words.`;
+Be honest, specific and encouraging. Under 400 words.
+
+${REASONING_GUIDE}`;
 
 export async function handleAssess(request: Request) {
   const key = process.env["LOVABLE_API_KEY"];
