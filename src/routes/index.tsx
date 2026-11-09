@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLiveVoice, type LiveEvent } from "@/hooks/use-live-voice";
+import { AssessPanel } from "@/components/AssessPanel";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -142,6 +143,12 @@ function Index() {
           </ol>
           <div ref={endRef} />
         </section>
+      )}
+
+      {(idle || showReplay) && (
+        <AssessPanel
+          initialTranscript={showReplay ? lines.map((l) => `${l.role === "assistant" ? "Dr Hale" : "You"}: ${l.text.trim()}`).join("\n\n") : ""}
+        />
       )}
     </main>
   );

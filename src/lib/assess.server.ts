@@ -1,0 +1,110 @@
+import { createOpenAI } from "@ai-sdk/openai";
+import { streamText, type ModelMessage } from "ai";
+import process from "node:process";
+import { createLovableAiGatewayProvider } from "./ai/gateway-helpers.ts";
+import { createLovableAiGatewayRunIdFetch } from "./ai/run-id.ts";
+
+const GATEWAY = "https://ai.gateway.lovable.dev/v1";
+const TEXT_MODEL = "openai/gpt-6-astra";
+// Astra has no video input; video submissions use a video-capable chat model.
+const VIDEO_MODEL = "google/gemini-3.8-flash";
+const MAX_VIDEO_BYTES = 20 * 1024 * 1024;
+
+const SYSTEM = `You are an experienced Cambridge geography admissions tutor reviewing a practice interview.
+Assess the candidate's reasoning, not their knowledge alone. Use British English and Markdown with these sections:
+## Overall impression (2-3 sentences)
+## Strengths in reasoning (2-3 bullets, quote the candidate where possible)
+## Where the reasoning slipped (2-3 bullets: unexamined assumptions, missed scales, lack of evidence, not engaging with pushback)
+## Targeted improvements (3 concrete, practicable actions for next time)
+## Try this next (one follow-up question to practise)
+If a video is provided, also briefly comment on delivery: pace, thinking aloud, composure and body language.
+Be honest, specific and encouraging. Under 400 words.`;
+
+export async function handleAssess(request: Request) {
+  const key = process.env["LOVABLE_API_KEY"];
+  if (!key) return Response.json({ error: "AI is not configured" }, { status: 500 });
+
+  let body: { transcript?: unknown; video?: unknown; videoType?: unknown };
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: "Invalid request" }, { status: 400 });
+  }
+  const transcript = typeof body.transcript === "string" ? body.transcript.trim().slice(0, 40_000) : "";
+  const video = typeof body.video === "string" ? body.video : "";
+  const videoType = typeof body.videoType === "string" && body.videoType.startsWith("video/") ? body.videoType : "video/mp4";
+  if (!transcript && !video) return Response.json({ error: "Add a transcript or a video" }, { status: 400 });
+  if (video && video.length * 0.75 > MAX_VIDEO_BYTES) {
+    return Response.json({ error: "Video must be under 20 MB" }, { status: 413 });
+  }
+
+  const intro = transcript
+    ? `Interview transcript:\n\n${transcript}`
+    : "No transcript was provided; assess from the video.";
+  const messages: ModelMessage[] = [
+    {
+      role: "user",
+      content: video
+        ? [{ type: "text", text: intro }, { type: "file", data: video, mediaType: videoType }]
+        : intro,
+    },
+  ];
+
+  const result = video
+    ? streamText({
+        model: createLovableAiGatewayProvider(key, undefined, { baseURL: GATEWAY })(VIDEO_MODEL),
+        system: SYSTEM,
+        messages,
+        maxRetries: 0,
+        abortSignal: request.signal,
+      })
+    : streamText({
+        model: createOpenAI({
+          baseURL: GATEWAY,
+          apiKey: key,
+          headers: { "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
+          fetch: createLovableAiGatewayRunIdFetch().fetch,
+        }).responses(TEXT_MODEL),
+        system: SYSTEM,
+        messages,
+        maxRetries: 0,
+        abortSignal: request.signal,
+        providerOptions: {
+          openai: {
+            forceReasoning: true,
+            reasoningEffort: "medium",
+            reasoningSummary: "auto",
+            store: false,
+            include: ["reasoning.encrypted_content"],
+          },
+        },
+      });
+
+  // Surface gateway errors (402/429 etc.) as a readable message instead of an empty stream.
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      try {
+        for await (const part of result.fullStream) {
+          if (part.type === "text-delta") controller.enqueue(encoder.encode(part.text));
+          if (part.type === "error") {
+            const err = part.error as { statusCode?: number; message?: string };
+            const msg =
+              err?.statusCode === 402
+                ? "AI credits have run out. Add credits to your workspace to continue."
+                : err?.statusCode === 429
+                  ? "Too many requests right now. Please try again in a minute."
+                  : "The assessment could not be completed.";
+            controller.enqueue(encoder.encode(`\n\n[[error]]${msg}`));
+          }
+        }
+      } catch {
+        if (!request.signal.aborted) controller.enqueue(encoder.encode("\n\n[[error]]The assessment could not be completed."));
+      }
+      controller.close();
+    },
+  });
+  return new Response(stream, {
+    headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-cache, no-transform" },
+  });
+}
