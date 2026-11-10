@@ -6,6 +6,7 @@ import { createLovableAiGatewayRunIdFetch } from "./ai/run-id.ts";
 import { REASONING_GUIDE } from "./interview-briefing.ts";
 import { limitMessage, takeFeedback, visitorKey } from "./rate-limit.server.ts";
 import { authenticateRequest } from "./request-auth.server.ts";
+import { isPreviewRequest } from "./preview.ts";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1";
 const TEXT_MODEL = "openai/gpt-6-astra";
@@ -28,9 +29,12 @@ export async function handleAssess(request: Request) {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) return Response.json({ error: "AI is not configured" }, { status: 500 });
 
-  const allowed = takeFeedback(visitorKey(request));
-  if (!allowed.ok) {
-    return Response.json({ error: limitMessage("feedback", allowed.retryAfterMinutes) }, { status: 429 });
+  const preview = isPreviewRequest(request);
+  if (!preview) {
+    const allowed = takeFeedback(visitorKey(request));
+    if (!allowed.ok) {
+      return Response.json({ error: limitMessage("feedback", allowed.retryAfterMinutes) }, { status: 429 });
+    }
   }
 
   let body: { transcript?: unknown; video?: unknown; videoType?: unknown; interviewId?: unknown };
@@ -45,15 +49,17 @@ export async function handleAssess(request: Request) {
   const interviewId = typeof body.interviewId === "string" ? body.interviewId : "";
   if (!transcript && !video) return Response.json({ error: "Add a transcript or a video" }, { status: 400 });
   if (video && video.length * 0.75 > MAX_VIDEO_BYTES) return Response.json({ error: "Video must be under 20 MB" }, { status: 413 });
-  if (!/^[0-9a-f-]{36}$/i.test(interviewId)) return Response.json({ error: "A valid interview is required" }, { status: 400 });
+  if (!preview && !/^[0-9a-f-]{36}$/i.test(interviewId)) return Response.json({ error: "A valid interview is required" }, { status: 400 });
 
-  const auth = await authenticateRequest(request);
-  if (!auth) return Response.json({ error: "Sign in to request feedback" }, { status: 401 });
-  const { data: feedbackAvailable, error: allowanceError } = await auth.supabase.rpc("consume_feedback", {
-    p_interview_id: interviewId,
-  });
-  if (allowanceError) return Response.json({ error: "Your feedback allowance could not be checked" }, { status: 500 });
-  if (!feedbackAvailable) return Response.json({ error: "This interview’s feedback has already been used." }, { status: 403 });
+  if (!preview) {
+    const auth = await authenticateRequest(request);
+    if (!auth) return Response.json({ error: "Sign in to request feedback" }, { status: 401 });
+    const { data: feedbackAvailable, error: allowanceError } = await auth.supabase.rpc("consume_feedback", {
+      p_interview_id: interviewId,
+    });
+    if (allowanceError) return Response.json({ error: "Your feedback allowance could not be checked" }, { status: 500 });
+    if (!feedbackAvailable) return Response.json({ error: "This interview’s feedback has already been used." }, { status: 403 });
+  }
 
   const intro = transcript ? `Interview transcript:\n\n${transcript}` : "No transcript was provided; assess from the video.";
   const messages: ModelMessage[] = [

@@ -36,3 +36,4 @@ use the editor.
 ## Accounts and payments
 
 - Lovable Cloud owns customer profiles, purchases, and interview allowances; enforce credits and one-feedback-per-interview in server-side database functions, never client checks alone. Built-in Paddle checkout and its signed webhook credit the one-off pack so entitlements remain consistent across preview and live environments.
+- Unlimited testing is preview-only and bypasses sign-in and allowances; gate it by the actual request hostname in `src/lib/preview.ts`, never by caller-supplied environment flags or development build mode, so published traffic keeps normal limits.

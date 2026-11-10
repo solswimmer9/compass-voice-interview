@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { isPreviewBrowser } from "@/lib/preview";
 
 function readDataURL(file: File) {
   return new Promise<string>((resolve, reject) => {
@@ -31,9 +32,10 @@ export function AssessPanel({ initialTranscript, interviewId }: { initialTranscr
     const controller = new AbortController();
     abortRef.current = controller;
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
+      const preview = isPreviewBrowser();
+      const { data: sessionData } = preview ? { data: { session: null } } : await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
-      if (!token) throw new Error("Sign in to request feedback.");
+      if (!preview && !token) throw new Error("Sign in to request feedback.");
       const body: Record<string, string> = { transcript, interviewId };
       if (video) {
         body["video"] = await readDataURL(video);
@@ -41,7 +43,10 @@ export function AssessPanel({ initialTranscript, interviewId }: { initialTranscr
       }
       const response = await fetch("/api/assess", {
         method: "POST",
-        headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+        headers: {
+          "content-type": "application/json",
+          ...(token ? { authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify(body),
         signal: controller.signal,
       });

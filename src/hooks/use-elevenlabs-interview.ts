@@ -1,7 +1,8 @@
 import { useConversation } from "@elevenlabs/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getPaddleEnvironment } from "@/lib/paddle";
-import { releaseInterviewCredit, startInterviewSession } from "@/utils/interview.functions";
+import { releaseInterviewCredit, startInterviewSession, startPreviewInterviewSession } from "@/utils/interview.functions";
+import { isPreviewBrowser } from "@/lib/preview";
 
 export type InterviewEvent =
   | { type: "app.transcript"; role: "user" | "assistant"; text: string }
@@ -69,9 +70,10 @@ export function useElevenLabsInterview({ onEvent }: { onEvent: (event: Interview
     setInterviewId(null);
     setPhase("connecting");
     try {
-      const data = await startInterviewSession({
-        data: { openingTurn: nextOpeningTurn(), environment: getPaddleEnvironment() },
-      });
+      const openingTurn = nextOpeningTurn();
+      const data = isPreviewBrowser()
+        ? await startPreviewInterviewSession({ data: { openingTurn } })
+        : await startInterviewSession({ data: { openingTurn, environment: getPaddleEnvironment() } });
       newInterviewId = data.interviewId;
       if (!data.openingQuestion) throw new Error("The opening question could not be prepared.");
       if (id !== attempt.current) return;
@@ -82,7 +84,7 @@ export function useElevenLabsInterview({ onEvent }: { onEvent: (event: Interview
         dynamicVariables: { opening_question: data.openingQuestion },
       });
     } catch (cause) {
-      if (newInterviewId) {
+      if (newInterviewId && newInterviewId !== "preview") {
         await releaseInterviewCredit({ data: { interviewId: newInterviewId } }).catch(() => undefined);
       }
       if (id !== attempt.current) return;

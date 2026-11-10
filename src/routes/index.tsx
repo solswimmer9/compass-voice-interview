@@ -8,6 +8,7 @@ import { DotPattern } from "@/components/ui/dot-pattern";
 import { INTERVIEW_MINUTES } from "@/lib/limits";
 import { PackCheckout } from "@/components/PackCheckout";
 import { useAccountSnapshot } from "@/hooks/useAccountSnapshot";
+import { isPreviewBrowser } from "@/lib/preview";
 
 const HEADLINE_WORDS = ["democratise", "open up", "demystify", "widen access to"];
 
@@ -66,6 +67,8 @@ function InterviewPage() {
 
   const call = useElevenLabsInterview({ onEvent });
   const account = useAccountSnapshot();
+  const [preview, setPreview] = useState(false);
+  useEffect(() => setPreview(isPreviewBrowser()), []);
   const idle = call.status === "idle" || call.status === "closed";
 
   const [elapsed, setElapsed] = useState(0);
@@ -152,11 +155,11 @@ function InterviewPage() {
 
         <section className="mt-6 rounded-md border bg-card p-6">
           <div className="flex flex-wrap items-center justify-center gap-3">
-            {idle ? !account.user ? (
+            {idle ? !preview && !account.user ? (
               <Link to="/auth" className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground">
                 Sign in to start
               </Link>
-            ) : account.data?.totalRemaining === 0 ? (
+            ) : !preview && account.data?.totalRemaining === 0 ? (
               <button
                 onClick={() => document.getElementById("interview-pack")?.scrollIntoView({ behavior: "smooth" })}
                 className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
@@ -166,7 +169,7 @@ function InterviewPage() {
             ) : (
               <button
                 onClick={start}
-                disabled={account.loading}
+                disabled={!preview && account.loading}
                 className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
               >
                 {showReplay ? "Start a new interview" : "Start interview"}
@@ -203,7 +206,9 @@ function InterviewPage() {
           <p className="mt-4 text-center text-xs text-muted-foreground">
             Dr Hale speaks with a natural British voice from ElevenLabs.
           </p>
-          {account.user && account.data && (
+          {preview ? (
+            <p className="mt-2 text-center text-xs text-muted-foreground">Unlimited preview testing · no purchase needed</p>
+          ) : account.user && account.data && (
             <p className="mt-2 text-center text-xs text-muted-foreground">
               {account.data.totalRemaining} {account.data.totalRemaining === 1 ? "interview" : "interviews"} remaining · {account.data.freeRemaining} free · {account.data.paidRemaining} purchased
             </p>
