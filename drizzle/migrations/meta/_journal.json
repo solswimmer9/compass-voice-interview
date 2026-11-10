@@ -8,6 +8,13 @@
       "when": 1794316880259,
       "tag": "0000_create_profiles_purchases_and_interview_allowances",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794317339056,
+      "tag": "0001_restrict_account_function_execution",
+      "breakpoints": true
     }
   ]
 }

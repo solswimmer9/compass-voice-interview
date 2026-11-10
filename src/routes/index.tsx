@@ -205,7 +205,7 @@ function InterviewPage() {
           </p>
           {account.user && account.data && (
             <p className="mt-2 text-center text-xs text-muted-foreground">
-              {account.data.totalRemaining} interviews remaining · {account.data.freeRemaining} free · {account.data.paidRemaining} purchased
+              {account.data.totalRemaining} {account.data.totalRemaining === 1 ? "interview" : "interviews"} remaining · {account.data.freeRemaining} free · {account.data.paidRemaining} purchased
             </p>
           )}
           {call.error && (

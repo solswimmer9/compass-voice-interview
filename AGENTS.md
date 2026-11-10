@@ -32,3 +32,7 @@ use the editor.
 ## Voice architecture
 
 - Live interviews use ElevenLabs Conversational AI through `@elevenlabs/react` and server-minted WebSocket signed URLs; keep `ELEVENLABS_API_KEY` server-only. Post-interview assessments continue to use Lovable AI Gateway. This preserves natural two-way speech without exposing the provider credential.
+
+## Accounts and payments
+
+- Lovable Cloud owns customer profiles, purchases, and interview allowances; enforce credits and one-feedback-per-interview in server-side database functions, never client checks alone. Built-in Paddle checkout and its signed webhook credit the one-off pack so entitlements remain consistent across preview and live environments.

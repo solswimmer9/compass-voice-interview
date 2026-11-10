@@ -13,7 +13,8 @@ export async function authenticateRequest(request: Request) {
     global: {
       headers: { Authorization: `Bearer ${token}` },
       fetch: (input, init) => {
-        const headers = new Headers(init?.headers);
+        const headers = new Headers(input instanceof Request ? input.headers : undefined);
+        new Headers(init?.headers).forEach((value, header) => headers.set(header, value));
         if (key.startsWith("sb_") && headers.get("Authorization") === `Bearer ${key}`) {
           headers.delete("Authorization");
         }

@@ -47,7 +47,7 @@ function AccountPage() {
         <div className="mt-8 space-y-8">
           <section className="rounded-md border bg-card p-6">
             <p className="text-sm text-muted-foreground">{user.email}</p>
-            <p className="mt-3 font-serif text-3xl font-semibold">{data?.totalRemaining ?? 0} interviews remaining</p>
+            <p className="mt-3 font-serif text-3xl font-semibold">{data?.totalRemaining ?? 0} {data?.totalRemaining === 1 ? "interview" : "interviews"} remaining</p>
             <p className="mt-2 text-sm text-muted-foreground">{data?.freeRemaining ?? 0} free · {data?.paidRemaining ?? 0} purchased</p>
             <Link to="/" className="mt-5 inline-flex rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground">Start practising</Link>
           </section>

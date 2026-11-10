@@ -5,6 +5,7 @@
 - [x] AI assessment of interview replay
 - [x] Optional video upload for assessment
 - [x] Enable built-in payments with Paddle (chosen after the eligibility check)
-- [ ] Choose products, prices, and purchase/subscription business rules with Solomon
-- [ ] Add products and prices to the payment provider
-- [ ] Build checkout and purchase/subscription access logic
+- [x] Choose the £20 two-interview pack, free allowance, and no-subscription rules with Solomon
+- [ ] Add the pack to the payment provider — blocked: product creation was declined twice at confirmation
+- [x] Build checkout, customer accounts, profiles, and interview/feedback allowance logic
+- [ ] Verify a signed-in test purchase end to end — needs a customer account and the approved provider product
