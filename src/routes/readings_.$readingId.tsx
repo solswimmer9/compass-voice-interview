@@ -1,5 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { EmailReadingButton } from "@/components/EmailReadingButton";
 import { READING_MINUTES, readingById } from "@/lib/readings";
 
 export const Route = createFileRoute("/readings_/$readingId")({
@@ -101,6 +102,16 @@ function ReadingSessionPage() {
           >
             {done ? "Start the interview" : "I'm ready, start the interview now"}
           </Link>
+        </div>
+      </section>
+
+      <section className="mt-6 rounded-xl border p-5 text-center">
+        <p className="text-sm text-muted-foreground">
+          Not ready now? Get the article, context and questions by email, with a link to start the
+          interview later.
+        </p>
+        <div className="mt-3">
+          <EmailReadingButton readingId={reading.id} />
         </div>
       </section>
 
