@@ -158,7 +158,10 @@ function InterviewPage() {
   return (
     <div className="relative min-h-[100svh] overflow-hidden">
       <DotPattern className="h-[100svh] [mask-image:radial-gradient(520px_circle_at_center,white,transparent)]" />
-      <nav className="relative z-20 mx-auto flex max-w-2xl justify-end gap-4 px-6 pt-6 text-sm">
+      <nav className="relative z-20 mx-auto flex max-w-2xl items-center justify-end gap-5 px-6 pt-6 text-sm">
+        <Link to="/pricing" className="text-muted-foreground transition hover:text-foreground">
+          Pricing
+        </Link>
         {account.user ? (
           <Link to="/account" className="underline">
             Your account
