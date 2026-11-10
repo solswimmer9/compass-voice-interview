@@ -18,7 +18,7 @@ export function PackCheckout() {
         <p className="font-serif text-4xl font-semibold">{INTERVIEW_PACK.displayPrice}</p>
       </div>
       <ul className="mt-5 space-y-2 text-sm">
-        <li>2 voice interviews with Dr Hale</li>
+        <li>2 voice interviews with Dr River</li>
         <li>1 AI feedback assessment per interview</li>
         <li>No subscription or recurring payment</li>
       </ul>

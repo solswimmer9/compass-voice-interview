@@ -196,7 +196,7 @@ function InterviewPage() {
               Preparing for an Oxbridge interview has been too hard for too long. We change that.
             </p>
             <p className="mt-2 text-foreground/90">
-              Practise out loud with Dr Hale, an AI tutor informed by real Cambridge geography
+              Practise out loud with Dr River, an AI tutor informed by real Cambridge geography
               notes, who will challenge your reasoning.
             </p>
           </div>
@@ -279,14 +279,14 @@ function InterviewPage() {
             )}
           </div>
           <p className="mt-4 text-center text-xs text-muted-foreground">
-            Dr Hale speaks with a natural British voice powered by Lovable AI.
+            Dr River speaks with a natural British voice powered by Lovable AI.
           </p>
           {call.playbackBlocked && (
             <button
               onClick={call.resumePlayback}
               className="mx-auto mt-3 block rounded-full border px-4 py-2 text-sm"
             >
-              Play Dr Hale’s voice
+              Play Dr River’s voice
             </button>
           )}
           {preview ? (
@@ -297,9 +297,15 @@ function InterviewPage() {
             account.user &&
             account.data && (
               <p className="mt-2 text-center text-xs text-muted-foreground">
-                {account.data.totalRemaining}{" "}
-                {account.data.totalRemaining === 1 ? "interview" : "interviews"} remaining ·{" "}
-                {account.data.freeRemaining} free · {account.data.paidRemaining} purchased
+                {account.data.lifetime ? (
+                  "Lifetime access · unlimited interviews"
+                ) : (
+                  <>
+                    {account.data.totalRemaining}{" "}
+                    {account.data.totalRemaining === 1 ? "interview" : "interviews"} remaining ·{" "}
+                    {account.data.freeRemaining} free · {account.data.paidRemaining} purchased
+                  </>
+                )}
               </p>
             )
           )}
@@ -319,7 +325,7 @@ function InterviewPage() {
             </h2>
             {showReplay && (
               <p className="mt-1 text-sm text-muted-foreground">
-                Read back how you argued. Where did Dr Hale push hardest?
+                Read back how you argued. Where did Dr River push hardest?
               </p>
             )}
             <ol className="mt-6 space-y-5">
@@ -329,7 +335,7 @@ function InterviewPage() {
                   className={line.role === "assistant" ? "border-l-2 border-accent pl-4" : "pl-4"}
                 >
                   <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                    {line.role === "assistant" ? "Dr Hale" : "You"}
+                    {line.role === "assistant" ? "Dr River" : "You"}
                   </p>
                   <p
                     className={
@@ -349,14 +355,14 @@ function InterviewPage() {
           <AssessPanel
             interviewId={call.interviewId}
             initialTranscript={lines
-              .map((l) => `${l.role === "assistant" ? "Dr Hale" : "You"}: ${l.text.trim()}`)
+              .map((l) => `${l.role === "assistant" ? "Dr River" : "You"}: ${l.text.trim()}`)
               .join("\n\n")}
           />
         )}
       </main>
       <footer className="relative z-10 mx-auto max-w-2xl px-6 pb-10 text-center text-xs text-muted-foreground">
         Independent practice tool, not affiliated with the University of Cambridge or the University
-        of Oxford. Dr Hale is an AI and can make mistakes.
+        of Oxford. Dr River is an AI and can make mistakes.
       </footer>
     </div>
   );

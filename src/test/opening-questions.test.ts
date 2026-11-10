@@ -21,7 +21,7 @@ describe("opening questions", () => {
 
   it("greets the candidate and asks the selected question", () => {
     expect(openingMessage(7)).toBe(
-      `Hello, I’m Dr Hale. Thank you for joining this practice geography interview. ${OPENING_QUESTIONS[7]}`,
+      `Hello, I’m Dr River. Thank you for joining this practice geography interview. ${OPENING_QUESTIONS[7]}`,
     );
   });
 });

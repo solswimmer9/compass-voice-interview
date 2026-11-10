@@ -1,11 +1,19 @@
 import { Link } from "@tanstack/react-router";
 import { useAuth } from "@/components/AuthProvider";
 import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
-import { INTERVIEW_PACK } from "@/lib/offer";
+import { INTERVIEW_PACK, type Offer } from "@/lib/offer";
 import { cn } from "@/lib/utils";
 
-/** Buy button for the interview pack. Sends signed-out visitors to sign in first. */
-export function BuyPackButton({ className, label }: { className?: string; label?: string }) {
+/** Buy button for an offer (the pack by default). Sends signed-out visitors to sign in first. */
+export function BuyPackButton({
+  className,
+  label,
+  offer = INTERVIEW_PACK,
+}: {
+  className?: string;
+  label?: string;
+  offer?: Offer;
+}) {
   const { user, loading } = useAuth();
   const checkout = usePaddleCheckout();
   const base =
@@ -27,16 +35,14 @@ export function BuyPackButton({ className, label }: { className?: string; label?
         onClick={() =>
           user &&
           void checkout.openCheckout({
-            priceId: INTERVIEW_PACK.priceId,
+            priceId: offer.priceId,
             customerEmail: user.email,
             userId: user.id,
           })
         }
         className={cn(base, className)}
       >
-        {checkout.loading
-          ? "Opening checkout…"
-          : (label ?? `Buy the pack · ${INTERVIEW_PACK.displayPrice}`)}
+        {checkout.loading ? "Opening checkout…" : (label ?? `Buy · ${offer.displayPrice}`)}
       </button>
       {checkout.error && (
         <p role="alert" className="mt-3 text-sm text-destructive">

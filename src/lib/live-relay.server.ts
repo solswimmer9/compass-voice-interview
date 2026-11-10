@@ -4,7 +4,7 @@ import { stepCountIs, streamText, type ModelMessage } from "ai";
 import process from "node:process";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
-import { DR_HALE_BRIEFING, openingInstructions, REASONING_GUIDE } from "./interview-briefing.ts";
+import { DR_RIVER_BRIEFING, openingInstructions, REASONING_GUIDE } from "./interview-briefing.ts";
 import { INTERVIEW_MINUTES } from "./limits.ts";
 import { authenticateAccessToken } from "./request-auth.server.ts";
 import { isServerTester } from "./testers.ts";
@@ -23,7 +23,7 @@ const liveSettings = {
   liveModel: "openai/gpt-live-1",
   backendModel: "openai/gpt-6-astra",
   openingInstructions:
-    "Start now in British English. Briefly introduce yourself as Dr Hale, running a practice geography interview, then ask one warm, easy question about what draws the student to geography or what they notice about where they live, and listen.",
+    "Start now in British English. Briefly introduce yourself as Dr River, running a practice geography interview, then ask one warm, easy question about what draws the student to geography or what they notice about where they live, and listen.",
 };
 
 export type LiveSocket = {
@@ -130,7 +130,7 @@ export function handleLiveRequest(request: Request): Response {
   return new Response(null, response);
 }
 
-const conversationInstructions = `${DR_HALE_BRIEFING}
+const conversationInstructions = `${DR_RIVER_BRIEFING}
 
 Voice: calm, unhurried and soothing, like a gentle documentary narrator; speak slowly with natural pauses.
 Backchannel policy: Use moderate listening sounds such as "mm" while the candidate thinks, without taking over.

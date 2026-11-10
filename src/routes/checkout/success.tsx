@@ -6,7 +6,7 @@ export const Route = createFileRoute("/checkout/success")({
       { title: "Purchase complete | Oxbridge Interview Practice" },
       { name: "description", content: "Your interview pack purchase is complete." },
       { property: "og:title", content: "Your interview pack is ready" },
-      { property: "og:description", content: "Return to Dr Hale to use your two purchased interviews." },
+      { property: "og:description", content: "Return to Dr River to use your two purchased interviews." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

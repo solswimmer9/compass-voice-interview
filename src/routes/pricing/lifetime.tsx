@@ -1,13 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BuyPackButton, StartFreeLink } from "@/components/pricing/BuyPackButton";
 import { Check, PRICING_FACTS, PricingShell, pricingHead } from "@/components/pricing/PricingShell";
-
-// DRAFT: the lifetime option is not set up in checkout or in the interview
-// allowance logic yet, so its button is disabled. See the branch notes.
-const LIFETIME_DRAFT = {
-  name: "Lifetime access",
-  displayPrice: "£100",
-};
+import { useAccountSnapshot } from "@/hooks/useAccountSnapshot";
+import { LIFETIME_ACCESS } from "@/lib/offer";
 
 export const Route = createFileRoute("/pricing/lifetime")({
   head: () => pricingHead("Lifetime access"),
@@ -16,6 +11,8 @@ export const Route = createFileRoute("/pricing/lifetime")({
 
 function LifetimePricing() {
   const { pack, free, minutes } = PRICING_FACTS;
+  const account = useAccountSnapshot();
+  const hasLifetime = Boolean(account.data?.lifetime);
 
   return (
     <PricingShell wide>
@@ -56,8 +53,8 @@ function LifetimePricing() {
           <span className="absolute -top-3 left-8 rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground">
             Best for the full run-up
           </span>
-          <h2 className="text-sm text-muted-foreground">{LIFETIME_DRAFT.name}</h2>
-          <p className="mt-2 font-serif text-6xl font-semibold">{LIFETIME_DRAFT.displayPrice}</p>
+          <h2 className="text-sm text-muted-foreground">{LIFETIME_ACCESS.name}</h2>
+          <p className="mt-2 font-serif text-6xl font-semibold">{LIFETIME_ACCESS.displayPrice}</p>
           <p className="mt-2 text-sm text-muted-foreground">One payment. Yours to keep.</p>
           <ul className="mt-6 flex-1 space-y-3 text-sm">
             <li className="flex gap-3">
@@ -77,13 +74,19 @@ function LifetimePricing() {
               Every new question and feature we add
             </li>
           </ul>
-          <button
-            type="button"
-            disabled
-            className="mt-8 w-full rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground disabled:opacity-40"
-          >
-            Coming soon · {LIFETIME_DRAFT.displayPrice}
-          </button>
+          <div className="mt-8">
+            {hasLifetime ? (
+              <p className="rounded-full border px-6 py-3 text-center font-medium">
+                You have lifetime access
+              </p>
+            ) : (
+              <BuyPackButton
+                className="w-full"
+                offer={LIFETIME_ACCESS}
+                label={`Get lifetime access · ${LIFETIME_ACCESS.displayPrice}`}
+              />
+            )}
+          </div>
         </article>
       </section>
 

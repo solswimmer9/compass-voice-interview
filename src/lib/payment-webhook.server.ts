@@ -1,5 +1,5 @@
 import { EventName, verifyWebhook, type PaddleEnv } from "@/lib/paddle.server";
-import { INTERVIEW_PACK } from "@/lib/offer";
+import { offerForPriceId } from "@/lib/offer";
 
 async function handleTransactionCompleted(data: any, env: PaddleEnv) {
   const userId = data.customData?.userId;
@@ -9,7 +9,8 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
   }
   const item = data.items?.[0];
   const priceId = item?.price?.importMeta?.externalId;
-  if (priceId !== INTERVIEW_PACK.priceId) {
+  const offer = offerForPriceId(priceId);
+  if (!offer) {
     console.warn("Skipping payment with an unrecognised price");
     return;
   }
@@ -19,11 +20,11 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
       user_id: userId,
       paddle_transaction_id: data.id,
       paddle_customer_id: data.customerId,
-      product_id: INTERVIEW_PACK.productId,
+      product_id: offer.productId,
       price_id: priceId,
       status: "completed",
       environment: env,
-      interviews_remaining: INTERVIEW_PACK.interviews,
+      interviews_remaining: offer.interviews,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "paddle_transaction_id", ignoreDuplicates: true },

@@ -88,7 +88,7 @@ export function AssessPanel({
         value={transcript}
         onChange={(event) => setTranscript(event.target.value)}
         rows={6}
-        placeholder="Dr Hale: Why do cities exist where they do?&#10;You: ..."
+        placeholder="Dr River: Why do cities exist where they do?&#10;You: ..."
         className="mt-4 w-full rounded-md border bg-background p-3 text-sm"
       />
       <label className="mt-3 block text-sm">

@@ -9,3 +9,30 @@ export const INTERVIEW_PACK = {
   displayPrice: "£20",
   interviews: 2,
 } as const;
+
+// Lifetime access is stored as a purchase with a very large interview count, so the
+// existing database credit rules (consume, refund, one feedback per interview) apply
+// unchanged. The Paddle product must exist with this price external ID.
+export const LIFETIME_INTERVIEWS = 100_000;
+export const LIFETIME_ACCESS = {
+  productId: "lifetime_access",
+  priceId: "lifetime_access_gbp",
+  name: "Lifetime access",
+  description:
+    "Unlimited geography voice interviews with Dr River, each with AI reasoning feedback.",
+  amountMinor: 10000,
+  currency: "gbp",
+  displayPrice: "£100",
+  interviews: LIFETIME_INTERVIEWS,
+} as const;
+
+export const OFFERS = [INTERVIEW_PACK, LIFETIME_ACCESS] as const;
+export type Offer = (typeof OFFERS)[number];
+
+export function offerForPriceId(priceId: unknown): Offer | undefined {
+  return OFFERS.find((offer) => offer.priceId === priceId);
+}
+
+export function offerForProductId(productId: unknown): Offer | undefined {
+  return OFFERS.find((offer) => offer.productId === productId);
+}
