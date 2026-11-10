@@ -11,11 +11,13 @@
 - [x] Add the £20 pack and £100 lifetime access to the payment provider
 - [x] Build checkout, customer accounts, profiles, and interview/feedback allowance logic
 - [ ] Verify a signed-in test purchase, automatic credit, full refund, and credit revocation end to end — blocked: Stripe's automated card submission stalled twice; manual checkout needed
-- [ ] Explain how checkout, refunds, and interview entitlements work, including the manual test steps
+- [x] Verify both test/live prices, webhook secrets, signed-webhook rejection, and 19 payment/access rule checks
+- [x] Add missing refund and dispute notifications to the app's test and live Stripe webhooks and confirm both subscriptions
+- [x] Explain how checkout, refunds, and interview entitlements work, including the manual test steps
 - [x] Allow unlimited preview testing while preserving published-site allowances
 - [x] Restore the interview used by the failed 13:49 connection and refund future failed voice starts automatically
 - [x] Recognize the current live-preview host for unlimited testing
 - [x] Replace ElevenLabs interviews with a natural Lovable live voice and verify a real voice session
 - [ ] Verify audible two-way playback in a real browser — blocked: the sandbox browser produces no WebRTC audio candidates; Lovable session creation and final usage are verified
 - [x] Switch payments to Stripe after the previous provider rejected AI products; recreate £20 pack and £100 lifetime products
-- [ ] Live payments: user must claim the Stripe account and finish go-live in the Payments tab
+- [x] Claim the Stripe account and complete live-payment setup in the Payments tab
