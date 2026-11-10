@@ -1,5 +1,5 @@
 import process from "node:process";
-import { openingMessage } from "./interview-briefing.ts";
+import { openingQuestion } from "./interview-briefing.ts";
 import { limitMessage, takeInterview, visitorKey } from "./rate-limit.server.ts";
 
 const ELEVENLABS_AGENT_ID = "agent_3401m72r88s7fjkbdn23rd2bpds9";
@@ -70,7 +70,7 @@ export async function handleElevenLabsToken(request: Request) {
       );
     }
     return Response.json(
-      { signedUrl: data.signed_url, firstMessage: openingMessage(body.openingTurn) },
+      { signedUrl: data.signed_url, openingQuestion: openingQuestion(body.openingTurn) },
       { headers: { "cache-control": "no-store" } },
     );
   } catch (error) {

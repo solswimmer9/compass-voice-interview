@@ -23,7 +23,7 @@ export const OPENING_QUESTIONS = [
 ];
 
 // The browser sends a rising turn number, so one device works through every question before repeating.
-function openingQuestion(turn: unknown) {
+export function openingQuestion(turn: unknown) {
   const count = OPENING_QUESTIONS.length;
   const index =
     typeof turn === "number" && Number.isSafeInteger(turn) && turn >= 0

@@ -77,17 +77,17 @@ export function useElevenLabsInterview({
       });
       const data = (await response.json().catch(() => ({}))) as {
         signedUrl?: string;
-        firstMessage?: string;
+        openingQuestion?: string;
         error?: string;
       };
-      if (!response.ok || !data.signedUrl || !data.firstMessage) {
+      if (!response.ok || !data.signedUrl || !data.openingQuestion) {
         throw new Error(data.error || "ElevenLabs could not start the interview.");
       }
       if (id !== attempt.current) return;
       startSession({
         signedUrl: data.signedUrl,
         connectionType: "websocket",
-        overrides: { agent: { firstMessage: data.firstMessage } },
+        dynamicVariables: { opening_question: data.openingQuestion },
       });
     } catch (cause) {
       if (id !== attempt.current) return;
