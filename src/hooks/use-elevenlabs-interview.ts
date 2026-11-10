@@ -1,5 +1,7 @@
 import { useConversation } from "@elevenlabs/react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { getPaddleEnvironment } from "@/lib/paddle";
+import { releaseInterviewCredit, startInterviewSession } from "@/utils/interview.functions";
 
 export type InterviewEvent =
   | { type: "app.transcript"; role: "user" | "assistant"; text: string }
@@ -19,15 +21,12 @@ function nextOpeningTurn() {
   }
 }
 
-export function useElevenLabsInterview({
-  onEvent,
-}: {
-  onEvent: (event: InterviewEvent) => void;
-}) {
+export function useElevenLabsInterview({ onEvent }: { onEvent: (event: InterviewEvent) => void }) {
   const latestOnEvent = useRef(onEvent);
   const attempt = useRef(0);
   const [phase, setPhase] = useState<InterviewPhase>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [interviewId, setInterviewId] = useState<string | null>(null);
 
   useEffect(() => {
     latestOnEvent.current = onEvent;
@@ -35,9 +34,7 @@ export function useElevenLabsInterview({
 
   const conversation = useConversation({
     stripAudioTags: true,
-    onConnect: () => {
-      setPhase("connected");
-    },
+    onConnect: () => setPhase("connected"),
     onDisconnect: (details) => {
       setPhase("closed");
       if (details.reason === "error") setError(details.message);
@@ -67,29 +64,27 @@ export function useElevenLabsInterview({
 
   const start = useCallback(async () => {
     const id = ++attempt.current;
+    let newInterviewId: string | null = null;
     setError(null);
+    setInterviewId(null);
     setPhase("connecting");
     try {
-      const response = await fetch("/api/elevenlabs/token", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ openingTurn: nextOpeningTurn() }),
+      const data = await startInterviewSession({
+        data: { openingTurn: nextOpeningTurn(), environment: getPaddleEnvironment() },
       });
-      const data = (await response.json().catch(() => ({}))) as {
-        signedUrl?: string;
-        openingQuestion?: string;
-        error?: string;
-      };
-      if (!response.ok || !data.signedUrl || !data.openingQuestion) {
-        throw new Error(data.error || "ElevenLabs could not start the interview.");
-      }
+      newInterviewId = data.interviewId;
+      if (!data.openingQuestion) throw new Error("The opening question could not be prepared.");
       if (id !== attempt.current) return;
+      setInterviewId(data.interviewId);
       startSession({
         signedUrl: data.signedUrl,
         connectionType: "websocket",
         dynamicVariables: { opening_question: data.openingQuestion },
       });
     } catch (cause) {
+      if (newInterviewId) {
+        await releaseInterviewCredit({ data: { interviewId: newInterviewId } }).catch(() => undefined);
+      }
       if (id !== attempt.current) return;
       setPhase("closed");
       setError(cause instanceof Error ? cause.message : "The interview could not be started.");
@@ -113,6 +108,7 @@ export function useElevenLabsInterview({
   return {
     status: phase,
     error,
+    interviewId,
     muted: conversation.isMuted,
     speaking: conversation.isSpeaking,
     start,

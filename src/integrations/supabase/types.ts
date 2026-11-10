@@ -14,13 +14,121 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      interview_sessions: {
+        Row: {
+          created_at: string
+          environment: string
+          feedback_used: boolean
+          id: string
+          purchase_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          environment: string
+          feedback_used?: boolean
+          id?: string
+          purchase_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          environment?: string
+          feedback_used?: boolean
+          id?: string
+          purchase_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_sessions_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      purchases: {
+        Row: {
+          created_at: string
+          environment: string
+          id: string
+          interviews_remaining: number
+          paddle_customer_id: string
+          paddle_transaction_id: string
+          price_id: string
+          product_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          environment?: string
+          id?: string
+          interviews_remaining?: number
+          paddle_customer_id: string
+          paddle_transaction_id: string
+          price_id: string
+          product_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          environment?: string
+          id?: string
+          interviews_remaining?: number
+          paddle_customer_id?: string
+          paddle_transaction_id?: string
+          price_id?: string
+          product_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      consume_feedback: { Args: { p_interview_id: string }; Returns: boolean }
+      consume_interview_credit: {
+        Args: { p_environment: string }
+        Returns: Json
+      }
+      release_interview_credit: {
+        Args: { p_interview_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

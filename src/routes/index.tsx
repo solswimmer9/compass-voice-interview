@@ -1,11 +1,13 @@
 import { ConversationProvider } from "@elevenlabs/react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useElevenLabsInterview, type InterviewEvent } from "@/hooks/use-elevenlabs-interview";
 import { AssessPanel } from "@/components/AssessPanel";
 import { FlippingWord } from "@/components/FlippingWord";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import { INTERVIEW_MINUTES } from "@/lib/limits";
+import { PackCheckout } from "@/components/PackCheckout";
+import { useAccountSnapshot } from "@/hooks/useAccountSnapshot";
 
 const HEADLINE_WORDS = ["democratise", "open up", "demystify", "widen access to"];
 
@@ -63,6 +65,7 @@ function InterviewPage() {
   }, []);
 
   const call = useElevenLabsInterview({ onEvent });
+  const account = useAccountSnapshot();
   const idle = call.status === "idle" || call.status === "closed";
 
   const [elapsed, setElapsed] = useState(0);
@@ -82,7 +85,7 @@ function InterviewPage() {
 
   const start = () => {
     setLines([]);
-    void call.start();
+    void call.start().then(() => account.refetch());
   };
 
   // Also true after a dropped call, so an interview that ended early can still be assessed.
@@ -91,6 +94,13 @@ function InterviewPage() {
   return (
     <div className="relative min-h-[100svh] overflow-hidden">
       <DotPattern className="h-[100svh] [mask-image:radial-gradient(520px_circle_at_center,white,transparent)]" />
+      <nav className="relative z-20 mx-auto flex max-w-2xl justify-end gap-4 px-6 pt-6 text-sm">
+        {account.user ? (
+          <Link to="/account" className="underline">Your account</Link>
+        ) : (
+          <Link to="/auth" className="underline">Sign in</Link>
+        )}
+      </nav>
       <main className="relative z-10 mx-auto flex min-h-[100svh] max-w-2xl flex-col justify-center px-6 py-16">
         <div className="text-center">
           <p className="text-xs font-medium uppercase tracking-[0.25em] text-muted-foreground">
@@ -142,10 +152,22 @@ function InterviewPage() {
 
         <section className="mt-6 rounded-md border bg-card p-6">
           <div className="flex flex-wrap items-center justify-center gap-3">
-            {idle ? (
+            {idle ? !account.user ? (
+              <Link to="/auth" className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground">
+                Sign in to start
+              </Link>
+            ) : account.data?.totalRemaining === 0 ? (
+              <button
+                onClick={() => document.getElementById("interview-pack")?.scrollIntoView({ behavior: "smooth" })}
+                className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
+              >
+                Get 2 more interviews
+              </button>
+            ) : (
               <button
                 onClick={start}
-                className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition hover:opacity-90"
+                disabled={account.loading}
+                className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
               >
                 {showReplay ? "Start a new interview" : "Start interview"}
               </button>
@@ -181,12 +203,19 @@ function InterviewPage() {
           <p className="mt-4 text-center text-xs text-muted-foreground">
             Dr Hale speaks with a natural British voice from ElevenLabs.
           </p>
+          {account.user && account.data && (
+            <p className="mt-2 text-center text-xs text-muted-foreground">
+              {account.data.totalRemaining} interviews remaining · {account.data.freeRemaining} free · {account.data.paidRemaining} purchased
+            </p>
+          )}
           {call.error && (
             <p role="alert" className="mt-4 text-sm text-destructive">
               {call.error}
             </p>
           )}
         </section>
+
+        {idle && <PackCheckout />}
 
         {lines.length > 0 && (
           <section className="mt-10">
@@ -223,6 +252,7 @@ function InterviewPage() {
 
         {showReplay && (
           <AssessPanel
+            interviewId={call.interviewId}
             initialTranscript={lines
               .map((l) => `${l.role === "assistant" ? "Dr Hale" : "You"}: ${l.text.trim()}`)
               .join("\n\n")}

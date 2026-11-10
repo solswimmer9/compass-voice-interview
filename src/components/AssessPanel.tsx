@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 function readDataURL(file: File) {
   return new Promise<string>((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(String(r.result));
-    r.onerror = () => reject(r.error);
-    r.readAsDataURL(file);
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
   });
 }
 
-export function AssessPanel({ initialTranscript }: { initialTranscript: string }) {
+export function AssessPanel({ initialTranscript, interviewId }: { initialTranscript: string; interviewId: string | null }) {
   const [transcript, setTranscript] = useState(initialTranscript);
   const [video, setVideo] = useState<File | null>(null);
   const [output, setOutput] = useState("");
@@ -24,39 +25,43 @@ export function AssessPanel({ initialTranscript }: { initialTranscript: string }
   const submit = async () => {
     setError(null);
     setOutput("");
+    if (!interviewId) return setError("Start an interview before requesting feedback.");
     if (video && video.size > 20 * 1024 * 1024) return setError("Video must be under 20 MB.");
     setBusy(true);
-    const ctrl = new AbortController();
-    abortRef.current = ctrl;
+    const controller = new AbortController();
+    abortRef.current = controller;
     try {
-      const body: Record<string, string> = { transcript };
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) throw new Error("Sign in to request feedback.");
+      const body: Record<string, string> = { transcript, interviewId };
       if (video) {
         body["video"] = await readDataURL(video);
         body["videoType"] = video.type || "video/mp4";
       }
-      const res = await fetch("/api/assess", {
+      const response = await fetch("/api/assess", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
-        signal: ctrl.signal,
+        signal: controller.signal,
       });
-      if (!res.ok || !res.body) {
-        const j = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(j.error ?? "Assessment failed");
+      if (!response.ok || !response.body) {
+        const result = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(result.error ?? "Assessment failed");
       }
-      const reader = res.body.getReader();
-      const dec = new TextDecoder();
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
       let text = "";
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
-        text += dec.decode(value, { stream: true });
-        const [main, err] = text.split("[[error]]");
+        text += decoder.decode(value, { stream: true });
+        const [main, streamError] = text.split("[[error]]");
         setOutput(main ?? "");
-        if (err) setError(err);
+        if (streamError) setError(streamError);
       }
-    } catch (e) {
-      if (!ctrl.signal.aborted) setError(e instanceof Error ? e.message : "Assessment failed");
+    } catch (cause) {
+      if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : "Assessment failed");
     } finally {
       setBusy(false);
     }
@@ -65,13 +70,10 @@ export function AssessPanel({ initialTranscript }: { initialTranscript: string }
   return (
     <section className="mt-12 rounded-md border bg-card p-6">
       <h2 className="font-serif text-3xl font-semibold">Assess my reasoning</h2>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Submit your replay (paste a transcript, add a video of yourself answering, or both) for AI
-        feedback.
-      </p>
+      <p className="mt-1 text-sm text-muted-foreground">Submit your replay, an optional video, or both. Each interview includes one AI feedback assessment.</p>
       <textarea
         value={transcript}
-        onChange={(e) => setTranscript(e.target.value)}
+        onChange={(event) => setTranscript(event.target.value)}
         rows={6}
         placeholder="Dr Hale: Why do cities exist where they do?&#10;You: ..."
         className="mt-4 w-full rounded-md border bg-background p-3 text-sm"
@@ -81,40 +83,23 @@ export function AssessPanel({ initialTranscript }: { initialTranscript: string }
         <input
           type="file"
           accept="video/*"
-          onChange={(e) => setVideo(e.target.files?.[0] ?? null)}
+          onChange={(event) => setVideo(event.target.files?.[0] ?? null)}
           className="mt-1 block w-full text-sm file:mr-3 file:rounded-full file:border-0 file:bg-secondary file:px-4 file:py-2"
         />
       </label>
       <div className="mt-4 flex gap-3">
         <button
           onClick={submit}
-          disabled={busy || (!transcript.trim() && !video)}
+          disabled={busy || !interviewId || (!transcript.trim() && !video)}
           className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground disabled:opacity-40"
         >
           {busy ? "Assessing…" : "Get feedback"}
         </button>
-        {busy && (
-          <button
-            onClick={() => abortRef.current?.abort()}
-            className="rounded-full border px-4 py-2 text-sm"
-          >
-            Stop
-          </button>
-        )}
+        {busy && <button onClick={() => abortRef.current?.abort()} className="rounded-full border px-4 py-2 text-sm">Stop</button>}
       </div>
-      {error && (
-        <p role="alert" className="mt-4 text-sm text-destructive">
-          {error}
-        </p>
-      )}
-      {busy && !output && (
-        <p className="mt-6 text-sm text-muted-foreground">Reading your answers…</p>
-      )}
-      {output && (
-        <div className="mt-6 whitespace-pre-wrap leading-relaxed">
-          {output.replace(/^#+\s?/gm, "").replace(/\*\*/g, "")}
-        </div>
-      )}
+      {error && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}
+      {busy && !output && <p className="mt-6 text-sm text-muted-foreground">Reading your answers…</p>}
+      {output && <div className="mt-6 whitespace-pre-wrap leading-relaxed">{output.replace(/^#+\s?/gm, "").replace(/\*\*/g, "")}</div>}
     </section>
   );
 }

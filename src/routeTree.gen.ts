@@ -10,12 +10,31 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccountRouteImport } from './routes/account'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ApiAssessRouteImport } from './routes/api/assess'
-import { Route as ApiElevenlabsTokenRouteImport } from './routes/api/elevenlabs/token'
+import { Route as CheckoutSuccessRouteImport } from './routes/checkout/success'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAssessRoute = ApiAssessRouteImport.update({
@@ -23,40 +42,84 @@ const ApiAssessRoute = ApiAssessRouteImport.update({
   path: '/api/assess',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiElevenlabsTokenRoute = ApiElevenlabsTokenRouteImport.update({
-  id: '/api/elevenlabs/token',
-  path: '/api/elevenlabs/token',
+const CheckoutSuccessRoute = CheckoutSuccessRouteImport.update({
+  id: '/checkout/success',
+  path: '/checkout/success',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/api/assess': typeof ApiAssessRoute
-  '/api/elevenlabs/token': typeof ApiElevenlabsTokenRoute
+  '/checkout/success': typeof CheckoutSuccessRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/api/assess': typeof ApiAssessRoute
-  '/api/elevenlabs/token': typeof ApiElevenlabsTokenRoute
+  '/checkout/success': typeof CheckoutSuccessRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/api/assess': typeof ApiAssessRoute
-  '/api/elevenlabs/token': typeof ApiElevenlabsTokenRoute
+  '/checkout/success': typeof CheckoutSuccessRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/assess' | '/api/elevenlabs/token'
+  fullPaths:
+    | '/'
+    | '/account'
+    | '/auth'
+    | '/reset-password'
+    | '/api/assess'
+    | '/checkout/success'
+    | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/assess' | '/api/elevenlabs/token'
-  id: '__root__' | '/' | '/api/assess' | '/api/elevenlabs/token'
+  to:
+    | '/'
+    | '/account'
+    | '/auth'
+    | '/reset-password'
+    | '/api/assess'
+    | '/checkout/success'
+    | '/api/public/payments/webhook'
+  id:
+    | '__root__'
+    | '/'
+    | '/account'
+    | '/auth'
+    | '/reset-password'
+    | '/api/assess'
+    | '/checkout/success'
+    | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccountRoute: typeof AccountRoute
+  AuthRoute: typeof AuthRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ApiAssessRoute: typeof ApiAssessRoute
-  ApiElevenlabsTokenRoute: typeof ApiElevenlabsTokenRoute
+  CheckoutSuccessRoute: typeof CheckoutSuccessRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -68,6 +131,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/assess': {
       id: '/api/assess'
       path: '/api/assess'
@@ -75,11 +159,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAssessRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/elevenlabs/token': {
-      id: '/api/elevenlabs/token'
-      path: '/api/elevenlabs/token'
-      fullPath: '/api/elevenlabs/token'
-      preLoaderRoute: typeof ApiElevenlabsTokenRouteImport
+    '/checkout/success': {
+      id: '/checkout/success'
+      path: '/checkout/success'
+      fullPath: '/checkout/success'
+      preLoaderRoute: typeof CheckoutSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -87,8 +178,12 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccountRoute: AccountRoute,
+  AuthRoute: AuthRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ApiAssessRoute: ApiAssessRoute,
-  ApiElevenlabsTokenRoute: ApiElevenlabsTokenRoute,
+  CheckoutSuccessRoute: CheckoutSuccessRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
