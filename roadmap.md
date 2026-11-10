@@ -10,3 +10,6 @@
 - [x] Build checkout, customer accounts, profiles, and interview/feedback allowance logic
 - [ ] Verify a signed-in test purchase end to end — needs a customer account and the approved provider product
 - [x] Allow unlimited preview testing while preserving published-site allowances
+- [x] Restore the interview used by the failed 13:49 connection and refund future failed voice starts automatically
+- [x] Recognize the current live-preview host for unlimited testing
+- [ ] Restore ElevenLabs agent availability — blocked: ElevenLabs rejects both the original and a clean agent during initialization on the free account; the API key cannot read account usage because it lacks `user_read`
