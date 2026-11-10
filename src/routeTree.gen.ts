@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiAssessRouteImport } from './routes/api/assess'
+import { Route as ApiElevenlabsTokenRouteImport } from './routes/api/elevenlabs/token'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,31 +23,40 @@ const ApiAssessRoute = ApiAssessRouteImport.update({
   path: '/api/assess',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiElevenlabsTokenRoute = ApiElevenlabsTokenRouteImport.update({
+  id: '/api/elevenlabs/token',
+  path: '/api/elevenlabs/token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/assess': typeof ApiAssessRoute
+  '/api/elevenlabs/token': typeof ApiElevenlabsTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/assess': typeof ApiAssessRoute
+  '/api/elevenlabs/token': typeof ApiElevenlabsTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/assess': typeof ApiAssessRoute
+  '/api/elevenlabs/token': typeof ApiElevenlabsTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/assess'
+  fullPaths: '/' | '/api/assess' | '/api/elevenlabs/token'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/assess'
-  id: '__root__' | '/' | '/api/assess'
+  to: '/' | '/api/assess' | '/api/elevenlabs/token'
+  id: '__root__' | '/' | '/api/assess' | '/api/elevenlabs/token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiAssessRoute: typeof ApiAssessRoute
+  ApiElevenlabsTokenRoute: typeof ApiElevenlabsTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +75,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAssessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/elevenlabs/token': {
+      id: '/api/elevenlabs/token'
+      path: '/api/elevenlabs/token'
+      fullPath: '/api/elevenlabs/token'
+      preLoaderRoute: typeof ApiElevenlabsTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiAssessRoute: ApiAssessRoute,
+  ApiElevenlabsTokenRoute: ApiElevenlabsTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

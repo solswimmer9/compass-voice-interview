@@ -1,6 +1,7 @@
+import { ConversationProvider } from "@elevenlabs/react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useLiveVoice, type LiveEvent } from "@/hooks/use-live-voice";
+import { useElevenLabsInterview, type InterviewEvent } from "@/hooks/use-elevenlabs-interview";
 import { AssessPanel } from "@/components/AssessPanel";
 import { FlippingWord } from "@/components/FlippingWord";
 import { DotPattern } from "@/components/ui/dot-pattern";
@@ -32,31 +33,36 @@ export const Route = createFileRoute("/")({
 type Line = { role: "user" | "assistant"; text: string };
 
 function Index() {
+  return (
+    <ConversationProvider>
+      <InterviewPage />
+    </ConversationProvider>
+  );
+}
+
+function InterviewPage() {
   const [lines, setLines] = useState<Line[]>([]);
-  const [note, setNote] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
-  const onEvent = useCallback((event: LiveEvent) => {
-    const role =
-      event.type === "session.input_transcript.delta"
-        ? "user"
-        : event.type === "session.output_transcript.delta"
-          ? "assistant"
-          : null;
-    const delta = event["delta"];
-    if (role && typeof delta === "string") {
-      setLines((prev) => {
-        const last = prev[prev.length - 1];
-        if (last && last.role === role) {
-          return [...prev.slice(0, -1), { role, text: last.text + delta }];
-        }
-        return [...prev, { role, text: delta }];
-      });
+  const onEvent = useCallback((event: InterviewEvent) => {
+    if (event.type === "app.transcript") {
+      setLines((prev) => [...prev, { role: event.role, text: event.text }]);
+      return;
     }
-    if (event.type === "app.greeting.error") setNote(event.error?.message ?? null);
+    setLines((prev) => {
+      const next = [...prev];
+      for (let index = next.length - 1; index >= 0; index--) {
+        const line = next[index];
+        if (line?.role === "assistant" && line.text === event.originalText) {
+          next[index] = { ...line, text: event.correctedText };
+          return next;
+        }
+      }
+      return prev;
+    });
   }, []);
 
-  const call = useLiveVoice({ onEvent });
+  const call = useElevenLabsInterview({ onEvent });
   const idle = call.status === "idle" || call.status === "closed";
 
   const [elapsed, setElapsed] = useState(0);
@@ -76,8 +82,7 @@ function Index() {
 
   const start = () => {
     setLines([]);
-    setNote(null);
-    call.start();
+    void call.start();
   };
 
   // Also true after a dropped call, so an interview that ended early can still be assessed.
@@ -172,22 +177,15 @@ function Index() {
                 </button>
               </>
             )}
-            {call.playbackBlocked && (
-              <button
-                onClick={call.resumePlayback}
-                className="rounded-full border px-4 py-2 text-sm"
-              >
-                Play voice
-              </button>
-            )}
           </div>
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            Dr Hale speaks with a natural British voice from ElevenLabs.
+          </p>
           {call.error && (
             <p role="alert" className="mt-4 text-sm text-destructive">
               {call.error}
             </p>
           )}
-          {note && <p className="mt-4 text-sm text-muted-foreground">{note}</p>}
-          <audio ref={call.audioRef} className="hidden" />
         </section>
 
         {lines.length > 0 && (

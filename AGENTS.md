@@ -28,3 +28,7 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Voice architecture
+
+- Live interviews use ElevenLabs Conversational AI through `@elevenlabs/react` and server-minted WebSocket signed URLs; keep `ELEVENLABS_API_KEY` server-only. Post-interview assessments continue to use Lovable AI Gateway. This preserves natural two-way speech without exposing the provider credential.

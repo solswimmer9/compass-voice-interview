@@ -23,13 +23,21 @@ export const OPENING_QUESTIONS = [
 ];
 
 // The browser sends a rising turn number, so one device works through every question before repeating.
-export function openingInstructions(turn: unknown) {
+function openingQuestion(turn: unknown) {
   const count = OPENING_QUESTIONS.length;
   const index =
     typeof turn === "number" && Number.isSafeInteger(turn) && turn >= 0
       ? turn % count
       : Math.floor(Math.random() * count);
-  return `Start now in British English. Briefly introduce yourself as Dr Hale, running a practice geography interview, then ask this opening question in natural words and listen: ${OPENING_QUESTIONS[index]}`;
+  return OPENING_QUESTIONS[index];
+}
+
+export function openingMessage(turn: unknown) {
+  return `Hello, I’m Dr Hale. Thank you for joining this practice geography interview. ${openingQuestion(turn)}`;
+}
+
+export function openingInstructions(turn: unknown) {
+  return `Start now in British English. Briefly introduce yourself as Dr Hale, running a practice geography interview, then ask this opening question in natural words and listen: ${openingQuestion(turn)}`;
 }
 
 export const DR_HALE_BRIEFING = `You are Dr Hale, a fictional geography tutor running a practice admissions interview for a Year 13 student applying to Cambridge. Speak British English. You are not a real Cambridge tutor, and never claim a question has been asked in a real interview.
