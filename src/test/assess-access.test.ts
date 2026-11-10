@@ -8,6 +8,10 @@ vi.mock("../lib/request-auth.server.ts", () => ({ authenticateRequest }));
 vi.mock("ai", () => ({ streamText }));
 
 const PUBLISHED_URL = "https://compass-voice-interview.lovable.app/api/assess";
+// The kind of internal address the published server may see for itself.
+const INTERNAL_URL =
+  "https://live--6db3f9e0-08e4-5430-979a-8856445f33a9.abc.lovable.app/api/assess";
+
 function post(url: string, body: unknown, token?: string) {
   return new Request(url, {
     method: "POST",
@@ -22,20 +26,21 @@ function post(url: string, body: unknown, token?: string) {
 describe("feedback access", () => {
   beforeEach(() => {
     vi.stubEnv("LOVABLE_API_KEY", "test-key");
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "tester@example.com");
     authenticateRequest.mockReset();
     streamText.mockReset();
     streamText.mockReturnValue({ fullStream: (async function* () {})() });
   });
   afterEach(() => vi.unstubAllEnvs());
 
-  it("refuses feedback with no sign-in on the published site", async () => {
+  it("refuses feedback with no sign-in, whatever the address", async () => {
     const { handleAssess } = await import("@/lib/assess.server");
     authenticateRequest.mockResolvedValue(null);
-    const response = await handleAssess(
-      post(PUBLISHED_URL, { transcript: "x", interviewId: "preview" }),
-    );
-    expect(response.status).toBeGreaterThanOrEqual(400);
-    expect(streamText).not.toHaveBeenCalled();
+    for (const url of [PUBLISHED_URL, INTERNAL_URL, "http://localhost:8080/api/assess"]) {
+      const response = await handleAssess(post(url, { transcript: "x", interviewId: "preview" }));
+      expect(response.status).toBeGreaterThanOrEqual(400);
+      expect(streamText).not.toHaveBeenCalled();
+    }
   });
 
   it("checks the allowance for a normal signed-in user", async () => {
@@ -47,7 +52,7 @@ describe("feedback access", () => {
     });
     const response = await handleAssess(
       post(
-        PUBLISHED_URL,
+        INTERNAL_URL,
         { transcript: "x", interviewId: "00000000-0000-0000-0000-000000000000" },
         "a.b.c",
       ),
@@ -57,13 +62,18 @@ describe("feedback access", () => {
     expect(streamText).not.toHaveBeenCalled();
   });
 
-  it("lets a signed-out visitor run unlimited preview feedback", async () => {
+  it("lets a listed tester run unlimited preview feedback", async () => {
     const { handleAssess } = await import("@/lib/assess.server");
+    const rpc = vi.fn();
+    authenticateRequest.mockResolvedValue({
+      user: { email: "tester@example.com" },
+      supabase: { rpc },
+    });
     const response = await handleAssess(
-      post("http://localhost:8080/api/assess", { transcript: "x", interviewId: "preview" }),
+      post(PUBLISHED_URL, { transcript: "x", interviewId: "preview" }, "a.b.c"),
     );
     expect(response.status).toBe(200);
-    expect(authenticateRequest).not.toHaveBeenCalled();
+    expect(rpc).not.toHaveBeenCalled();
     expect(streamText).toHaveBeenCalled();
   });
 });

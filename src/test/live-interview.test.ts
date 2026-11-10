@@ -110,20 +110,46 @@ describe("Lovable live interview access", () => {
     );
   });
 
-  it("allows preview testing without sign-in or consuming an allowance", async () => {
+  it("refuses to start a voice interview without sign-in, even in preview", async () => {
     const browser = browserSocket();
-    bindLiveConnection(browser.socket, config, executionContext(), mocks.connect, {
-      preview: true,
-    });
+    mocks.authenticate.mockResolvedValue(null);
+    bindLiveConnection(browser.socket, config, executionContext(), mocks.connect);
+
+    browser.start();
+
+    await vi.waitFor(() =>
+      expect(browser.events).toContainEqual(expect.objectContaining({ type: "app.error" })),
+    );
+    expect(mocks.connect).not.toHaveBeenCalled();
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+
+  it("lets a listed tester run unlimited voice interviews without using credits", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
+    const browser = browserSocket();
+    bindLiveConnection(browser.socket, config, executionContext(), mocks.connect);
 
     browser.start();
 
     await vi.waitFor(() => expect(mocks.connect).toHaveBeenCalledOnce());
-    expect(mocks.authenticate).not.toHaveBeenCalled();
-    expect(mocks.rpc).not.toHaveBeenCalled();
+    expect(mocks.rpc).not.toHaveBeenCalledWith("consume_interview_credit", expect.anything());
     expect(browser.events).toContainEqual({
       type: "app.interview.started",
       interviewId: "preview",
     });
+    vi.unstubAllEnvs();
+  });
+
+  it("makes signed-in non-testers use their interview credits", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "someone-else@example.com");
+    const browser = browserSocket();
+    bindLiveConnection(browser.socket, config, executionContext(), mocks.connect);
+
+    browser.start();
+
+    await vi.waitFor(() =>
+      expect(mocks.rpc).toHaveBeenCalledWith("consume_interview_credit", expect.anything()),
+    );
+    vi.unstubAllEnvs();
   });
 });

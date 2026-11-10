@@ -114,7 +114,6 @@ function InterviewPage() {
 
   const getStartContext = useCallback(async () => {
     const environment = getPaddleEnvironment();
-    if (isPreviewBrowser()) return { accessToken: "", environment };
     const { data } = await supabase.auth.getSession();
     const accessToken = data.session?.access_token;
     if (!accessToken) throw new Error("Please sign in again before starting your interview.");
@@ -223,7 +222,7 @@ function InterviewPage() {
           <audio ref={call.audioRef} controls className="hidden" playsInline />
           <div className="flex flex-wrap items-center justify-center gap-3">
             {idle ? (
-              !account.user && !preview ? (
+              !account.user ? (
                 <Link
                   to="/auth"
                   className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
@@ -292,7 +291,7 @@ function InterviewPage() {
           )}
           {preview ? (
             <p className="mt-2 text-center text-xs text-muted-foreground">
-              Preview mode · unlimited testing
+              Preview mode · unlimited testing for tester accounts
             </p>
           ) : (
             account.user &&

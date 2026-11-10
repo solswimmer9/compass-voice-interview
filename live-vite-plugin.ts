@@ -12,7 +12,6 @@ import {
   type LiveConnector,
   type LiveSocket,
 } from "./src/lib/live-relay.server";
-import { isPreviewHostname } from "./src/lib/preview";
 
 function liveSocket(socket: WebSocket): LiveSocket {
   return {
@@ -137,7 +136,6 @@ export function liveVoiceDev(): Plugin {
             });
             if (rejection) return rejectUpgrade(socket, rejection.status);
             if (socket.destroyed) return;
-            const preview = isPreviewHostname(new URL(voiceRequest.url).hostname);
             sockets.handleUpgrade(request, socket, head, (connection) => {
               const browser = liveSocket(connection);
               bindLiveConnection(
@@ -149,7 +147,6 @@ export function liveVoiceDev(): Plugin {
                   },
                 },
                 connectGateway,
-                { preview },
               );
             });
           } catch (error) {

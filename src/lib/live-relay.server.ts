@@ -6,8 +6,8 @@ import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 import { DR_HALE_BRIEFING, openingInstructions, REASONING_GUIDE } from "./interview-briefing.ts";
 import { INTERVIEW_MINUTES } from "./limits.ts";
-import { isPreviewHostname } from "./preview.ts";
 import { authenticateAccessToken } from "./request-auth.server.ts";
+import { isServerTester } from "./testers.ts";
 
 export type LiveConfig = {
   baseURL: string;
@@ -119,19 +119,13 @@ export function handleLiveRequest(request: Request): Response {
   if (rejected) return rejected;
   const pair = new WebSocketPair();
   pair[1].accept();
-  bindLiveConnection(
-    workerSocket(pair[1]),
-    config,
-    { waitUntil },
-    async (url, headers, signal) => {
-      const response = await fetch(url, { headers: { ...headers, Upgrade: "websocket" }, signal });
-      const socket = (response as Response & { webSocket?: WorkerSocket | null }).webSocket;
-      if (!socket) throw await gatewayRejection(response);
-      socket.accept();
-      return workerSocket(socket);
-    },
-    { preview: isPreviewHostname(new URL(request.url).hostname) },
-  );
+  bindLiveConnection(workerSocket(pair[1]), config, { waitUntil }, async (url, headers, signal) => {
+    const response = await fetch(url, { headers: { ...headers, Upgrade: "websocket" }, signal });
+    const socket = (response as Response & { webSocket?: WorkerSocket | null }).webSocket;
+    if (!socket) throw await gatewayRejection(response);
+    socket.accept();
+    return workerSocket(socket);
+  });
   const response: ResponseInit & { webSocket: WebSocket } = { status: 101, webSocket: pair[0] };
   return new Response(null, response);
 }
@@ -287,7 +281,6 @@ export function bindLiveConnection(
   configuration: LiveConfig,
   execution: LiveExecutionContext,
   connect: LiveConnector,
-  options: { preview?: boolean } = {},
 ): void {
   const config = { ...configuration };
   let durationTimer: ReturnType<typeof setTimeout> | undefined;
@@ -363,12 +356,13 @@ export function bindLiveConnection(
     accessToken?: unknown;
     environment?: unknown;
   }): Promise<string> {
-    if (options.preview) return "preview";
     if (typeof event.accessToken !== "string" || !event.accessToken) {
       throw new Error("Please sign in again before starting your interview.");
     }
     const auth = await authenticateAccessToken(event.accessToken);
     if (!auth) throw new Error("Your sign-in has expired. Please sign in again.");
+    // Unlimited testing is per signed-in tester account, never by web address.
+    if (isServerTester(auth.user.email)) return "preview";
     if (event.environment !== "sandbox" && event.environment !== "live") {
       throw new Error("Your interview settings could not be checked.");
     }
