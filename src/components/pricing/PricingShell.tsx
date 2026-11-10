@@ -28,14 +28,7 @@ export function pricingHead(title: string) {
   };
 }
 
-const DESIGNS = [
-  { to: "/pricing/simple", label: "1 · Simple" },
-  { to: "/pricing/compare", label: "2 · Compare" },
-  { to: "/pricing/guide", label: "3 · Guide" },
-  { to: "/pricing/lifetime", label: "4 · Lifetime" },
-] as const;
-
-/** Page frame with a back link and a switcher between the three draft designs. */
+/** Page frame with a back link to the interview. */
 export function PricingShell({ children, wide }: { children: ReactNode; wide?: boolean }) {
   return (
     <main className={`mx-auto min-h-screen px-6 py-10 ${wide ? "max-w-5xl" : "max-w-3xl"}`}>
@@ -43,18 +36,6 @@ export function PricingShell({ children, wide }: { children: ReactNode; wide?: b
         <Link to="/" className="text-muted-foreground hover:text-foreground">
           ← Back to interview practice
         </Link>
-        <nav aria-label="Pricing design drafts" className="flex gap-1 rounded-full border p-1">
-          {DESIGNS.map((design) => (
-            <Link
-              key={design.to}
-              to={design.to}
-              className="rounded-full px-3 py-1 text-xs text-muted-foreground"
-              activeProps={{ className: "bg-secondary text-foreground" }}
-            >
-              {design.label}
-            </Link>
-          ))}
-        </nav>
       </div>
       {children}
     </main>

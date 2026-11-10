@@ -27,6 +27,11 @@ function LifetimePricing() {
           Your first {free === 1 ? "interview is" : `${free} interviews are`} free. No
           subscriptions, ever.
         </p>
+        <p className="mx-auto mt-6 max-w-xl text-sm text-muted-foreground">
+          <span className="font-medium text-foreground">Built on real Cambridge context.</span> Made
+          by Cambridge students and informed by real Cambridge geography notes, so Dr River covers
+          more ground than any one interviewer can hold in their head.
+        </p>
       </section>
 
       <section className="mx-auto mt-12 grid max-w-4xl items-stretch gap-6 md:grid-cols-[1fr_1.15fr]">
