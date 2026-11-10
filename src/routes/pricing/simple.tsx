@@ -19,7 +19,7 @@ function SimplePricing() {
           Practise first. Pay later.
         </h1>
         <p className="mt-4 text-muted-foreground">
-          Your first {free === 1 ? "interview is" : `${free} interviews are`} free. If Dr Hale
+          Your first {free === 1 ? "interview is" : `${free} interviews are`} free. If Dr River
           helps, pick up two more.
         </p>
       </section>
@@ -35,7 +35,7 @@ function SimplePricing() {
         <ul className="space-y-3 p-8 text-sm">
           <li className="flex gap-3">
             <Check />
-            {pack.interviews} voice interviews with Dr Hale, up to {minutes} minutes each
+            {pack.interviews} voice interviews with Dr River, up to {minutes} minutes each
           </li>
           <li className="flex gap-3">
             <Check />

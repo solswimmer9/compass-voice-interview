@@ -15,7 +15,7 @@ export function pricingHead(title: string) {
       { title: `${title} | Oxbridge Interview Practice` },
       {
         name: "description",
-        content: `Your first interview with Dr Hale is free. Then the ${INTERVIEW_PACK.name} gives you two more, each with AI reasoning feedback.`,
+        content: `Your first interview with Dr River is free. Then the ${INTERVIEW_PACK.name} gives you two more, each with AI reasoning feedback.`,
       },
       { property: "og:title", content: "Pricing · Oxbridge Interview Practice" },
       {
@@ -32,6 +32,7 @@ const DESIGNS = [
   { to: "/pricing/simple", label: "1 · Simple" },
   { to: "/pricing/compare", label: "2 · Compare" },
   { to: "/pricing/guide", label: "3 · Guide" },
+  { to: "/pricing/lifetime", label: "4 · Lifetime" },
 ] as const;
 
 /** Page frame with a back link and a switcher between the three draft designs. */

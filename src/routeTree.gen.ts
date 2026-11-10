@@ -18,6 +18,7 @@ import { Route as CheckoutSuccessRouteImport } from './routes/checkout/success'
 import { Route as PricingIndexRouteImport } from './routes/pricing/index'
 import { Route as PricingCompareRouteImport } from './routes/pricing/compare'
 import { Route as PricingGuideRouteImport } from './routes/pricing/guide'
+import { Route as PricingLifetimeRouteImport } from './routes/pricing/lifetime'
 import { Route as PricingSimpleRouteImport } from './routes/pricing/simple'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
@@ -66,6 +67,11 @@ const PricingGuideRoute = PricingGuideRouteImport.update({
   path: '/pricing/guide',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PricingLifetimeRoute = PricingLifetimeRouteImport.update({
+  id: '/pricing/lifetime',
+  path: '/pricing/lifetime',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PricingSimpleRoute = PricingSimpleRouteImport.update({
   id: '/pricing/simple',
   path: '/pricing/simple',
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/checkout/success': typeof CheckoutSuccessRoute
   '/pricing/compare': typeof PricingCompareRoute
   '/pricing/guide': typeof PricingGuideRoute
+  '/pricing/lifetime': typeof PricingLifetimeRoute
   '/pricing/simple': typeof PricingSimpleRoute
   '/pricing/': typeof PricingIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -100,6 +107,7 @@ export interface FileRoutesByTo {
   '/checkout/success': typeof CheckoutSuccessRoute
   '/pricing/compare': typeof PricingCompareRoute
   '/pricing/guide': typeof PricingGuideRoute
+  '/pricing/lifetime': typeof PricingLifetimeRoute
   '/pricing/simple': typeof PricingSimpleRoute
   '/pricing': typeof PricingIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -114,6 +122,7 @@ export interface FileRoutesById {
   '/checkout/success': typeof CheckoutSuccessRoute
   '/pricing/compare': typeof PricingCompareRoute
   '/pricing/guide': typeof PricingGuideRoute
+  '/pricing/lifetime': typeof PricingLifetimeRoute
   '/pricing/simple': typeof PricingSimpleRoute
   '/pricing/': typeof PricingIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -129,6 +138,7 @@ export interface FileRouteTypes {
     | '/checkout/success'
     | '/pricing/compare'
     | '/pricing/guide'
+    | '/pricing/lifetime'
     | '/pricing/simple'
     | '/pricing/'
     | '/api/public/payments/webhook'
@@ -142,6 +152,7 @@ export interface FileRouteTypes {
     | '/checkout/success'
     | '/pricing/compare'
     | '/pricing/guide'
+    | '/pricing/lifetime'
     | '/pricing/simple'
     | '/pricing'
     | '/api/public/payments/webhook'
@@ -155,6 +166,7 @@ export interface FileRouteTypes {
     | '/checkout/success'
     | '/pricing/compare'
     | '/pricing/guide'
+    | '/pricing/lifetime'
     | '/pricing/simple'
     | '/pricing/'
     | '/api/public/payments/webhook'
@@ -169,6 +181,7 @@ export interface RootRouteChildren {
   CheckoutSuccessRoute: typeof CheckoutSuccessRoute
   PricingCompareRoute: typeof PricingCompareRoute
   PricingGuideRoute: typeof PricingGuideRoute
+  PricingLifetimeRoute: typeof PricingLifetimeRoute
   PricingSimpleRoute: typeof PricingSimpleRoute
   PricingIndexRoute: typeof PricingIndexRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -239,6 +252,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PricingGuideRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pricing/lifetime': {
+      id: '/pricing/lifetime'
+      path: '/pricing/lifetime'
+      fullPath: '/pricing/lifetime'
+      preLoaderRoute: typeof PricingLifetimeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pricing/simple': {
       id: '/pricing/simple'
       path: '/pricing/simple'
@@ -265,6 +285,7 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutSuccessRoute: CheckoutSuccessRoute,
   PricingCompareRoute: PricingCompareRoute,
   PricingGuideRoute: PricingGuideRoute,
+  PricingLifetimeRoute: PricingLifetimeRoute,
   PricingSimpleRoute: PricingSimpleRoute,
   PricingIndexRoute: PricingIndexRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,

@@ -10,7 +10,7 @@ export const Route = createFileRoute("/pricing/compare")({
 function ComparePricing() {
   const { pack, free, minutes } = PRICING_FACTS;
   const rows: { label: string; free: string; pack: string }[] = [
-    { label: "Voice interviews with Dr Hale", free: String(free), pack: String(pack.interviews) },
+    { label: "Voice interviews with Dr River", free: String(free), pack: String(pack.interviews) },
     {
       label: "Length of each interview",
       free: `Up to ${minutes} min`,
@@ -42,7 +42,7 @@ function ComparePricing() {
           <ul className="mt-6 flex-1 space-y-3 text-sm">
             <li className="flex gap-3">
               <Check />
-              {free} full voice interview with Dr Hale
+              {free} full voice interview with Dr River
             </li>
             <li className="flex gap-3">
               <Check />
@@ -62,7 +62,7 @@ function ComparePricing() {
           <ul className="mt-6 flex-1 space-y-3 text-sm">
             <li className="flex gap-3">
               <Check />
-              {pack.interviews} more voice interviews with Dr Hale
+              {pack.interviews} more voice interviews with Dr River
             </li>
             <li className="flex gap-3">
               <Check />
@@ -70,7 +70,7 @@ function ComparePricing() {
             </li>
             <li className="flex gap-3">
               <Check />
-              Practise new questions as Dr Hale rotates his openers
+              Practise new questions as Dr River rotates his openers
             </li>
           </ul>
           <div className="mt-8">

@@ -12,7 +12,7 @@ function GuidePricing() {
 
   const steps = [
     {
-      title: "Dr Hale asks",
+      title: "Dr River asks",
       body: "A Cambridge-style geography question, the kind that has no single right answer.",
     },
     {
@@ -58,7 +58,7 @@ function GuidePricing() {
           A real interview rehearsal, not a quiz.
         </h1>
         <p className="mt-4 max-w-xl text-muted-foreground">
-          Built by Cambridge students. Dr Hale is informed by real Cambridge geography notes and
+          Built by Cambridge students. Dr River is informed by real Cambridge geography notes and
           will challenge how you think, not just what you know.
         </p>
       </section>
@@ -82,7 +82,7 @@ function GuidePricing() {
           <ul className="mt-5 space-y-2 text-sm">
             <li className="flex gap-3">
               <Check />
-              {pack.interviews} voice interviews with Dr Hale
+              {pack.interviews} voice interviews with Dr River
             </li>
             <li className="flex gap-3">
               <Check />
