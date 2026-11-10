@@ -3,7 +3,7 @@ import { streamText, type ModelMessage } from "ai";
 import process from "node:process";
 import { createLovableAiGatewayProvider } from "./ai/gateway-helpers.ts";
 import { createLovableAiGatewayRunIdFetch } from "./ai/run-id.ts";
-import { REASONING_GUIDE } from "./interview-briefing.ts";
+import { NOTES_CONTEXT, REASONING_GUIDE } from "./interview-briefing.ts";
 import { limitMessage, takeFeedback, visitorKey } from "./rate-limit.server.ts";
 import { authenticateRequest } from "./request-auth.server.ts";
 import { isServerTester } from "./testers.ts";
@@ -23,7 +23,10 @@ Assess the candidate's reasoning, not their knowledge alone. Use British English
 If a video is provided, also briefly comment on delivery: pace, thinking aloud, composure and body language.
 Be honest, specific and encouraging. Under 400 words.
 
-${REASONING_GUIDE}`;
+${REASONING_GUIDE}
+
+${NOTES_CONTEXT}
+When judging the candidate, give most weight to how far they developed the ideas above in their own words.`;
 
 export async function handleAssess(request: Request) {
   const key = process.env["LOVABLE_API_KEY"];

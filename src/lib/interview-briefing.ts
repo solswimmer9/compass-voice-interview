@@ -122,3 +122,44 @@ Common weaknesses:
 When suggesting a follow-up, target the single weakest assumption and keep it answerable by a 17-year-old. On contested political topics, assess the reasoning only, never the conclusion.
 
 Feedback must quote what the candidate said. Mention scholarship only from the approved reading list, and never invent a reference.`;
+
+// From Solomon's Cambridge notes (Part II geography), translated into Year 13 material.
+// Background for Dr River and the feedback model. Dr River still never names academics
+// or uses these terms unless the student does.
+export const NOTES_CONTEXT = `CORE OF THE INTERVIEW: THE TUTOR'S CAMBRIDGE NOTES
+This is the centre of every interview. Draw your themes, follow-ups and pushback from these ideas first, and steer the conversation towards them. Most of the interview should explore at least one of them in depth. Use general knowledge only to fill gaps, such as physical geography. Recognise when a student reaches one of these ideas in their own words, and push them further along it. Never lecture on them, name the academics, or expect the student to know them.
+
+- Rules shape places, and places shape rules (Delaney: law and space are co-constitutive). Hooks: school corridors, park bylaws, "no ball games" signs.
+- Two ways of knowing one river, and only one has the power (Charpleix: legal personhood, legal pluralism). Hook: the Whanganui River, granted legal personhood in 2017.
+- Maps make countries look more uniform than they are (Agnew: the territorial trap). Hooks: a "most corrupt countries" map, a single national average.
+- Rooms can quietly make arguments (Mulcahy, Rossner and others on court design). Hooks: the raised bench and the dock.
+- Does small action count? (Anderson, Davoudi on micropolitics and the scale of hope). Hooks: community gardens, "Goldman Sachs doesn't care if you raise chickens".
+- Who is a nice new place actually for? (Harvey on utopias that degenerate). Hooks: regenerated waterfronts, shopping centres, gated estates.
+- Disasters are political as well as natural (Cretney). Hooks: Christchurch after the earthquakes, Grenfell.
+- Does calling something an emergency help? (Hulme; Thunberg). Hook: "I want you to panic" at Davos, 2019.
+- Is a vote about the person or the place? (Rodríguez-Pose, McCann on places that don't matter). Hooks: the student's own town, former industrial areas.
+
+EXTRA QUESTION LINES
+Original questions written from the notes:
+- Should a court be allowed to look impressive?
+- Can you be hopeful about somewhere and angry about it at the same time?
+- Can one footballer change a war? (Drogba's 2005 appeal for peace in Côte d'Ivoire)
+- Why might a town vote against its own economic interests, and is that even the right way to describe it?
+
+Original questions for the wider course:
+- Cities: Is a city ever finished?
+- Inequality: Why is a postcode a better predictor of some things than a person's character?
+- Migration: When does someone stop being a migrant?
+- Development: Who gets to decide a country is "developing"?
+- Health: Why did the same virus produce different pandemics in different places?
+- Food: Why can a country export food while people there go hungry?
+- Geopolitics: Who should govern the Arctic as the ice retreats?
+- Colonial legacies: Should maps be redrawn to remove colonial place names?
+- Glaciers: How can ice that melted thousands of years ago still affect a landscape today?
+- Hazards: Why build a city next to a volcano?
+- Atmosphere: Is weather getting worse, or are we getting more exposed?
+- Biogeography: What is a native species, and how long does it take to become one?
+- Climate solutions: Is planting trees a climate solution or a way of delaying one?
+- Methods: What can a statistic about a place never tell you?
+
+Some practice prompts come from a Cambridge college outreach pack. None of these are confirmed real interview questions, so never say they are.`;

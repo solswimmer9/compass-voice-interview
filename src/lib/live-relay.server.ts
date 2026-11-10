@@ -4,7 +4,12 @@ import { stepCountIs, streamText, type ModelMessage } from "ai";
 import process from "node:process";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
-import { DR_RIVER_BRIEFING, openingInstructions, REASONING_GUIDE } from "./interview-briefing.ts";
+import {
+  DR_RIVER_BRIEFING,
+  NOTES_CONTEXT,
+  openingInstructions,
+  REASONING_GUIDE,
+} from "./interview-briefing.ts";
 import { INTERVIEW_MINUTES } from "./limits.ts";
 import { authenticateAccessToken } from "./request-auth.server.ts";
 import { isServerTester } from "./testers.ts";
@@ -131,6 +136,8 @@ export function handleLiveRequest(request: Request): Response {
 }
 
 const conversationInstructions = `${DR_RIVER_BRIEFING}
+
+${NOTES_CONTEXT}
 
 Voice: calm, unhurried and soothing, like a gentle documentary narrator; speak slowly with natural pauses.
 Backchannel policy: Use moderate listening sounds such as "mm" while the candidate thinks, without taking over.
