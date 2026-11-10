@@ -37,9 +37,9 @@ export const READINGS: Reading[] = [
       "What would you need to measure to decide whether the hippos are good or bad for the river?",
     ],
     tutorThoughts: [
-      "The word 'invasive' does a lot of moral work. Nobody calls the English rabbit or the sycamore invasive any more. When does an outsider become part of a place?",
+      "The word 'invasive' does a lot of moral work. Few people now think of the rabbit or the sycamore in Britain as invasive, though both were introduced. When does an outsider become part of a place?",
       "If the hippos fill the role of animals that went extinct thousands of years ago, the argument quietly assumes some past state of nature is the 'right' one. Which past, and who chooses it?",
-      "The local view is missing from most coverage: fishers and farmers who share the river with a three-tonne animal see a safety and livelihood question, not an ecology debate.",
+      "Ask whose view is missing: fishers and farmers who share the river with an animal weighing well over a tonne may see a safety and livelihood question, not an ecology debate.",
       "The story only exists because of a drug lord. Should the way something arrived affect how we judge its effects?",
     ],
   },
@@ -109,7 +109,7 @@ export const READINGS: Reading[] = [
     ],
     tutorThoughts: [
       "Separate the argument from the author. A former oil and gas executive making this case is worth noticing, but it does not by itself make the argument wrong. Judge the reasoning.",
-      "The essay's strongest point may be that cheap energy lifted billions out of poverty. Its weakest may be whose 'progress' it counts: those who gained most are often not those most exposed to the costs.",
+      "The essay's strongest point may be that cheap energy lifted billions out of poverty. Then ask the student to test whose 'progress' it counts: are the people who gained most the same people most exposed to the costs?",
       "Words matter here. 'Crisis', 'emergency' and 'by-product' each frame what action seems reasonable. Ask the student what each word licenses.",
       "Stay strictly neutral on the politics. Test the student's reasoning equally whichever side they take.",
     ],

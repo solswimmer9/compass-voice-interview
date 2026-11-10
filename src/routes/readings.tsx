@@ -39,7 +39,7 @@ function ReadingsPage() {
         <p className="mt-4 text-muted-foreground">
           Some colleges give you a short article 30 minutes before an interview, then spend the
           first 10 to 15 minutes discussing it. These are articles Keble College, Oxford, says it
-          used. Give yourself 30 minutes with one, then work through the questions out loud.
+          used. Give yourself 15 minutes with one, then work through the questions out loud.
         </p>
       </section>
 

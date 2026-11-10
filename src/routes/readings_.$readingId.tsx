@@ -32,6 +32,12 @@ function ReadingSessionPage() {
     return () => clearInterval(timer);
   }, [startedAt]);
 
+  function startTimer() {
+    if (startedAt !== null) return;
+    setStartedAt(Date.now());
+    setNow(Date.now());
+  }
+
   if (!found) return null;
   const reading = found;
   const total = READING_MINUTES * 60;
@@ -63,12 +69,8 @@ function ReadingSessionPage() {
             href={reading.url}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => {
-              if (startedAt === null) {
-                setStartedAt(Date.now());
-                setNow(Date.now());
-              }
-            }}
+            onClick={startTimer}
+            onAuxClick={startTimer}
             className="group mt-3 flex items-center justify-between gap-4 rounded-lg border bg-background p-4 text-left transition hover:border-foreground/40"
           >
             <span>
