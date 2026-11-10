@@ -1,5 +1,6 @@
 # Roadmap
 
+- [x] Replace the legal seller placeholder with the approved name Solomon Allen and check the public policy pages.
 - [x] Voice geography interview MVP with transcript replay
 - [x] Calmer, narrator-style voice
 - [x] ElevenLabs natural British voice for the live two-way interview
