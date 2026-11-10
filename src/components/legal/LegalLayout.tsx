@@ -27,7 +27,7 @@ export function LegalFooter() {
         <Link to="/privacy" className="hover:text-foreground">Privacy Notice</Link>
         <Link to="/refunds" className="hover:text-foreground">Refund Policy</Link>
       </nav>
-      <p className="mt-2">© 2026 {SELLER_NAME}. Payments processed by Paddle.com, our Merchant of Record.</p>
+      <p className="mt-2">© 2026 {SELLER_NAME}. Payments are processed securely by Stripe.</p>
     </footer>
   );
 }

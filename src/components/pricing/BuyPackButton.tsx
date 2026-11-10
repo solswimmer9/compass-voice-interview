@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { useAuth } from "@/components/AuthProvider";
-import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { INTERVIEW_PACK, type Offer } from "@/lib/offer";
 import { cn } from "@/lib/utils";
 
@@ -15,7 +17,7 @@ export function BuyPackButton({
   offer?: Offer;
 }) {
   const { user, loading } = useAuth();
-  const checkout = usePaddleCheckout();
+  const [open, setOpen] = useState(false);
   const base =
     "inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-40";
 
@@ -31,24 +33,18 @@ export function BuyPackButton({
     <div>
       <button
         type="button"
-        disabled={loading || checkout.loading || !user}
-        onClick={() =>
-          user &&
-          void checkout.openCheckout({
-            priceId: offer.priceId,
-            customerEmail: user.email,
-            userId: user.id,
-          })
-        }
+        disabled={loading || !user}
+        onClick={() => setOpen(true)}
         className={cn(base, className)}
       >
-        {checkout.loading ? "Opening checkout…" : (label ?? `Buy · ${offer.displayPrice}`)}
+        {label ?? `Buy · ${offer.displayPrice}`}
       </button>
-      {checkout.error && (
-        <p role="alert" className="mt-3 text-sm text-destructive">
-          {checkout.error}
-        </p>
-      )}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
+          <DialogTitle>{offer.name}</DialogTitle>
+          {open && <StripeEmbeddedCheckout priceId={offer.priceId} />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

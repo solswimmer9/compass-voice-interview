@@ -4,22 +4,21 @@ import { INTERVIEW_PACK, LIFETIME_ACCESS, offerForPriceId } from "@/lib/offer";
 const upsert = vi.fn();
 const verifyWebhook = vi.fn();
 
-vi.mock("@/lib/paddle.server", () => ({
-  EventName: { TransactionCompleted: "transaction.completed" },
-  verifyWebhook,
-}));
+vi.mock("@/lib/stripe.server", () => ({ verifyWebhook }));
 vi.mock("@/integrations/supabase/client.server", () => ({
   supabaseAdmin: { from: () => ({ upsert }) },
 }));
 
 function completedPayment(priceId: string) {
   verifyWebhook.mockResolvedValue({
-    eventType: "transaction.completed",
+    type: "checkout.session.completed",
     data: {
-      id: "txn_123",
-      customerId: "ctm_123",
-      customData: { userId: "user-1" },
-      items: [{ price: { importMeta: { externalId: priceId } } }],
+      object: {
+        id: "cs_123",
+        customer: "cus_123",
+        payment_status: "paid",
+        metadata: { userId: "user-1", priceId },
+      },
     },
   });
   return new Request("https://example.test/api/public/payments/webhook?env=sandbox", {

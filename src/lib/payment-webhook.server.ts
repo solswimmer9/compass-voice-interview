@@ -1,14 +1,15 @@
-import { EventName, verifyWebhook, type PaddleEnv } from "@/lib/paddle.server";
+import { verifyWebhook, type StripeEnv } from "@/lib/stripe.server";
 import { offerForPriceId } from "@/lib/offer";
 
-async function handleTransactionCompleted(data: any, env: PaddleEnv) {
-  const userId = data.customData?.userId;
+// Credits the purchase once per checkout session. The purchases table keeps its original
+// column names (paddle_transaction_id / paddle_customer_id); they now hold Stripe IDs.
+async function fulfilCheckout(session: any, env: StripeEnv) {
+  const userId = session.metadata?.userId;
   if (typeof userId !== "string" || !userId) {
     console.error("Payment completed without a user ID");
     return;
   }
-  const item = data.items?.[0];
-  const priceId = item?.price?.importMeta?.externalId;
+  const priceId = session.metadata?.priceId;
   const offer = offerForPriceId(priceId);
   if (!offer) {
     console.warn("Skipping payment with an unrecognised price");
@@ -18,8 +19,8 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
   const { error } = await supabaseAdmin.from("purchases").upsert(
     {
       user_id: userId,
-      paddle_transaction_id: data.id,
-      paddle_customer_id: data.customerId,
+      paddle_transaction_id: session.id,
+      paddle_customer_id: typeof session.customer === "string" ? session.customer : session.customer?.id ?? null,
       product_id: offer.productId,
       price_id: priceId,
       status: "completed",
@@ -33,17 +34,19 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
 }
 
 export async function handlePaymentWebhook(request: Request) {
-  const url = new URL(request.url);
-  const requestedEnv = url.searchParams.get("env") || "sandbox";
-  if (requestedEnv !== "sandbox" && requestedEnv !== "live") {
-    return Response.json({ error: "Invalid environment" }, { status: 400 });
+  const env = new URL(request.url).searchParams.get("env");
+  if (env !== "sandbox" && env !== "live") {
+    return Response.json({ received: true, ignored: "invalid env" });
   }
   try {
-    const event = await verifyWebhook(request, requestedEnv);
-    if (event.eventType === EventName.TransactionCompleted) {
-      await handleTransactionCompleted(event.data, requestedEnv);
+    const event = await verifyWebhook(request, env);
+    const session = event.data.object;
+    if (event.type === "checkout.session.completed") {
+      if (session.payment_status !== "unpaid") await fulfilCheckout(session, env);
+    } else if (event.type === "checkout.session.async_payment_succeeded") {
+      await fulfilCheckout(session, env);
     } else {
-      console.log("Unhandled payment event:", event.eventType);
+      console.log("Unhandled payment event:", event.type);
     }
     return Response.json({ received: true });
   } catch (error) {

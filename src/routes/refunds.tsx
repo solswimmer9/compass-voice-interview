@@ -24,16 +24,7 @@ function RefundsPage() {
       </p>
       <h2>How to request a refund</h2>
       <p>
-        Refunds are processed by our payment provider and Merchant of Record, Paddle. To request one,
-        visit <a href="https://paddle.net" target="_blank" rel="noopener noreferrer">paddle.net</a>{" "}
-        and look up your order using the email on your receipt, or reply to your receipt email.
-      </p>
-      <p>
-        See also{" "}
-        <a href="https://www.paddle.com/legal/refund-policy" target="_blank" rel="noopener noreferrer">
-          Paddle's refund policy
-        </a>
-        .
+        To request a refund, reply to your payment receipt email or contact us with the email address you used to buy. Approved refunds go back to your original payment method, usually within 5–10 working days.
       </p>
     </LegalLayout>
   );
