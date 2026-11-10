@@ -8,9 +8,10 @@
 - [x] Optional video upload for assessment
 - [x] Enable built-in payments with Paddle (chosen after the eligibility check)
 - [x] Choose the £20 two-interview pack, free allowance, and no-subscription rules with Solomon
-- [ ] Add the pack to the payment provider — blocked: product creation was declined twice at confirmation
+- [x] Add the £20 pack and £100 lifetime access to the payment provider
 - [x] Build checkout, customer accounts, profiles, and interview/feedback allowance logic
-- [ ] Verify a signed-in test purchase end to end — needs a customer account and the approved provider product
+- [ ] Verify a signed-in test purchase, automatic credit, full refund, and credit revocation end to end — blocked: Stripe's automated card submission stalled twice; manual checkout needed
+- [ ] Explain how checkout, refunds, and interview entitlements work, including the manual test steps
 - [x] Allow unlimited preview testing while preserving published-site allowances
 - [x] Restore the interview used by the failed 13:49 connection and refund future failed voice starts automatically
 - [x] Recognize the current live-preview host for unlimited testing
