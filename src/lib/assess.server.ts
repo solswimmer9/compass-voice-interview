@@ -6,7 +6,7 @@ import { createLovableAiGatewayRunIdFetch } from "./ai/run-id.ts";
 import { REASONING_GUIDE } from "./interview-briefing.ts";
 import { limitMessage, takeFeedback, visitorKey } from "./rate-limit.server.ts";
 import { authenticateRequest } from "./request-auth.server.ts";
-import { isPreviewRequest } from "./preview.ts";
+import { isServerTester } from "./testers.ts";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1";
 const TEXT_MODEL = "openai/gpt-6-astra";
@@ -29,11 +29,15 @@ export async function handleAssess(request: Request) {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) return Response.json({ error: "AI is not configured" }, { status: 500 });
 
-  const preview = isPreviewRequest(request);
+  const auth = await authenticateRequest(request);
+  const preview = isServerTester(auth?.user.email);
   if (!preview) {
     const allowed = takeFeedback(visitorKey(request));
     if (!allowed.ok) {
-      return Response.json({ error: limitMessage("feedback", allowed.retryAfterMinutes) }, { status: 429 });
+      return Response.json(
+        { error: limitMessage("feedback", allowed.retryAfterMinutes) },
+        { status: 429 },
+      );
     }
   }
 
@@ -43,29 +47,53 @@ export async function handleAssess(request: Request) {
   } catch {
     return Response.json({ error: "Invalid request" }, { status: 400 });
   }
-  const transcript = typeof body.transcript === "string" ? body.transcript.trim().slice(0, 40_000) : "";
+  const transcript =
+    typeof body.transcript === "string" ? body.transcript.trim().slice(0, 40_000) : "";
   const video = typeof body.video === "string" ? body.video : "";
-  const videoType = typeof body.videoType === "string" && body.videoType.startsWith("video/") ? body.videoType : "video/mp4";
+  const videoType =
+    typeof body.videoType === "string" && body.videoType.startsWith("video/")
+      ? body.videoType
+      : "video/mp4";
   const interviewId = typeof body.interviewId === "string" ? body.interviewId : "";
-  if (!transcript && !video) return Response.json({ error: "Add a transcript or a video" }, { status: 400 });
-  if (video && video.length * 0.75 > MAX_VIDEO_BYTES) return Response.json({ error: "Video must be under 20 MB" }, { status: 413 });
-  if (!preview && !/^[0-9a-f-]{36}$/i.test(interviewId)) return Response.json({ error: "A valid interview is required" }, { status: 400 });
+  if (!transcript && !video)
+    return Response.json({ error: "Add a transcript or a video" }, { status: 400 });
+  if (video && video.length * 0.75 > MAX_VIDEO_BYTES)
+    return Response.json({ error: "Video must be under 20 MB" }, { status: 413 });
+  if (!preview && !/^[0-9a-f-]{36}$/i.test(interviewId))
+    return Response.json({ error: "A valid interview is required" }, { status: 400 });
 
   if (!preview) {
-    const auth = await authenticateRequest(request);
     if (!auth) return Response.json({ error: "Sign in to request feedback" }, { status: 401 });
-    const { data: feedbackAvailable, error: allowanceError } = await auth.supabase.rpc("consume_feedback", {
-      p_interview_id: interviewId,
-    });
-    if (allowanceError) return Response.json({ error: "Your feedback allowance could not be checked" }, { status: 500 });
-    if (!feedbackAvailable) return Response.json({ error: "This interview’s feedback has already been used." }, { status: 403 });
+    const { data: feedbackAvailable, error: allowanceError } = await auth.supabase.rpc(
+      "consume_feedback",
+      {
+        p_interview_id: interviewId,
+      },
+    );
+    if (allowanceError)
+      return Response.json(
+        { error: "Your feedback allowance could not be checked" },
+        { status: 500 },
+      );
+    if (!feedbackAvailable)
+      return Response.json(
+        { error: "This interview’s feedback has already been used." },
+        { status: 403 },
+      );
   }
 
-  const intro = transcript ? `Interview transcript:\n\n${transcript}` : "No transcript was provided; assess from the video.";
+  const intro = transcript
+    ? `Interview transcript:\n\n${transcript}`
+    : "No transcript was provided; assess from the video.";
   const messages: ModelMessage[] = [
     {
       role: "user",
-      content: video ? [{ type: "text", text: intro }, { type: "file", data: video, mediaType: videoType }] : intro,
+      content: video
+        ? [
+            { type: "text", text: intro },
+            { type: "file", data: video, mediaType: videoType },
+          ]
+        : intro,
     },
   ];
 
@@ -107,21 +135,26 @@ export async function handleAssess(request: Request) {
           if (part.type === "text-delta") controller.enqueue(encoder.encode(part.text));
           if (part.type === "error") {
             const err = part.error as { statusCode?: number; message?: string };
-            const message = err?.statusCode === 402
-              ? "AI credits have run out. Add credits to your workspace to continue."
-              : err?.statusCode === 429
-                ? "Too many requests right now. Please try again in a minute."
-                : "The assessment could not be completed.";
+            const message =
+              err?.statusCode === 402
+                ? "AI credits have run out. Add credits to your workspace to continue."
+                : err?.statusCode === 429
+                  ? "Too many requests right now. Please try again in a minute."
+                  : "The assessment could not be completed.";
             controller.enqueue(encoder.encode(`\n\n[[error]]${message}`));
           }
         }
       } catch {
-        if (!request.signal.aborted) controller.enqueue(encoder.encode("\n\n[[error]]The assessment could not be completed."));
+        if (!request.signal.aborted)
+          controller.enqueue(encoder.encode("\n\n[[error]]The assessment could not be completed."));
       }
       controller.close();
     },
   });
   return new Response(stream, {
-    headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-cache, no-transform" },
+    headers: {
+      "content-type": "text/plain; charset=utf-8",
+      "cache-control": "no-cache, no-transform",
+    },
   });
 }

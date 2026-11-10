@@ -1,3 +1,5 @@
+// Browser-only: decides which UI to show. Never use this to grant access on the server;
+// see testers.ts for that.
 const PREVIEW_SUFFIXES = ["lovable.app", "gpt-eng.com", "gptengineer.run"];
 
 export function isPreviewHostname(value: string) {
@@ -14,10 +16,6 @@ export function isPreviewHostname(value: string) {
     return labels.length === suffixLabels + 2;
   }
   return false;
-}
-
-export function isPreviewRequest(request: Request) {
-  return isPreviewHostname(new URL(request.url).hostname);
 }
 
 export function isPreviewBrowser() {

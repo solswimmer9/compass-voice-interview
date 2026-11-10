@@ -99,9 +99,13 @@ function InterviewPage() {
       <DotPattern className="h-[100svh] [mask-image:radial-gradient(520px_circle_at_center,white,transparent)]" />
       <nav className="relative z-20 mx-auto flex max-w-2xl justify-end gap-4 px-6 pt-6 text-sm">
         {account.user ? (
-          <Link to="/account" className="underline">Your account</Link>
+          <Link to="/account" className="underline">
+            Your account
+          </Link>
         ) : (
-          <Link to="/auth" className="underline">Sign in</Link>
+          <Link to="/auth" className="underline">
+            Sign in
+          </Link>
         )}
       </nav>
       <main className="relative z-10 mx-auto flex min-h-[100svh] max-w-2xl flex-col justify-center px-6 py-16">
@@ -155,25 +159,34 @@ function InterviewPage() {
 
         <section className="mt-6 rounded-md border bg-card p-6">
           <div className="flex flex-wrap items-center justify-center gap-3">
-            {idle ? !preview && !account.user ? (
-              <Link to="/auth" className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground">
-                Sign in to start
-              </Link>
-            ) : !preview && account.data?.totalRemaining === 0 ? (
-              <button
-                onClick={() => document.getElementById("interview-pack")?.scrollIntoView({ behavior: "smooth" })}
-                className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
-              >
-                Get 2 more interviews
-              </button>
-            ) : (
-              <button
-                onClick={start}
-                disabled={!preview && account.loading}
-                className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
-              >
-                {showReplay ? "Start a new interview" : "Start interview"}
-              </button>
+            {idle ? (
+              !account.user ? (
+                <Link
+                  to="/auth"
+                  className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
+                >
+                  Sign in to start
+                </Link>
+              ) : !preview && account.data?.totalRemaining === 0 ? (
+                <button
+                  onClick={() =>
+                    document
+                      .getElementById("interview-pack")
+                      ?.scrollIntoView({ behavior: "smooth" })
+                  }
+                  className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
+                >
+                  Get 2 more interviews
+                </button>
+              ) : (
+                <button
+                  onClick={start}
+                  disabled={!preview && account.loading}
+                  className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
+                >
+                  {showReplay ? "Start a new interview" : "Start interview"}
+                </button>
+              )
             ) : (
               <>
                 <span
@@ -207,11 +220,18 @@ function InterviewPage() {
             Dr Hale speaks with a natural British voice from ElevenLabs.
           </p>
           {preview ? (
-            <p className="mt-2 text-center text-xs text-muted-foreground">Unlimited preview testing · no purchase needed</p>
-          ) : account.user && account.data && (
             <p className="mt-2 text-center text-xs text-muted-foreground">
-              {account.data.totalRemaining} {account.data.totalRemaining === 1 ? "interview" : "interviews"} remaining · {account.data.freeRemaining} free · {account.data.paidRemaining} purchased
+              Preview mode · unlimited testing for tester accounts
             </p>
+          ) : (
+            account.user &&
+            account.data && (
+              <p className="mt-2 text-center text-xs text-muted-foreground">
+                {account.data.totalRemaining}{" "}
+                {account.data.totalRemaining === 1 ? "interview" : "interviews"} remaining ·{" "}
+                {account.data.freeRemaining} free · {account.data.paidRemaining} purchased
+              </p>
+            )
           )}
           {call.error && (
             <p role="alert" className="mt-4 text-sm text-destructive">

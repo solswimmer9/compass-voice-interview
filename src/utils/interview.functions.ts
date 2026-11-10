@@ -1,13 +1,17 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { getRequest } from "@tanstack/react-start/server";
-import { isPreviewRequest } from "@/lib/preview";
+import { isServerTester } from "@/lib/testers";
 
 export const startPreviewInterviewSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ openingTurn: z.number().int().positive() }))
-  .handler(async ({ data }) => {
-    if (!isPreviewRequest(getRequest())) throw new Error("Preview testing is not available on the published site");
+  .handler(async ({ data, context }) => {
+    if (!isServerTester(context.claims.email)) {
+      throw new Error(
+        "Unlimited testing is only available to tester accounts. Sign in with a tester account.",
+      );
+    }
     const { createElevenLabsSession } = await import("@/lib/elevenlabs-interview.server");
     const session = await createElevenLabsSession(data.openingTurn);
     return { ...session, interviewId: "preview" };
