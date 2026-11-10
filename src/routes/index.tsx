@@ -3,7 +3,7 @@ import { readingById } from "@/lib/readings";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLiveVoice, type LiveEvent } from "@/hooks/use-live-voice";
 import { supabase } from "@/integrations/supabase/client";
-import { getPaddleEnvironment } from "@/lib/paddle";
+import { getPaymentsEnvironment } from "@/lib/stripe";
 import { AssessPanel } from "@/components/AssessPanel";
 import { FlippingWord } from "@/components/FlippingWord";
 import { DotPattern } from "@/components/ui/dot-pattern";
@@ -117,7 +117,7 @@ function InterviewPage() {
   const { reading: readingParam } = Route.useSearch();
   const reading = readingById(readingParam);
   const getStartContext = useCallback(async () => {
-    const environment = getPaddleEnvironment();
+    const environment = getPaymentsEnvironment();
     const { data } = await supabase.auth.getSession();
     const accessToken = data.session?.access_token;
     if (!accessToken) throw new Error("Please sign in again before starting your interview.");

@@ -62,13 +62,7 @@ function TermsPage() {
       </p>
       <h2>Payments</h2>
       <p>
-        Our order process is conducted by our online reseller Paddle.com. Paddle.com is the Merchant
-        of Record for all our orders. Paddle provides all customer service inquiries and handles
-        returns. Payment, billing, tax and refund terms are set out in{" "}
-        <a href="https://www.paddle.com/legal/checkout-buyer-terms" target="_blank" rel="noopener noreferrer">
-          Paddle's Buyer Terms
-        </a>
-        . Our offers are one-off payments, not subscriptions.
+        Payments are taken securely by our payment processor, Stripe. Prices are shown in GBP and include any applicable tax. Refunds are covered by our Refund Policy. Our offers are one-off payments, not subscriptions.
       </p>
       <h2>Availability</h2>
       <p>

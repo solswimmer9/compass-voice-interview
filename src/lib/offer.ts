@@ -12,7 +12,7 @@ export const INTERVIEW_PACK = {
 
 // Lifetime access is stored as a purchase with a very large interview count, so the
 // existing database credit rules (consume, refund, one feedback per interview) apply
-// unchanged. The Paddle product must exist with this price external ID.
+// unchanged. The payment product must exist with this price ID.
 export const LIFETIME_INTERVIEWS = 100_000;
 export const LIFETIME_ACCESS = {
   productId: "lifetime_access",

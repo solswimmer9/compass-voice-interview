@@ -1,5 +1,6 @@
 # Roadmap
 
+- [x] Replace the legal seller placeholder with the approved name Solomon Allen and check the public policy pages.
 - [x] Voice geography interview MVP with transcript replay
 - [x] Calmer, narrator-style voice
 - [x] ElevenLabs natural British voice for the live two-way interview
@@ -15,3 +16,5 @@
 - [x] Recognize the current live-preview host for unlimited testing
 - [x] Replace ElevenLabs interviews with a natural Lovable live voice and verify a real voice session
 - [ ] Verify audible two-way playback in a real browser — blocked: the sandbox browser produces no WebRTC audio candidates; Lovable session creation and final usage are verified
+- [x] Switch payments to Stripe after the previous provider rejected AI products; recreate £20 pack and £100 lifetime products
+- [ ] Live payments: user must claim the Stripe account and finish go-live in the Payments tab

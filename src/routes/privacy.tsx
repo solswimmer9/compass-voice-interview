@@ -44,11 +44,11 @@ function PrivacyPage() {
           <strong>Support messages</strong> — to help you. Basis: legitimate interests.
         </li>
       </ul>
-      <p>Card and payment details are collected by Paddle, not by us.</p>
+      <p>Card and payment details are collected by Stripe, our payment processor, not by us.</p>
       <h2>Who we share it with</h2>
       <ul>
         <li>Service providers: hosting, database and authentication, and AI model providers that power the voice tutor and feedback.</li>
-        <li>Paddle, our Merchant of Record, for sales, payments, tax compliance and invoicing.</li>
+        <li>Stripe, our payment processor, for payments, fraud prevention, tax and receipts.</li>
         <li>Professional advisers (legal, accounting).</li>
         <li>Authorities where required by law.</li>
       </ul>
