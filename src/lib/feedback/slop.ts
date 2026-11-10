@@ -156,7 +156,8 @@ export function findSlop(text: string): SlopMatch[] {
           o.rule === m.rule &&
           o.index <= m.index &&
           o.index + o.phrase.length >= m.index + m.phrase.length &&
-          (o.phrase.length > m.phrase.length || (o.phrase.length === m.phrase.length && out.indexOf(o) < out.indexOf(m))),
+          (o.phrase.length > m.phrase.length ||
+            (o.phrase.length === m.phrase.length && out.indexOf(o) < out.indexOf(m))),
       ),
   );
   return deduped.sort((a, b) => a.index - b.index);

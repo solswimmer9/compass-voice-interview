@@ -26,7 +26,14 @@ const obs = (over: Partial<Observation> & Pick<Observation, "evidence">): Observ
 describe("parseTranscript", () => {
   it("numbers turns and assigns roles", () => {
     expect(turns).toHaveLength(6);
-    expect(turns.map((t) => t.role)).toEqual(["assistant", "user", "assistant", "user", "assistant", "user"]);
+    expect(turns.map((t) => t.role)).toEqual([
+      "assistant",
+      "user",
+      "assistant",
+      "user",
+      "assistant",
+      "user",
+    ]);
     expect(turns[1]!.turn).toBe(2);
     expect(turns[1]!.text.startsWith("I think")).toBe(true);
   });
@@ -56,7 +63,7 @@ describe("parseTranscript", () => {
 describe("normalise", () => {
   it("unifies case, quotes, dashes, punctuation and whitespace", () => {
     expect(normalise("  It’s   a “Cut-off” — really!  ")).toBe("its a cut off really");
-    expect(normalise("It's a \"cut-off\" - really")).toBe("its a cut off really");
+    expect(normalise('It\'s a "cut-off" - really')).toBe("its a cut off really");
   });
   it("handles non-strings", () => {
     expect(normalise(undefined as unknown as string)).toBe("");
@@ -79,7 +86,11 @@ describe("verifyObservations", () => {
       [
         obs({
           evidence: [
-            { turn: 2, quote: "I think it's because the outer bank erodes faster, so the meander migrates downstream" },
+            {
+              turn: 2,
+              quote:
+                "I think it's because the outer bank erodes faster, so the meander migrates downstream",
+            },
             { turn: 4, quote: "A CUT OFF forms when two bends meet" },
           ],
         }),
@@ -103,7 +114,10 @@ describe("verifyObservations", () => {
       { turn: 1, role: "user", text: "I really do not know the answer" },
       { turn: 2, role: "user", text: "I really do not know the answer" },
     ];
-    const { verified, dropped } = verifyObservations([obs({ evidence: [{ turn: 5, quote: "really do not know" }] })], t);
+    const { verified, dropped } = verifyObservations(
+      [obs({ evidence: [{ turn: 5, quote: "really do not know" }] })],
+      t,
+    );
     expect(verified).toHaveLength(0);
     expect(dropped).toHaveLength(1);
   });
@@ -142,7 +156,10 @@ describe("verifyObservations", () => {
     const o = obs({ evidence: [{ turn: 6, quote: "flood defences" }] });
     expect(verifyObservations([o], turns).verified).toHaveLength(0);
     expect(verifyObservations([o], turns, { minWords: 2 }).verified).toHaveLength(1);
-    expect(verifyObservations([obs({ evidence: [{ turn: 2, quote: "the outer bank" }] })], turns).verified).toHaveLength(0);
+    expect(
+      verifyObservations([obs({ evidence: [{ turn: 2, quote: "the outer bank" }] })], turns)
+        .verified,
+    ).toHaveLength(0);
   });
 
   it("does not match across word fragments", () => {
@@ -171,7 +188,10 @@ describe("verifyObservations", () => {
 
   it("drops an improvement whose only evidence is on unclear turns", () => {
     const t = turns.map((x) => (x.turn === 6 ? { ...x, unclear: true } : x));
-    const imp = obs({ kind: "improvement", evidence: [{ turn: 6, quote: "flood defences I suppose" }] });
+    const imp = obs({
+      kind: "improvement",
+      evidence: [{ turn: 6, quote: "flood defences I suppose" }],
+    });
     const r = verifyObservations([imp], t);
     expect(r.verified).toHaveLength(0);
     expect(r.dropped[0]!.reason).toMatch(/unclear/);
@@ -192,7 +212,10 @@ describe("verifyObservations", () => {
 
   it("still allows a strength to cite an unclear turn that matches", () => {
     const t = turns.map((x) => (x.turn === 6 ? { ...x, unclear: true } : x));
-    const r = verifyObservations([obs({ evidence: [{ turn: 6, quote: "flood defences I suppose" }] })], t);
+    const r = verifyObservations(
+      [obs({ evidence: [{ turn: 6, quote: "flood defences I suppose" }] })],
+      t,
+    );
     expect(r.verified).toHaveLength(1);
   });
 
@@ -215,7 +238,9 @@ describe("verifyObservations", () => {
     expect(verifyObservations(bad, turns).verified).toHaveLength(0);
     expect(() => verifyObservations(undefined as never, undefined as never)).not.toThrow();
     expect(verifyObservations([], [])).toEqual({ verified: [], dropped: [] });
-    expect(verifyObservations([obs({ evidence: [{ turn: 1, quote: "a b c d e" }] })], [])).toMatchObject({ verified: [] });
+    expect(
+      verifyObservations([obs({ evidence: [{ turn: 1, quote: "a b c d e" }] })], []),
+    ).toMatchObject({ verified: [] });
   });
 });
 
@@ -232,12 +257,18 @@ describe("findSlop", () => {
   const rulesOf = (s: string) => findSlop(s).map((m) => m.rule);
 
   it("flags generic praise and filler", () => {
-    expect(rulesOf("Great job! Keep up the good work.")).toEqual(["generic-praise", "generic-praise"]);
+    expect(rulesOf("Great job! Keep up the good work.")).toEqual([
+      "generic-praise",
+      "generic-praise",
+    ]);
     expect(rulesOf("Overall, you demonstrated strong communication skills.")).toEqual(
       expect.arrayContaining(["generic-summary", "generic-praise"]),
     );
     expect(rulesOf("You showed great potential.")).toContain("generic-praise");
-    expect(rulesOf("Let us delve into it. It’s important to note the following.")).toEqual(["filler", "filler"]);
+    expect(rulesOf("Let us delve into it. It’s important to note the following.")).toEqual([
+      "filler",
+      "filler",
+    ]);
     expect(rulesOf("A truly outstanding answer, simply superb.")).toContain("empty-superlative");
   });
 
@@ -256,7 +287,10 @@ describe("findSlop", () => {
   it("flags accent, fluency, appearance and body language, in British and American spellings", () => {
     expect(rulesOf("Your accent was clear.")).toEqual(["delivery-comment"]);
     expect(rulesOf("You were very fluent.")).toEqual(["delivery-comment"]);
-    expect(rulesOf("Good body language and eye contact.")).toEqual(["delivery-comment", "delivery-comment"]);
+    expect(rulesOf("Good body language and eye contact.")).toEqual([
+      "delivery-comment",
+      "delivery-comment",
+    ]);
     expect(rulesOf("Your demeanour was calm.")).toEqual(["delivery-comment"]);
     expect(rulesOf("Your demeanor was calm.")).toEqual(["delivery-comment"]);
     expect(rulesOf("Great composure.")).toEqual(["delivery-comment"]);

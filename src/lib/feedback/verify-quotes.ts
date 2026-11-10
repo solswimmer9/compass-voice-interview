@@ -44,7 +44,9 @@ export function verifyObservations(
   const verified: VerifiedObservation[] = [];
   const dropped: DroppedObservation[] = [];
   const minWords =
-    typeof options?.minWords === "number" && options.minWords >= 1 ? options.minWords : DEFAULT_MIN_WORDS;
+    typeof options?.minWords === "number" && options.minWords >= 1
+      ? options.minWords
+      : DEFAULT_MIN_WORDS;
   const safeTurns: Turn[] = Array.isArray(turns)
     ? turns.filter((t) => t && typeof t.turn === "number" && typeof t.text === "string")
     : [];
@@ -68,7 +70,11 @@ export function verifyObservations(
 
     for (const ev of obs.evidence) {
       if (!ev || typeof ev.quote !== "string" || typeof ev.turn !== "number") {
-        droppedEvidence.push({ turn: (ev as Evidence)?.turn, quote: (ev as Evidence)?.quote, reason: "malformed evidence" });
+        droppedEvidence.push({
+          turn: (ev as Evidence)?.turn,
+          quote: (ev as Evidence)?.quote,
+          reason: "malformed evidence",
+        });
         continue;
       }
       const q = normalise(ev.quote);
@@ -91,9 +97,15 @@ export function verifyObservations(
       } else if (named && named.role !== "user") {
         droppedEvidence.push({ ...ev, reason: "turn is not a student turn" });
       } else if (matches.length > 1) {
-        droppedEvidence.push({ ...ev, reason: "quote appears in several student turns; turn number is wrong" });
+        droppedEvidence.push({
+          ...ev,
+          reason: "quote appears in several student turns; turn number is wrong",
+        });
       } else {
-        droppedEvidence.push({ ...ev, reason: named ? "quote not found in the named turn" : "turn does not exist" });
+        droppedEvidence.push({
+          ...ev,
+          reason: named ? "quote not found in the named turn" : "turn does not exist",
+        });
       }
     }
 
@@ -101,7 +113,9 @@ export function verifyObservations(
     if (obs.kind === "improvement") {
       // An improvement may never lean on a turn the speech recognition flagged as unclear.
       const clear = kept.filter((_, i) => !keptTurns[i]?.unclear);
-      for (const e of kept) if (!clear.includes(e)) droppedEvidence.push({ turn: e.turn, quote: e.quote, reason: "turn marked unclear" });
+      for (const e of kept)
+        if (!clear.includes(e))
+          droppedEvidence.push({ turn: e.turn, quote: e.quote, reason: "turn marked unclear" });
       finalEvidence = clear;
     }
 
@@ -109,7 +123,10 @@ export function verifyObservations(
       const reasons = [...new Set(droppedEvidence.map((d) => d.reason))];
       dropped.push({
         observation: obs,
-        reason: obs.evidence.length === 0 ? "no evidence supplied" : `no surviving evidence (${reasons.join("; ")})`,
+        reason:
+          obs.evidence.length === 0
+            ? "no evidence supplied"
+            : `no surviving evidence (${reasons.join("; ")})`,
       });
       continue;
     }
