@@ -7,7 +7,6 @@ import { AssessPanel } from "@/components/AssessPanel";
 import { FlippingWord } from "@/components/FlippingWord";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import { INTERVIEW_MINUTES } from "@/lib/limits";
-import { PackCheckout } from "@/components/PackCheckout";
 import { useAccountSnapshot } from "@/hooks/useAccountSnapshot";
 import { isPreviewBrowser } from "@/lib/preview";
 
@@ -233,16 +232,12 @@ function InterviewPage() {
                   Sign in to start
                 </Link>
               ) : !preview && account.data?.totalRemaining === 0 ? (
-                <button
-                  onClick={() =>
-                    document
-                      .getElementById("interview-pack")
-                      ?.scrollIntoView({ behavior: "smooth" })
-                  }
+                <Link
+                  to="/pricing"
                   className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
                 >
-                  Get 2 more interviews
-                </button>
+                  Get more interviews
+                </Link>
               ) : (
                 <button
                   onClick={start}
@@ -318,8 +313,6 @@ function InterviewPage() {
             </p>
           )}
         </section>
-
-        {idle && <PackCheckout />}
 
         {lines.length > 0 && (
           <section className="mt-10">
