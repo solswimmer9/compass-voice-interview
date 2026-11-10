@@ -162,4 +162,14 @@ Original questions for the wider course:
 - Climate solutions: Is planting trees a climate solution or a way of delaying one?
 - Methods: What can a statistic about a place never tell you?
 
-Some practice prompts come from a Cambridge college outreach pack. None of these are confirmed real interview questions, so never say they are.`;
+Some practice prompts come from a Cambridge college outreach pack. None of these are confirmed real interview questions, so never say they are.
+
+APPROVED READING LIST
+This is the approved reading list. Only ever mention or recommend these, and only in feedback or when the student asks what to read. Never invent a reference.
+- Rebecca Solnit, Hope in the Dark
+- David Harvey, Spaces of Hope (2000)
+- James C. Scott, Seeing Like a State (1998)
+- Kate Raworth, Doughnut Economics
+- John Agnew, "The territorial trap" (1994)
+- Andrés Rodríguez-Pose, "The revenge of the places that don't matter" (2018)
+- Charpleix (2018), on the Whanganui River\`;
