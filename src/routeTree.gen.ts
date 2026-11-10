@@ -12,7 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as RefundsRouteImport } from './routes/refunds'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ApiAssessRouteImport } from './routes/api/assess'
 import { Route as CheckoutSuccessRouteImport } from './routes/checkout/success'
 import { Route as PricingIndexRouteImport } from './routes/pricing/index'
@@ -34,9 +37,24 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RefundsRoute = RefundsRouteImport.update({
+  id: '/refunds',
+  path: '/refunds',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAssessRoute = ApiAssessRouteImport.update({
@@ -70,7 +88,10 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/auth': typeof AuthRoute
+  '/privacy': typeof PrivacyRoute
+  '/refunds': typeof RefundsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/terms': typeof TermsRoute
   '/api/assess': typeof ApiAssessRoute
   '/checkout/success': typeof CheckoutSuccessRoute
   '/pricing/lifetime': typeof PricingLifetimeRoute
@@ -81,7 +102,10 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/auth': typeof AuthRoute
+  '/privacy': typeof PrivacyRoute
+  '/refunds': typeof RefundsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/terms': typeof TermsRoute
   '/api/assess': typeof ApiAssessRoute
   '/checkout/success': typeof CheckoutSuccessRoute
   '/pricing/lifetime': typeof PricingLifetimeRoute
@@ -93,7 +117,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/auth': typeof AuthRoute
+  '/privacy': typeof PrivacyRoute
+  '/refunds': typeof RefundsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/terms': typeof TermsRoute
   '/api/assess': typeof ApiAssessRoute
   '/checkout/success': typeof CheckoutSuccessRoute
   '/pricing/lifetime': typeof PricingLifetimeRoute
@@ -106,7 +133,10 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/auth'
+    | '/privacy'
+    | '/refunds'
     | '/reset-password'
+    | '/terms'
     | '/api/assess'
     | '/checkout/success'
     | '/pricing/lifetime'
@@ -117,7 +147,10 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/auth'
+    | '/privacy'
+    | '/refunds'
     | '/reset-password'
+    | '/terms'
     | '/api/assess'
     | '/checkout/success'
     | '/pricing/lifetime'
@@ -128,7 +161,10 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/auth'
+    | '/privacy'
+    | '/refunds'
     | '/reset-password'
+    | '/terms'
     | '/api/assess'
     | '/checkout/success'
     | '/pricing/lifetime'
@@ -140,7 +176,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
   AuthRoute: typeof AuthRoute
+  PrivacyRoute: typeof PrivacyRoute
+  RefundsRoute: typeof RefundsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  TermsRoute: typeof TermsRoute
   ApiAssessRoute: typeof ApiAssessRoute
   CheckoutSuccessRoute: typeof CheckoutSuccessRoute
   PricingLifetimeRoute: typeof PricingLifetimeRoute
@@ -171,11 +210,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/refunds': {
+      id: '/refunds'
+      path: '/refunds'
+      fullPath: '/refunds'
+      preLoaderRoute: typeof RefundsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/assess': {
@@ -220,7 +280,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
   AuthRoute: AuthRoute,
+  PrivacyRoute: PrivacyRoute,
+  RefundsRoute: RefundsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  TermsRoute: TermsRoute,
   ApiAssessRoute: ApiAssessRoute,
   CheckoutSuccessRoute: CheckoutSuccessRoute,
   PricingLifetimeRoute: PricingLifetimeRoute,
