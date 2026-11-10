@@ -172,4 +172,4 @@ This is the approved reading list. Only ever mention or recommend these, and onl
 - Kate Raworth, Doughnut Economics
 - John Agnew, "The territorial trap" (1994)
 - Andrés Rodríguez-Pose, "The revenge of the places that don't matter" (2018)
-- Charpleix (2018), on the Whanganui River\`;
+- Charpleix (2018), on the Whanganui River`;
