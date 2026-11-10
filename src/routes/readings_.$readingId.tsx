@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { READING_MINUTES, readingById } from "@/lib/readings";
 
 export const Route = createFileRoute("/readings_/$readingId")({
@@ -52,57 +52,82 @@ function ReadingSessionPage() {
         {reading.title}
       </h1>
 
-      <section className="mt-8 rounded-xl border bg-card p-6 text-center">
-        {startedAt === null ? (
-          <>
-            <p className="text-sm text-muted-foreground">
-              Like the real thing: {READING_MINUTES} minutes to read, then Dr River interviews you
-              on it.
-            </p>
-            <button
-              type="button"
-              onClick={() => {
+      <ol className="mt-8 space-y-4">
+        <Step
+          number={1}
+          title="Open the article"
+          active={startedAt === null}
+          complete={startedAt !== null}
+        >
+          <a
+            href={reading.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => {
+              if (startedAt === null) {
                 setStartedAt(Date.now());
                 setNow(Date.now());
-                window.open(reading.url, "_blank", "noopener,noreferrer");
-              }}
-              className="mt-5 rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition hover:opacity-90"
-            >
-              Open the article and start the {READING_MINUTES}-minute timer
-            </button>
-          </>
-        ) : (
-          <>
-            <p className="font-serif text-6xl font-semibold tabular-nums" aria-live="polite">
-              {clock(remaining)}
-            </p>
+              }
+            }}
+            className="group mt-3 flex items-center justify-between gap-4 rounded-lg border bg-background p-4 text-left transition hover:border-foreground/40"
+          >
+            <span>
+              <span className="block text-xs text-muted-foreground">{reading.source}</span>
+              <span className="mt-0.5 block font-medium">{reading.title}</span>
+              <span className="mt-1 block text-xs text-muted-foreground">
+                {reading.searchLink
+                  ? "Opens a search for the article in a new tab. It may need a subscription."
+                  : "Opens on the publisher's site in a new tab. Keep this page open."}
+              </span>
+            </span>
+            <span aria-hidden="true" className="text-xl transition group-hover:translate-x-0.5">
+              ↗
+            </span>
+          </a>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Opening it starts your {READING_MINUTES}-minute reading timer.
+          </p>
+        </Step>
+
+        <Step
+          number={2}
+          title={`Read for ${READING_MINUTES} minutes`}
+          active={startedAt !== null && !done}
+          complete={done}
+        >
+          {startedAt === null ? (
             <p className="mt-2 text-sm text-muted-foreground">
-              {done ? "Time's up. Dr River is ready for you." : "Reading time remaining"}
+              Your timer starts when you open the article.
             </p>
-            <a
-              href={reading.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 inline-block text-sm underline"
-            >
-              Reopen the article ↗
-            </a>
-          </>
-        )}
-        <div className="mt-6">
+          ) : (
+            <div className="mt-3 flex items-baseline gap-4">
+              <span className="font-serif text-5xl font-semibold tabular-nums" aria-live="polite">
+                {clock(remaining)}
+              </span>
+              <span className="text-sm text-muted-foreground">
+                {done ? "Time's up." : "left. Make notes on the questions below."}
+              </span>
+            </div>
+          )}
+        </Step>
+
+        <Step number={3} title="Talk it through with Dr River" active={done} complete={false}>
+          <p className="mt-2 text-sm text-muted-foreground">
+            He'll ask you to sum up the argument, then test it and share his own take.
+          </p>
           <Link
             to="/"
             search={{ reading: reading.id }}
-            className={`inline-flex rounded-full px-6 py-3 font-medium transition ${
+            className={`mt-4 inline-flex rounded-full px-6 py-3 font-medium transition ${
               done
                 ? "bg-primary text-primary-foreground hover:opacity-90"
                 : "border hover:bg-secondary"
             }`}
           >
-            {done ? "Start the interview" : "I'm ready, start the interview now"}
+            {done ? "Start the interview" : "I'm ready early, start now"}
           </Link>
-        </div>
-      </section>
+        </Step>
+      </ol>
 
       <h2 className="mt-10 text-sm font-medium">Context</h2>
       <p className="mt-1 text-sm text-muted-foreground">{reading.context}</p>
@@ -113,5 +138,43 @@ function ReadingSessionPage() {
         ))}
       </ul>
     </main>
+  );
+}
+
+function Step({
+  number,
+  title,
+  active,
+  complete,
+  children,
+}: {
+  number: number;
+  title: string;
+  active: boolean;
+  complete: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <li
+      className={`rounded-xl border p-5 transition ${
+        active ? "border-foreground/40 bg-card" : complete ? "opacity-60" : ""
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        <span
+          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-medium ${
+            complete
+              ? "bg-accent text-accent-foreground"
+              : active
+                ? "bg-primary text-primary-foreground"
+                : "border text-muted-foreground"
+          }`}
+        >
+          {complete ? "✓" : number}
+        </span>
+        <h2 className="font-medium">{title}</h2>
+      </div>
+      {children}
+    </li>
   );
 }
