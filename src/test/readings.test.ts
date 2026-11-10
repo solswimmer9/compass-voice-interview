@@ -21,6 +21,7 @@ describe("practice readings", () => {
       expect(reading.url).toMatch(/^https:\/\//);
       expect(reading.context.length).toBeGreaterThan(50);
       expect(reading.questions.length).toBeGreaterThanOrEqual(3);
+      expect(reading.tutorThoughts.length).toBeGreaterThanOrEqual(3);
     }
   });
 });

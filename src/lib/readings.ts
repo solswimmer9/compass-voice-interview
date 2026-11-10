@@ -11,6 +11,8 @@ export type Reading = {
   usedIn: string;
   context: string;
   questions: string[];
+  /** Dr River's own angles to raise in the interview. Never shown on the page. */
+  tutorThoughts: string[];
 };
 
 function search(title: string, source: string) {
@@ -34,6 +36,12 @@ export const READINGS: Reading[] = [
       "Who gains and who loses from the hippos: scientists, farmers, fishers, tourists, the river?",
       "What would you need to measure to decide whether the hippos are good or bad for the river?",
     ],
+    tutorThoughts: [
+      "The word 'invasive' does a lot of moral work. Nobody calls the English rabbit or the sycamore invasive any more. When does an outsider become part of a place?",
+      "If the hippos fill the role of animals that went extinct thousands of years ago, the argument quietly assumes some past state of nature is the 'right' one. Which past, and who chooses it?",
+      "The local view is missing from most coverage: fishers and farmers who share the river with a three-tonne animal see a safety and livelihood question, not an ecology debate.",
+      "The story only exists because of a drug lord. Should the way something arrived affect how we judge its effects?",
+    ],
   },
   {
     id: "ai-environment",
@@ -50,6 +58,12 @@ export const READINGS: Reading[] = [
       "Is it fair to judge a technology by its environmental footprint alone?",
       "If you were writing a rule for where new data centres can be built, what would it say?",
     ],
+    tutorThoughts: [
+      "The cloud sounds weightless, but it is concrete, copper, water and land. Geography is good at making invisible infrastructure visible again.",
+      "The costs and benefits of AI often land in different places: a data centre's water use in a dry region, mining for chips far from the users who benefit. That mismatch is a classic geographical question.",
+      "There is a scale problem: one AI query is tiny, billions add up. Is it fair to ask individuals to feel guilty, or is this a question for governments and companies?",
+      "Push back the other way too: if AI helps model floods or design better batteries, how would you even weigh that against its footprint?",
+    ],
   },
   {
     id: "tipping-points",
@@ -65,6 +79,12 @@ export const READINGS: Reading[] = [
       "How can scientists know a tipping point exists before we have crossed it?",
       "If we can't be sure when a tipping point will happen, how should governments plan for it?",
       "Can you think of a tipping point in a human system, such as a town, a market or a fashion?",
+    ],
+    tutorThoughts: [
+      "Tipping points break a comfortable assumption: that change is gradual, so we will notice in time and adjust.",
+      "There is a strange politics to uncertainty. Not knowing exactly when a threshold arrives is used both as a reason to act now and as a reason to wait.",
+      "Human systems tip too: high streets, housing markets, a town losing its main employer. Do the same ideas carry over, or is that a stretch?",
+      "Ask how anyone can know a threshold exists before crossing it: past climates, models and analogues all have limits.",
     ],
   },
   {
@@ -86,6 +106,12 @@ export const READINGS: Reading[] = [
       "Whose experience of climate change is missing from the argument?",
       "Does it matter who wrote this? How should we treat an argument from someone with an interest in the outcome?",
       "Is 'progress' the same for everyone? Who has gained most from cheap energy, and who pays the costs?",
+    ],
+    tutorThoughts: [
+      "Separate the argument from the author. A former oil and gas executive making this case is worth noticing, but it does not by itself make the argument wrong. Judge the reasoning.",
+      "The essay's strongest point may be that cheap energy lifted billions out of poverty. Its weakest may be whose 'progress' it counts: those who gained most are often not those most exposed to the costs.",
+      "Words matter here. 'Crisis', 'emergency' and 'by-product' each frame what action seems reasonable. Ask the student what each word licenses.",
+      "Stay strictly neutral on the politics. Test the student's reasoning equally whichever side they take.",
     ],
   },
 ];
