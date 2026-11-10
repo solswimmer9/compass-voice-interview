@@ -13,6 +13,13 @@ describe("preview testing host checks", () => {
     expect(isPreviewHostname("project--6db3f9e0-08e4-5430-979a-8856445f33a9-dev.lovable.app")).toBe(true);
   });
 
+  it("allows the current live-preview host without opening the published site", () => {
+    expect(isPreviewHostname("6db3f9e0-08e4-5430-979a-8856445f33a9.lovableproject.com")).toBe(true);
+    expect(isPreviewHostname("live--6db3f9e0-08e4-5430-979a-8856445f33a9.lovableproject-dev.com")).toBe(true);
+    expect(isPreviewHostname("6db3f9e0-08e4-5430-979a-8856445f33a9.lovableproject.com.evil.example")).toBe(false);
+    expect(isPreviewHostname("compass-voice-interview.lovable.app")).toBe(false);
+  });
+
   it("keeps the published site and misleading hosts on normal limits", () => {
     expect(isPreviewHostname("compass-voice-interview.lovable.app")).toBe(false);
     expect(isPreviewHostname("project--6db3f9e0-08e4-5430-979a-8856445f33a9.lovable.app")).toBe(false);

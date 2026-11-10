@@ -1,10 +1,21 @@
 const PREVIEW_SUFFIXES = ["lovable.app", "gpt-eng.com", "gptengineer.run"];
+const LIVE_PREVIEW_SUFFIXES = ["lovableproject.com", "lovableproject-dev.com"];
 
 export function isPreviewHostname(value: string) {
   const hostname = value.trim().toLowerCase();
   if (hostname === "localhost" || hostname === "127.0.0.1") return true;
   const labels = hostname.split(".");
   const first = labels[0] ?? "";
+  if (
+    LIVE_PREVIEW_SUFFIXES.some(
+      (candidate) =>
+        labels.length === candidate.split(".").length + 1 &&
+        hostname.endsWith(`.${candidate}`) &&
+        /^(?:live--)?[0-9a-f-]{36}(?:-thr_[a-z0-9]+)?$/.test(first),
+    )
+  ) {
+    return true;
+  }
   const suffix = PREVIEW_SUFFIXES.find((candidate) => hostname.endsWith(`.${candidate}`));
   if (!suffix) return false;
   if (/^(?:id-preview|preview)(?:-[a-z0-9]+)?--.+$/.test(first)) return true;

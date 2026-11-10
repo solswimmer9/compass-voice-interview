@@ -78,7 +78,7 @@ export function useElevenLabsInterview({ onEvent }: { onEvent: (event: Interview
       if (!data.openingQuestion) throw new Error("The opening question could not be prepared.");
       if (id !== attempt.current) return;
       setInterviewId(data.interviewId);
-      startSession({
+      await startSession({
         signedUrl: data.signedUrl,
         connectionType: "websocket",
         dynamicVariables: { opening_question: data.openingQuestion },
