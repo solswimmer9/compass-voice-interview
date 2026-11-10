@@ -6,7 +6,7 @@ import { Check, PRICING_FACTS, PricingShell, pricingHead } from "@/components/pr
 // allowance logic yet, so its button is disabled. See the branch notes.
 const LIFETIME_DRAFT = {
   name: "Lifetime access",
-  displayPrice: "$100",
+  displayPrice: "£100",
 };
 
 export const Route = createFileRoute("/pricing/lifetime")({
