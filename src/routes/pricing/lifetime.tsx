@@ -50,7 +50,13 @@ function LifetimePricing() {
             </li>
           </ul>
           <div className="mt-8">
-            <BuyPackButton className="w-full" />
+            {hasLifetime ? (
+              <p className="rounded-full border px-6 py-3 text-center text-sm text-muted-foreground">
+                Included in your lifetime access
+              </p>
+            ) : (
+              <BuyPackButton className="w-full" />
+            )}
           </div>
         </article>
 
@@ -96,7 +102,11 @@ function LifetimePricing() {
       </section>
 
       <p className="mt-10 text-center text-sm text-muted-foreground">
-        Not sure yet? <StartFreeLink className="ml-2 px-4 py-2 text-sm" />
+        Not sure yet?{" "}
+        <StartFreeLink
+          className="ml-2 px-4 py-2 text-sm"
+          freeLeft={!account.data || account.data.freeRemaining > 0}
+        />
       </p>
     </PricingShell>
   );

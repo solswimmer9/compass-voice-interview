@@ -54,7 +54,14 @@ export function BuyPackButton({
 }
 
 /** Start-free button: signed-in visitors go to the interview, others to sign in. */
-export function StartFreeLink({ className }: { className?: string }) {
+export function StartFreeLink({
+  className,
+  freeLeft = true,
+}: {
+  className?: string;
+  /** Whether a signed-in user still has their free interview. */
+  freeLeft?: boolean;
+}) {
   const { user } = useAuth();
   return (
     <Link
@@ -64,7 +71,7 @@ export function StartFreeLink({ className }: { className?: string }) {
         className,
       )}
     >
-      {user ? "Use my free interview" : "Start free"}
+      {!user ? "Start free" : freeLeft ? "Use my free interview" : "Go to practice"}
     </Link>
   );
 }

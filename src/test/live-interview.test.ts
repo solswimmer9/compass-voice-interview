@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   bindLiveConnection,
   type LiveExecutionContext,
@@ -63,6 +63,7 @@ function executionContext(): LiveExecutionContext {
 }
 
 describe("Lovable live interview access", () => {
+  afterEach(() => vi.unstubAllEnvs());
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.authenticate.mockResolvedValue({
@@ -137,7 +138,6 @@ describe("Lovable live interview access", () => {
       type: "app.interview.started",
       interviewId: "preview",
     });
-    vi.unstubAllEnvs();
   });
 
   it("makes signed-in non-testers use their interview credits", async () => {
@@ -150,6 +150,5 @@ describe("Lovable live interview access", () => {
     await vi.waitFor(() =>
       expect(mocks.rpc).toHaveBeenCalledWith("consume_interview_credit", expect.anything()),
     );
-    vi.unstubAllEnvs();
   });
 });

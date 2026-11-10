@@ -372,7 +372,9 @@ export function bindLiveConnection(
     if (error) throw new Error("Your interview allowance could not be checked");
     const result = allowance as { allowed?: boolean; interviewId?: string } | null;
     if (!result?.allowed || !result.interviewId) {
-      throw new Error("Your free interview has been used. Buy the 2-Interview Pack to continue.");
+      throw new Error(
+        "Your free interview has been used. See the pricing page for more interviews or lifetime access.",
+      );
     }
     interviewCredit = { id: result.interviewId, supabase: auth.supabase };
     return result.interviewId;
