@@ -8,8 +8,10 @@ import {
   DR_RIVER_BRIEFING,
   NOTES_CONTEXT,
   openingInstructions,
+  readingOpeningInstructions,
   REASONING_GUIDE,
 } from "./interview-briefing.ts";
+import { readingById, READINGS } from "./readings.ts";
 import { INTERVIEW_MINUTES } from "./limits.ts";
 import { authenticateAccessToken } from "./request-auth.server.ts";
 import { isServerTester } from "./testers.ts";
@@ -135,9 +137,15 @@ export function handleLiveRequest(request: Request): Response {
   return new Response(null, response);
 }
 
+const readingsContext = `PRACTICE READINGS
+The app lists these articles for students to read before an interview. When the interview opens on one of these readings, or the student says they have read one, spend the first 10 to 15 minutes on it, as some colleges do: check they understood it, then test its argument. Do not claim to have read the full article; work from what the student says and this summary.
+${READINGS.map((r) => `- "${r.title}" (${r.source}): ${r.context} Questions: ${r.questions.join(" ")}`).join("\n")}`;
+
 const conversationInstructions = `${DR_RIVER_BRIEFING}
 
 ${NOTES_CONTEXT}
+
+${readingsContext}
 
 Voice: calm, unhurried and soothing, like a gentle documentary narrator; speak slowly with natural pauses.
 Backchannel policy: Use moderate listening sounds such as "mm" while the candidate thinks, without taking over.
@@ -725,7 +733,10 @@ export function bindLiveConnection(
           throw new Error("Voice startup message required");
         }
         starting = true;
-        config.openingInstructions = openingInstructions(event.openingTurn);
+        const reading = readingById(event.readingId);
+        config.openingInstructions = reading
+          ? readingOpeningInstructions(reading)
+          : openingInstructions(event.openingTurn);
         execution.waitUntil(
           (async () => {
             const interviewId = await authorizeStart(event);

@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { readingById } from "@/lib/readings";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLiveVoice, type LiveEvent } from "@/hooks/use-live-voice";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +14,8 @@ import { isPreviewBrowser } from "@/lib/preview";
 const HEADLINE_WORDS = ["democratise", "open up", "demystify", "widen access to"];
 
 export const Route = createFileRoute("/")({
+  validateSearch: (search: Record<string, unknown>): { reading?: string } =>
+    typeof search["reading"] === "string" ? { reading: search["reading"] } : {},
   head: () => ({
     meta: [
       { title: "We are here to democratise Oxbridge" },
@@ -111,13 +114,15 @@ function InterviewPage() {
     setLines((previous) => appendTranscriptFragment(previous, role, fragment));
   }, []);
 
+  const { reading: readingParam } = Route.useSearch();
+  const reading = readingById(readingParam);
   const getStartContext = useCallback(async () => {
     const environment = getPaddleEnvironment();
     const { data } = await supabase.auth.getSession();
     const accessToken = data.session?.access_token;
     if (!accessToken) throw new Error("Please sign in again before starting your interview.");
-    return { accessToken, environment };
-  }, []);
+    return { accessToken, environment, ...(reading ? { readingId: reading.id } : {}) };
+  }, [reading]);
   const call = useLiveVoice({ onEvent, getStartContext });
   const account = useAccountSnapshot();
   const [preview, setPreview] = useState(false);
@@ -158,6 +163,9 @@ function InterviewPage() {
     <div className="relative min-h-[100svh] overflow-hidden">
       <DotPattern className="h-[100svh] [mask-image:radial-gradient(520px_circle_at_center,white,transparent)]" />
       <nav className="relative z-20 mx-auto flex max-w-2xl items-center justify-end gap-5 px-6 pt-6 text-sm">
+        <Link to="/readings" className="text-muted-foreground transition hover:text-foreground">
+          Readings
+        </Link>
         <Link to="/pricing" className="text-muted-foreground transition hover:text-foreground">
           Pricing
         </Link>
@@ -220,6 +228,14 @@ function InterviewPage() {
           </ol>
         </div>
 
+        {reading && (
+          <p className="mt-6 rounded-md border border-accent/60 px-4 py-3 text-center text-sm">
+            Reading interview: <span className="font-medium">{reading.title}</span>.{" "}
+            <Link to="/" search={{}} className="text-muted-foreground underline">
+              Switch to a normal interview
+            </Link>
+          </p>
+        )}
         <section className="mt-6 rounded-md border bg-card p-6">
           <audio ref={call.audioRef} controls className="hidden" playsInline />
           <div className="flex flex-wrap items-center justify-center gap-3">

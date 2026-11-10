@@ -27,6 +27,8 @@ type LiveState = {
 export type LiveStartContext = {
   accessToken: string;
   environment: "sandbox" | "live";
+  /** Optional practice reading this interview opens on. */
+  readingId?: string;
 };
 
 const initialState: LiveState = {

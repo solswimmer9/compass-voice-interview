@@ -173,3 +173,8 @@ This is the approved reading list. Only ever mention or recommend these, and onl
 - John Agnew, "The territorial trap" (1994)
 - Andrés Rodríguez-Pose, "The revenge of the places that don't matter" (2018)
 - Charpleix (2018), on the Whanganui River`;
+
+// Opening for a reading interview. Kept short: the voice gateway caps opening instructions.
+export function readingOpeningInstructions(reading: { title: string; source: string }) {
+  return `Start now in British English. Briefly introduce yourself as Dr River. The student has just spent 15 minutes reading "${reading.title}" (${reading.source}). Ask them to sum up its main argument in their own words, then listen.`;
+}

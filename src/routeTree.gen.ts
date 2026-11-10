@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ReadingsRouteImport } from './routes/readings'
 import { Route as RefundsRouteImport } from './routes/refunds'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as TermsRouteImport } from './routes/terms'
@@ -20,6 +21,7 @@ import { Route as ApiAssessRouteImport } from './routes/api/assess'
 import { Route as CheckoutSuccessRouteImport } from './routes/checkout/success'
 import { Route as PricingIndexRouteImport } from './routes/pricing/index'
 import { Route as PricingLifetimeRouteImport } from './routes/pricing/lifetime'
+import { Route as ReadingsReadingIdRouteImport } from './routes/readings_.$readingId'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const IndexRoute = IndexRouteImport.update({
@@ -40,6 +42,11 @@ const AuthRoute = AuthRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReadingsRoute = ReadingsRouteImport.update({
+  id: '/readings',
+  path: '/readings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RefundsRoute = RefundsRouteImport.update({
@@ -77,6 +84,11 @@ const PricingLifetimeRoute = PricingLifetimeRouteImport.update({
   path: '/pricing/lifetime',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReadingsReadingIdRoute = ReadingsReadingIdRouteImport.update({
+  id: '/readings_/$readingId',
+  path: '/readings/$readingId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -89,12 +101,14 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
+  '/readings': typeof ReadingsRoute
   '/refunds': typeof RefundsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/api/assess': typeof ApiAssessRoute
   '/checkout/success': typeof CheckoutSuccessRoute
   '/pricing/lifetime': typeof PricingLifetimeRoute
+  '/readings/$readingId': typeof ReadingsReadingIdRoute
   '/pricing/': typeof PricingIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -103,12 +117,14 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
+  '/readings': typeof ReadingsRoute
   '/refunds': typeof RefundsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/api/assess': typeof ApiAssessRoute
   '/checkout/success': typeof CheckoutSuccessRoute
   '/pricing/lifetime': typeof PricingLifetimeRoute
+  '/readings/$readingId': typeof ReadingsReadingIdRoute
   '/pricing': typeof PricingIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -118,12 +134,14 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
+  '/readings': typeof ReadingsRoute
   '/refunds': typeof RefundsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/api/assess': typeof ApiAssessRoute
   '/checkout/success': typeof CheckoutSuccessRoute
   '/pricing/lifetime': typeof PricingLifetimeRoute
+  '/readings_/$readingId': typeof ReadingsReadingIdRoute
   '/pricing/': typeof PricingIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -134,12 +152,14 @@ export interface FileRouteTypes {
     | '/account'
     | '/auth'
     | '/privacy'
+    | '/readings'
     | '/refunds'
     | '/reset-password'
     | '/terms'
     | '/api/assess'
     | '/checkout/success'
     | '/pricing/lifetime'
+    | '/readings/$readingId'
     | '/pricing/'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -148,12 +168,14 @@ export interface FileRouteTypes {
     | '/account'
     | '/auth'
     | '/privacy'
+    | '/readings'
     | '/refunds'
     | '/reset-password'
     | '/terms'
     | '/api/assess'
     | '/checkout/success'
     | '/pricing/lifetime'
+    | '/readings/$readingId'
     | '/pricing'
     | '/api/public/payments/webhook'
   id:
@@ -162,12 +184,14 @@ export interface FileRouteTypes {
     | '/account'
     | '/auth'
     | '/privacy'
+    | '/readings'
     | '/refunds'
     | '/reset-password'
     | '/terms'
     | '/api/assess'
     | '/checkout/success'
     | '/pricing/lifetime'
+    | '/readings_/$readingId'
     | '/pricing/'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -177,12 +201,14 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   AuthRoute: typeof AuthRoute
   PrivacyRoute: typeof PrivacyRoute
+  ReadingsRoute: typeof ReadingsRoute
   RefundsRoute: typeof RefundsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   TermsRoute: typeof TermsRoute
   ApiAssessRoute: typeof ApiAssessRoute
   CheckoutSuccessRoute: typeof CheckoutSuccessRoute
   PricingLifetimeRoute: typeof PricingLifetimeRoute
+  ReadingsReadingIdRoute: typeof ReadingsReadingIdRoute
   PricingIndexRoute: typeof PricingIndexRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -215,6 +241,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/readings': {
+      id: '/readings'
+      path: '/readings'
+      fullPath: '/readings'
+      preLoaderRoute: typeof ReadingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/refunds': {
@@ -266,6 +299,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PricingLifetimeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/readings_/$readingId': {
+      id: '/readings_/$readingId'
+      path: '/readings/$readingId'
+      fullPath: '/readings/$readingId'
+      preLoaderRoute: typeof ReadingsReadingIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -281,12 +321,14 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   AuthRoute: AuthRoute,
   PrivacyRoute: PrivacyRoute,
+  ReadingsRoute: ReadingsRoute,
   RefundsRoute: RefundsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   TermsRoute: TermsRoute,
   ApiAssessRoute: ApiAssessRoute,
   CheckoutSuccessRoute: CheckoutSuccessRoute,
   PricingLifetimeRoute: PricingLifetimeRoute,
+  ReadingsReadingIdRoute: ReadingsReadingIdRoute,
   PricingIndexRoute: PricingIndexRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
