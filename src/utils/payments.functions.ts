@@ -28,7 +28,7 @@ async function resolveOrCreateCustomer(stripe: Stripe, options: { email?: string
 
 export const createCheckoutSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { priceId: string; returnUrl: string; environment: "sandbox" | "live" }) => {
+  .validator((data: { priceId: string; returnUrl: string; environment: "sandbox" | "live" }) => {
     if (!offerForPriceId(data.priceId)) throw new Error("Invalid priceId");
     if (data.environment !== "sandbox" && data.environment !== "live") throw new Error("Invalid environment");
     return data;

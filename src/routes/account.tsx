@@ -86,12 +86,21 @@ function AccountPage() {
                 </p>
               </>
             )}
-            <Link
-              to="/"
-              className="mt-5 inline-flex rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
-            >
-              Start practising
-            </Link>
+            {data?.lifetime || (data?.totalRemaining ?? 0) > 0 ? (
+              <Link
+                to="/"
+                className="mt-5 inline-flex rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
+              >
+                Start practising
+              </Link>
+            ) : (
+              <Link
+                to="/pricing"
+                className="mt-5 inline-flex rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
+              >
+                Get more interviews
+              </Link>
+            )}
           </section>
           <form onSubmit={save} className="rounded-md border bg-card p-6">
             <h2 className="font-serif text-2xl font-semibold">Profile</h2>
@@ -115,8 +124,15 @@ function AccountPage() {
                   <li key={purchase.id} className="flex justify-between gap-4">
                     <span>
                       {offerForProductId(purchase.product_id)?.name ?? "Interview purchase"}
+                      <span className="block text-xs text-muted-foreground">
+                        {new Date(purchase.created_at).toLocaleDateString("en-GB", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </span>
                     </span>
-                    <span className="text-muted-foreground">
+                    <span className="text-right text-muted-foreground">
                       {purchase.product_id === LIFETIME_ACCESS.productId
                         ? "Unlimited"
                         : `${purchase.interviews_remaining} remaining`}

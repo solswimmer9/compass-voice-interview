@@ -12,3 +12,5 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+Sitemap: https://compass-voice-interview.lovable.app/sitemap.xml

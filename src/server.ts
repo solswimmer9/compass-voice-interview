@@ -45,11 +45,44 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
+// Conservative security headers. The CSP is limited to frame-ancestors so it cannot break
+// Stripe, Supabase, the AI gateway, or WebRTC; Stripe iframing into our page is unaffected.
+const SECURITY_HEADERS: Record<string, string> = {
+  "Content-Security-Policy": "frame-ancestors 'none'",
+  "X-Frame-Options": "DENY",
+  "Permissions-Policy":
+    'microphone=(self), camera=(self), payment=(self "https://js.stripe.com" "https://checkout.stripe.com")',
+};
+
+function withSecurityHeaders(response: Response): Response {
+  // Leave websocket upgrades untouched.
+  if (response.status === 101) return response;
+  try {
+    for (const [k, v] of Object.entries(SECURITY_HEADERS)) response.headers.set(k, v);
+    return response;
+  } catch {
+    // Immutable headers (e.g. fetched/redirect responses): rebuild with a copy.
+    const headers = new Headers(response.headers);
+    for (const [k, v] of Object.entries(SECURITY_HEADERS)) headers.set(k, v);
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
+  }
+}
+
 // Hosting compresses every response at the edge. Never compress a body (gzip, brotli,
 // CompressionStream) or set content-encoding here or in a server route: the body gets encoded
 // twice and renders garbled.
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    return withSecurityHeaders(await handle(request, env, ctx));
+  },
+};
+
+async function handle(request: Request, env: unknown, ctx: unknown): Promise<Response> {
+  {
     try {
       if (new URL(request.url).pathname === "/api/live") {
         return handleLiveRequest(request);
@@ -64,5 +97,5 @@ export default {
         headers: { "content-type": "text/html; charset=utf-8" },
       });
     }
-  },
-};
+  }
+}

@@ -7,7 +7,7 @@ const environmentSchema = z.enum(["sandbox", "live"]);
 
 export const getAccountSnapshot = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ environment: environmentSchema }))
+  .validator(z.object({ environment: environmentSchema }))
   .handler(async ({ data, context }) => {
     const [profile, purchases, freeSessions] = await Promise.all([
       context.supabase
@@ -50,7 +50,7 @@ export const getAccountSnapshot = createServerFn({ method: "GET" })
 
 export const updateDisplayName = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ displayName: z.string().trim().min(1).max(80) }))
+  .validator(z.object({ displayName: z.string().trim().min(1).max(80) }))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.from("profiles").upsert({
       id: context.userId,

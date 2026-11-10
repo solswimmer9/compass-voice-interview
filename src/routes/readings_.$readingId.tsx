@@ -23,8 +23,19 @@ function clock(seconds: number) {
 function ReadingSessionPage() {
   const { readingId } = Route.useParams();
   const found = readingById(readingId);
+  const storageKey = `reading-timer:${readingId}`;
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    try {
+      const saved = Number(window.localStorage.getItem(storageKey));
+      setStartedAt(Number.isFinite(saved) && saved > 0 ? saved : null);
+    } catch {
+      setStartedAt(null);
+    }
+    setNow(Date.now());
+  }, [storageKey]);
 
   useEffect(() => {
     if (startedAt === null) return;
@@ -34,8 +45,14 @@ function ReadingSessionPage() {
 
   function startTimer() {
     if (startedAt !== null) return;
-    setStartedAt(Date.now());
-    setNow(Date.now());
+    const start = Date.now();
+    try {
+      window.localStorage.setItem(storageKey, String(start));
+    } catch {
+      // Storage unavailable: the timer still works for this visit.
+    }
+    setStartedAt(start);
+    setNow(start);
   }
 
   if (!found) return null;
@@ -61,7 +78,7 @@ function ReadingSessionPage() {
       <ol className="mt-8 space-y-4">
         <Step
           number={1}
-          title="Open the article"
+          title={reading.searchLink ? "Find the article" : "Open the article"}
           active={startedAt === null}
           complete={startedAt !== null}
         >
@@ -87,7 +104,7 @@ function ReadingSessionPage() {
             </span>
           </a>
           <p className="mt-2 text-xs text-muted-foreground">
-            Opening it starts your {READING_MINUTES}-minute reading timer.
+            {reading.searchLink ? "Searching" : "Opening it"} starts your {READING_MINUTES}-minute reading timer.
           </p>
         </Step>
 
@@ -99,7 +116,7 @@ function ReadingSessionPage() {
         >
           {startedAt === null ? (
             <p className="mt-2 text-sm text-muted-foreground">
-              Your timer starts when you open the article.
+              Your timer starts when you {reading.searchLink ? "search for" : "open"} the article.
             </p>
           ) : (
             <div className="mt-3 flex items-baseline gap-4">

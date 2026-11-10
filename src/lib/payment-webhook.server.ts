@@ -1,4 +1,4 @@
-import { verifyWebhook, type StripeEnv } from "@/lib/stripe.server";
+import { createStripeClient, verifyWebhook, type StripeEnv } from "@/lib/stripe.server";
 import { offerForPriceId } from "@/lib/offer";
 
 // Credits the purchase once per checkout session. The purchases table keeps its original
@@ -33,6 +33,32 @@ async function fulfilCheckout(session: any, env: StripeEnv) {
   if (error) throw new Error(`Could not record purchase: ${error.message}`);
 }
 
+// Refunds and disputes revoke the remaining credits. purchases.paddle_transaction_id holds the
+// Checkout Session ID, so the charge's payment intent is mapped back to its session via Stripe.
+async function revokeForCharge(chargeOrDispute: any, env: StripeEnv, status: "refunded" | "disputed") {
+  const paymentIntent =
+    typeof chargeOrDispute.payment_intent === "string"
+      ? chargeOrDispute.payment_intent
+      : chargeOrDispute.payment_intent?.id;
+  if (!paymentIntent) {
+    console.warn("Refund/dispute event without a payment intent");
+    return;
+  }
+  const sessions = await createStripeClient(env).checkout.sessions.list({ payment_intent: paymentIntent, limit: 1 });
+  const sessionId = sessions.data[0]?.id;
+  if (!sessionId) {
+    console.warn("No checkout session found for refunded/disputed payment");
+    return;
+  }
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { error } = await supabaseAdmin
+    .from("purchases")
+    .update({ interviews_remaining: 0, status, updated_at: new Date().toISOString() })
+    .eq("paddle_transaction_id", sessionId)
+    .eq("environment", env);
+  if (error) throw new Error(`Could not revoke purchase: ${error.message}`);
+}
+
 export async function handlePaymentWebhook(request: Request) {
   const env = new URL(request.url).searchParams.get("env");
   if (env !== "sandbox" && env !== "live") {
@@ -45,6 +71,13 @@ export async function handlePaymentWebhook(request: Request) {
       if (session.payment_status !== "unpaid") await fulfilCheckout(session, env);
     } else if (event.type === "checkout.session.async_payment_succeeded") {
       await fulfilCheckout(session, env);
+    } else if (event.type === "charge.refunded") {
+      // Only full refunds revoke access; partial refunds leave the entitlement in place.
+      if (session.refunded === true || (session.amount_refunded > 0 && session.amount_refunded >= session.amount)) {
+        await revokeForCharge(session, env, "refunded");
+      }
+    } else if (event.type === "charge.dispute.created") {
+      await revokeForCharge(session, env, "disputed");
     } else {
       console.log("Unhandled payment event:", event.type);
     }

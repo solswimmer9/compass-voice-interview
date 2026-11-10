@@ -12,6 +12,7 @@ export const Route = createFileRoute("/pricing/lifetime")({
 function LifetimePricing() {
   const { pack, free, minutes } = PRICING_FACTS;
   const account = useAccountSnapshot();
+  const user = account.user;
   const hasLifetime = Boolean(account.data?.lifetime);
 
   return (
@@ -103,10 +104,16 @@ function LifetimePricing() {
 
       <p className="mt-10 text-center text-sm text-muted-foreground">
         Not sure yet?{" "}
-        <StartFreeLink
-          className="ml-2 px-4 py-2 text-sm"
-          freeLeft={!account.data || account.data.freeRemaining > 0}
-        />
+        {user && !account.data ? (
+          <span className="ml-2 inline-block px-4 py-2 text-sm" aria-hidden="true">
+            …
+          </span>
+        ) : (
+          <StartFreeLink
+            className="ml-2 px-4 py-2 text-sm"
+            freeLeft={!account.data || account.data.freeRemaining > 0}
+          />
+        )}
       </p>
     </PricingShell>
   );
