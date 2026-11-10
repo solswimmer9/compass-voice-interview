@@ -7,6 +7,10 @@ export type LiveEvent = {
   usage?: { seconds?: number };
   finalized?: boolean;
   transport?: { type?: string; sdp?: string };
+  delta?: string;
+  start_ms?: number;
+  end_ms?: number;
+  interviewId?: string;
   [key: string]: unknown;
 };
 
@@ -17,6 +21,12 @@ type LiveState = {
   finalized: boolean | null;
   muted: boolean;
   playbackBlocked: boolean;
+  interviewId: string | null;
+};
+
+export type LiveStartContext = {
+  accessToken: string;
+  environment: "sandbox" | "live";
 };
 
 const initialState: LiveState = {
@@ -26,14 +36,14 @@ const initialState: LiveState = {
   finalized: null,
   muted: false,
   playbackBlocked: false,
+  interviewId: null,
 };
 
-export function useLiveVoice(
-  options: {
-    url?: string;
-    onEvent?: (event: LiveEvent) => void | Promise<void>;
-  } = {},
-) {
+export function useLiveVoice(options: {
+  url?: string;
+  getStartContext: () => Promise<LiveStartContext>;
+  onEvent?: (event: LiveEvent) => void | Promise<void>;
+}) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const controller = useRef<ReturnType<typeof createLiveVoice> | null>(null);
   const mounted = useRef(false);
@@ -72,10 +82,16 @@ export function useLiveVoice(
     const voice = createLiveVoice({
       url: endpoint.href,
       audio,
+      getStartContext: () => latest.current.getStartContext(),
       onEvent(event) {
         if (!mounted.current || controller.current !== voice) return;
         if (event.type === "app.connected") {
           setCall((previous) => ({ ...previous, status: "connected", hasConnected: true }));
+        } else if (event.type === "app.interview.started") {
+          setCall((previous) => ({
+            ...previous,
+            interviewId: typeof event.interviewId === "string" ? event.interviewId : null,
+          }));
         } else if (event.type === "app.stopping") {
           setCall((previous) => ({ ...previous, status: "stopping", playbackBlocked: false }));
         } else if (event.type === "app.closed") {
@@ -92,7 +108,9 @@ export function useLiveVoice(
             ...previous,
             playbackBlocked: event.type === "app.playback.blocked",
           }));
-        } else if (["app.error", "gateway.error", "error"].includes(event.type)) {
+        } else if (
+          ["app.error", "app.greeting.error", "gateway.error", "error"].includes(event.type)
+        ) {
           setCall((previous) => ({
             ...previous,
             error: event.error?.message ?? "Voice request failed.",
@@ -140,6 +158,7 @@ function nextOpeningTurn() {
 type LiveOptions = {
   url: string;
   audio: HTMLAudioElement;
+  getStartContext: () => Promise<LiveStartContext>;
   onEvent: (event: LiveEvent) => void;
 };
 
@@ -324,6 +343,8 @@ function createLiveVoice(options: LiveOptions) {
     state = "starting";
     window.addEventListener("pagehide", stop);
     try {
+      const startContext = await options.getStartContext();
+      if (!starting()) return;
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true },
       });
@@ -375,7 +396,7 @@ function createLiveVoice(options: LiveOptions) {
       deadline = setTimeout(() => fail("Voice session did not start"), 50_000);
       socket.onopen = () => {
         if (!starting()) return release();
-        send({ type: "app.start", sdp, openingTurn: nextOpeningTurn() });
+        send({ type: "app.start", sdp, openingTurn: nextOpeningTurn(), ...startContext });
       };
       socket.onmessage = ({ data }) => {
         try {

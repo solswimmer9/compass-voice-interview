@@ -23,8 +23,12 @@ describe("preview testing host checks", () => {
 
   it("allows the current live-preview host without opening the published site", () => {
     expect(isPreviewHostname("6db3f9e0-08e4-5430-979a-8856445f33a9.lovableproject.com")).toBe(true);
-    expect(isPreviewHostname("live--6db3f9e0-08e4-5430-979a-8856445f33a9.lovableproject-dev.com")).toBe(true);
-    expect(isPreviewHostname("6db3f9e0-08e4-5430-979a-8856445f33a9.lovableproject.com.evil.example")).toBe(false);
+    expect(
+      isPreviewHostname("live--6db3f9e0-08e4-5430-979a-8856445f33a9.lovableproject-dev.com"),
+    ).toBe(true);
+    expect(
+      isPreviewHostname("6db3f9e0-08e4-5430-979a-8856445f33a9.lovableproject.com.evil.example"),
+    ).toBe(false);
     expect(isPreviewHostname("compass-voice-interview.lovable.app")).toBe(false);
   });
 
@@ -35,22 +39,5 @@ describe("preview testing host checks", () => {
     );
     expect(isPreviewHostname("id-preview--anything.example.com")).toBe(false);
     expect(isPreviewHostname("id-preview--anything.lovable.app.evil.example")).toBe(false);
-  });
-});
-
-describe("tester allow-list", () => {
-  it("only lets listed emails use unlimited testing", async () => {
-    const { isTesterEmail } = await import("@/lib/testers");
-    const list = " Owner@Example.com , second@example.com ";
-    expect(isTesterEmail("owner@example.com", list)).toBe(true);
-    expect(isTesterEmail("SECOND@example.com", list)).toBe(true);
-    expect(isTesterEmail("someone@example.com", list)).toBe(false);
-    expect(isTesterEmail(undefined, list)).toBe(false);
-  });
-
-  it("gives nobody unlimited testing when the list is not set", async () => {
-    const { isTesterEmail } = await import("@/lib/testers");
-    expect(isTesterEmail("owner@example.com", undefined)).toBe(false);
-    expect(isTesterEmail("owner@example.com", "")).toBe(false);
   });
 });

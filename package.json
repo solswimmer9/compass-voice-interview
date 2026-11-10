@@ -19,7 +19,6 @@
   "dependencies": {
     "@ai-sdk/openai": "^4.0.111",
     "@ai-sdk/openai-compatible": "^3.0.87",
-    "@elevenlabs/react": "^1.21.1",
     "@hookform/resolvers": "^5.2.2",
     "@lovable.dev/cloud-auth-js": "^1.2.0",
     "@paddle/paddle-node-sdk": "^3.11.1",

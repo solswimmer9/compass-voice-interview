@@ -1,7 +1,8 @@
-import { ConversationProvider } from "@elevenlabs/react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useElevenLabsInterview, type InterviewEvent } from "@/hooks/use-elevenlabs-interview";
+import { useLiveVoice, type LiveEvent } from "@/hooks/use-live-voice";
+import { supabase } from "@/integrations/supabase/client";
+import { getPaddleEnvironment } from "@/lib/paddle";
 import { AssessPanel } from "@/components/AssessPanel";
 import { FlippingWord } from "@/components/FlippingWord";
 import { DotPattern } from "@/components/ui/dot-pattern";
@@ -33,39 +34,93 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-type Line = { role: "user" | "assistant"; text: string };
+type Fragment = { text: string; start: number; end: number; sequence: number };
+type Line = {
+  role: "user" | "assistant";
+  text: string;
+  start: number;
+  end: number;
+  fragments: Fragment[];
+};
+
+function appendTranscriptFragment(lines: Line[], role: Line["role"], fragment: Fragment): Line[] {
+  const next = [...lines];
+  let index = -1;
+  for (let candidate = next.length - 1; candidate >= 0; candidate--) {
+    const line = next[candidate]!;
+    if (
+      line.role === role &&
+      fragment.start <= line.end + 500 &&
+      fragment.end >= line.start - 500
+    ) {
+      index = candidate;
+      break;
+    }
+  }
+  if (index < 0 && next.at(-1)?.role === role) index = next.length - 1;
+  if (index < 0) {
+    return [
+      ...next,
+      {
+        role,
+        text: fragment.text,
+        start: fragment.start,
+        end: fragment.end,
+        fragments: [fragment],
+      },
+    ];
+  }
+  const line = next[index]!;
+  const fragments = [...line.fragments, fragment].sort(
+    (a, b) => a.start - b.start || a.end - b.end || a.sequence - b.sequence,
+  );
+  next[index] = {
+    ...line,
+    start: Math.min(line.start, fragment.start),
+    end: Math.max(line.end, fragment.end),
+    fragments,
+    text: fragments.map((part) => part.text).join(""),
+  };
+  return next;
+}
 
 function Index() {
-  return (
-    <ConversationProvider>
-      <InterviewPage />
-    </ConversationProvider>
-  );
+  return <InterviewPage />;
 }
 
 function InterviewPage() {
   const [lines, setLines] = useState<Line[]>([]);
   const endRef = useRef<HTMLDivElement>(null);
+  const fragmentSequence = useRef(0);
 
-  const onEvent = useCallback((event: InterviewEvent) => {
-    if (event.type === "app.transcript") {
-      setLines((prev) => [...prev, { role: event.role, text: event.text }]);
+  const onEvent = useCallback((event: LiveEvent) => {
+    if (
+      (event.type !== "session.input_transcript.delta" &&
+        event.type !== "session.output_transcript.delta") ||
+      typeof event.delta !== "string" ||
+      event.delta.length === 0
+    ) {
       return;
     }
-    setLines((prev) => {
-      const next = [...prev];
-      for (let index = next.length - 1; index >= 0; index--) {
-        const line = next[index];
-        if (line?.role === "assistant" && line.text === event.originalText) {
-          next[index] = { ...line, text: event.correctedText };
-          return next;
-        }
-      }
-      return prev;
-    });
+    const role = event.type === "session.input_transcript.delta" ? "user" : "assistant";
+    const fragment = {
+      text: event.delta,
+      start: typeof event.start_ms === "number" ? event.start_ms : 0,
+      end: typeof event.end_ms === "number" ? event.end_ms : 0,
+      sequence: ++fragmentSequence.current,
+    };
+    setLines((previous) => appendTranscriptFragment(previous, role, fragment));
   }, []);
 
-  const call = useElevenLabsInterview({ onEvent });
+  const getStartContext = useCallback(async () => {
+    const environment = getPaddleEnvironment();
+    if (isPreviewBrowser()) return { accessToken: "", environment };
+    const { data } = await supabase.auth.getSession();
+    const accessToken = data.session?.access_token;
+    if (!accessToken) throw new Error("Please sign in again before starting your interview.");
+    return { accessToken, environment };
+  }, []);
+  const call = useLiveVoice({ onEvent, getStartContext });
   const account = useAccountSnapshot();
   const [preview, setPreview] = useState(false);
   useEffect(() => setPreview(isPreviewBrowser()), []);
@@ -88,8 +143,15 @@ function InterviewPage() {
 
   const start = () => {
     setLines([]);
-    void call.start().then(() => account.refetch());
+    fragmentSequence.current = 0;
+    call.start();
   };
+
+  const interviewId = call.interviewId;
+  const refetchAccount = account.refetch;
+  useEffect(() => {
+    if (interviewId && interviewId !== "preview") void refetchAccount();
+  }, [interviewId, refetchAccount]);
 
   // Also true after a dropped call, so an interview that ended early can still be assessed.
   const showReplay = idle && lines.length > 0;
@@ -158,9 +220,10 @@ function InterviewPage() {
         </div>
 
         <section className="mt-6 rounded-md border bg-card p-6">
+          <audio ref={call.audioRef} controls className="hidden" playsInline />
           <div className="flex flex-wrap items-center justify-center gap-3">
             {idle ? (
-              !account.user ? (
+              !account.user && !preview ? (
                 <Link
                   to="/auth"
                   className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
@@ -217,11 +280,19 @@ function InterviewPage() {
             )}
           </div>
           <p className="mt-4 text-center text-xs text-muted-foreground">
-            Dr Hale speaks with a natural British voice from ElevenLabs.
+            Dr Hale speaks with a natural British voice powered by Lovable AI.
           </p>
+          {call.playbackBlocked && (
+            <button
+              onClick={call.resumePlayback}
+              className="mx-auto mt-3 block rounded-full border px-4 py-2 text-sm"
+            >
+              Play Dr Hale’s voice
+            </button>
+          )}
           {preview ? (
             <p className="mt-2 text-center text-xs text-muted-foreground">
-              Preview mode · unlimited testing for tester accounts
+              Preview mode · unlimited testing
             </p>
           ) : (
             account.user &&

@@ -1,5 +1,5 @@
-// Browser-only: decides which UI to show. Never use this to grant access on the server;
-// see testers.ts for that.
+// The same hostname check gates unlimited preview testing in the browser and on the server.
+// Published and custom domains must continue through normal account allowances.
 const PREVIEW_SUFFIXES = ["lovable.app", "gpt-eng.com", "gptengineer.run"];
 const LIVE_PREVIEW_SUFFIXES = ["lovableproject.com", "lovableproject-dev.com"];
 

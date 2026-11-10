@@ -4,9 +4,9 @@ import process from "node:process";
 import { createLovableAiGatewayProvider } from "./ai/gateway-helpers.ts";
 import { createLovableAiGatewayRunIdFetch } from "./ai/run-id.ts";
 import { REASONING_GUIDE } from "./interview-briefing.ts";
+import { isPreviewHostname } from "./preview.ts";
 import { limitMessage, takeFeedback, visitorKey } from "./rate-limit.server.ts";
 import { authenticateRequest } from "./request-auth.server.ts";
-import { isServerTester } from "./testers.ts";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1";
 const TEXT_MODEL = "openai/gpt-6-astra";
@@ -29,8 +29,8 @@ export async function handleAssess(request: Request) {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) return Response.json({ error: "AI is not configured" }, { status: 500 });
 
-  const auth = await authenticateRequest(request);
-  const preview = isServerTester(auth?.user.email);
+  const preview = isPreviewHostname(new URL(request.url).hostname);
+  const auth = preview ? null : await authenticateRequest(request);
   if (!preview) {
     const allowed = takeFeedback(visitorKey(request));
     if (!allowed.ok) {

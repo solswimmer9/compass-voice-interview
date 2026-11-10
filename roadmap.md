@@ -1,4 +1,5 @@
 # Roadmap
+
 - [x] Voice geography interview MVP with transcript replay
 - [x] Calmer, narrator-style voice
 - [x] ElevenLabs natural British voice for the live two-way interview
@@ -12,4 +13,5 @@
 - [x] Allow unlimited preview testing while preserving published-site allowances
 - [x] Restore the interview used by the failed 13:49 connection and refund future failed voice starts automatically
 - [x] Recognize the current live-preview host for unlimited testing
-- [ ] Restore ElevenLabs agent availability — blocked: ElevenLabs rejects both the original and a clean agent during initialization on the free account; the API key cannot read account usage because it lacks `user_read`
+- [x] Replace ElevenLabs interviews with a natural Lovable live voice and verify a real voice session
+- [ ] Verify audible two-way playback in a real browser — blocked: the sandbox browser produces no WebRTC audio candidates; Lovable session creation and final usage are verified

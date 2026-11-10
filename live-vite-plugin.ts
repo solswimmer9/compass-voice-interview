@@ -5,7 +5,14 @@ import type { Plugin } from "vite";
 
 import WebSocket, { WebSocketServer } from "ws";
 
-import type { LiveConnector, LiveSocket } from "./src/lib/live-relay.server";
+import {
+  bindLiveConnection,
+  getLiveConfig,
+  validateLiveUpgrade,
+  type LiveConnector,
+  type LiveSocket,
+} from "./src/lib/live-relay.server";
+import { isPreviewHostname } from "./src/lib/preview";
 
 function liveSocket(socket: WebSocket): LiveSocket {
   return {
@@ -123,19 +130,17 @@ export function liveVoiceDev(): Plugin {
         timer.unref();
         void (async () => {
           try {
-            const relay = (await server.ssrLoadModule(
-              "/src/lib/live-relay.server.ts",
-            )) as typeof import("./src/lib/live-relay.server");
-            const config = relay.getLiveConfig();
-            const rejection = relay.validateLiveUpgrade(upgradeRequest(request), {
+            const config = getLiveConfig();
+            const voiceRequest = upgradeRequest(request);
+            const rejection = validateLiveUpgrade(voiceRequest, {
               allowMissingOrigin: true,
             });
             if (rejection) return rejectUpgrade(socket, rejection.status);
             if (socket.destroyed) return;
-            const limitRejection = relay.liveRejection(upgradeRequest(request));
+            const preview = isPreviewHostname(new URL(voiceRequest.url).hostname);
             sockets.handleUpgrade(request, socket, head, (connection) => {
               const browser = liveSocket(connection);
-              relay.bindLiveConnection(
+              bindLiveConnection(
                 browser,
                 config,
                 {
@@ -144,10 +149,11 @@ export function liveVoiceDev(): Plugin {
                   },
                 },
                 connectGateway,
-                { rejection: limitRejection },
+                { preview },
               );
             });
-          } catch {
+          } catch (error) {
+            console.error("Live voice preview upgrade failed", error);
             rejectUpgrade(socket, 503);
           } finally {
             clearTimeout(timer);

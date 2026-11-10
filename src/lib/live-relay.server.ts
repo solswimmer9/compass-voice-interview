@@ -1,10 +1,13 @@
 import { createOpenAI } from "@ai-sdk/openai";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { stepCountIs, streamText, type ModelMessage } from "ai";
 import process from "node:process";
 import { z } from "zod";
+import type { Database } from "@/integrations/supabase/types";
 import { DR_HALE_BRIEFING, openingInstructions, REASONING_GUIDE } from "./interview-briefing.ts";
 import { INTERVIEW_MINUTES } from "./limits.ts";
-import { limitMessage, takeInterview, visitorKey } from "./rate-limit.server.ts";
+import { isPreviewHostname } from "./preview.ts";
+import { authenticateAccessToken } from "./request-auth.server.ts";
 
 export type LiveConfig = {
   baseURL: string;
@@ -81,12 +84,6 @@ async function gatewayRejection(response: Response) {
   return new Error(message || `Voice gateway rejected the connection (${response.status})`);
 }
 
-// Counts an interview attempt for this visitor; returns a message when they are over the limit.
-export function liveRejection(request: Request): string | undefined {
-  const result = takeInterview(visitorKey(request));
-  return result.ok ? undefined : limitMessage("interviews", result.retryAfterMinutes);
-}
-
 export function validateLiveUpgrade(
   request: Request,
   options: { allowMissingOrigin?: boolean } = {},
@@ -133,7 +130,7 @@ export function handleLiveRequest(request: Request): Response {
       socket.accept();
       return workerSocket(socket);
     },
-    { rejection: liveRejection(request) },
+    { preview: isPreviewHostname(new URL(request.url).hostname) },
   );
   const response: ResponseInit & { webSocket: WebSocket } = { status: 101, webSocket: pair[0] };
   return new Response(null, response);
@@ -290,7 +287,7 @@ export function bindLiveConnection(
   configuration: LiveConfig,
   execution: LiveExecutionContext,
   connect: LiveConnector,
-  options: { rejection?: string | undefined } = {},
+  options: { preview?: boolean } = {},
 ): void {
   const config = { ...configuration };
   let durationTimer: ReturnType<typeof setTimeout> | undefined;
@@ -315,6 +312,8 @@ export function bindLiveConnection(
   let closeTimer: ReturnType<typeof setTimeout> | undefined;
   let finishDrain: (() => void) | undefined;
   let browserReady = false;
+  let interviewCredit: { id: string; supabase: SupabaseClient<Database> } | undefined;
+  let creditRelease: Promise<void> | undefined;
   let greetingRequested = false;
   let greetingCommand: { id: string; type: "instructions" | "commentary" } | undefined;
   let greetingTimer: ReturnType<typeof setTimeout> | undefined;
@@ -346,6 +345,43 @@ export function bindLiveConnection(
   function clearGreeting() {
     clearTimeout(greetingTimer);
     greetingCommand = undefined;
+  }
+
+  function releaseUnusedCredit() {
+    if (!interviewCredit || browserReady || creditRelease) return;
+    const credit = interviewCredit;
+    creditRelease = (async () => {
+      const { error } = await credit.supabase.rpc("release_interview_credit", {
+        p_interview_id: credit.id,
+      });
+      if (error) console.error("The unused interview credit could not be restored", error);
+    })();
+    execution.waitUntil(creditRelease);
+  }
+
+  async function authorizeStart(event: {
+    accessToken?: unknown;
+    environment?: unknown;
+  }): Promise<string> {
+    if (options.preview) return "preview";
+    if (typeof event.accessToken !== "string" || !event.accessToken) {
+      throw new Error("Please sign in again before starting your interview.");
+    }
+    const auth = await authenticateAccessToken(event.accessToken);
+    if (!auth) throw new Error("Your sign-in has expired. Please sign in again.");
+    if (event.environment !== "sandbox" && event.environment !== "live") {
+      throw new Error("Your interview settings could not be checked.");
+    }
+    const { data: allowance, error } = await auth.supabase.rpc("consume_interview_credit", {
+      p_environment: event.environment,
+    });
+    if (error) throw new Error("Your interview allowance could not be checked");
+    const result = allowance as { allowed?: boolean; interviewId?: string } | null;
+    if (!result?.allowed || !result.interviewId) {
+      throw new Error("Your free interview has been used. Buy the 2-Interview Pack to continue.");
+    }
+    interviewCredit = { id: result.interviewId, supabase: auth.supabase };
+    return result.interviewId;
   }
 
   function requestGreeting() {
@@ -389,6 +425,7 @@ export function bindLiveConnection(
 
   function finish() {
     if (finished) return;
+    releaseUnusedCredit();
     finished = closing = true;
     clearTimeout(durationTimer);
     clearTimeout(startTimer);
@@ -406,6 +443,7 @@ export function bindLiveConnection(
   function stop() {
     if (closing) return;
     closing = true;
+    releaseUnusedCredit();
     discardPendingWork();
     clearTimeout(durationTimer);
     clearTimeout(startupTimer);
@@ -686,7 +724,12 @@ export function bindLiveConnection(
         starting = true;
         config.openingInstructions = openingInstructions(event.openingTurn);
         execution.waitUntil(
-          startSession(event.sdp).catch((error) => {
+          (async () => {
+            const interviewId = await authorizeStart(event);
+            if (closing) return;
+            emit({ type: "app.interview.started", interviewId });
+            await startSession(event.sdp);
+          })().catch((error) => {
             if (!closing)
               emit({
                 type: "app.error",
@@ -717,8 +760,4 @@ export function bindLiveConnection(
   });
   browser.onClose(stop);
   browser.onError(stop);
-  if (options.rejection) {
-    emit({ type: "app.error", error: { message: options.rejection } });
-    finish();
-  }
 }
