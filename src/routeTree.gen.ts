@@ -15,6 +15,11 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ApiAssessRouteImport } from './routes/api/assess'
 import { Route as CheckoutSuccessRouteImport } from './routes/checkout/success'
+import { Route as PricingIndexRouteImport } from './routes/pricing/index'
+import { Route as PricingCompareRouteImport } from './routes/pricing/compare'
+import { Route as PricingGuideRouteImport } from './routes/pricing/guide'
+import { Route as PricingLifetimeRouteImport } from './routes/pricing/lifetime'
+import { Route as PricingSimpleRouteImport } from './routes/pricing/simple'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const IndexRoute = IndexRouteImport.update({
@@ -47,6 +52,31 @@ const CheckoutSuccessRoute = CheckoutSuccessRouteImport.update({
   path: '/checkout/success',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PricingIndexRoute = PricingIndexRouteImport.update({
+  id: '/pricing/',
+  path: '/pricing/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingCompareRoute = PricingCompareRouteImport.update({
+  id: '/pricing/compare',
+  path: '/pricing/compare',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingGuideRoute = PricingGuideRouteImport.update({
+  id: '/pricing/guide',
+  path: '/pricing/guide',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingLifetimeRoute = PricingLifetimeRouteImport.update({
+  id: '/pricing/lifetime',
+  path: '/pricing/lifetime',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingSimpleRoute = PricingSimpleRouteImport.update({
+  id: '/pricing/simple',
+  path: '/pricing/simple',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -61,6 +91,11 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/api/assess': typeof ApiAssessRoute
   '/checkout/success': typeof CheckoutSuccessRoute
+  '/pricing/compare': typeof PricingCompareRoute
+  '/pricing/guide': typeof PricingGuideRoute
+  '/pricing/lifetime': typeof PricingLifetimeRoute
+  '/pricing/simple': typeof PricingSimpleRoute
+  '/pricing/': typeof PricingIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -70,6 +105,11 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/api/assess': typeof ApiAssessRoute
   '/checkout/success': typeof CheckoutSuccessRoute
+  '/pricing/compare': typeof PricingCompareRoute
+  '/pricing/guide': typeof PricingGuideRoute
+  '/pricing/lifetime': typeof PricingLifetimeRoute
+  '/pricing/simple': typeof PricingSimpleRoute
+  '/pricing': typeof PricingIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
@@ -80,6 +120,11 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/api/assess': typeof ApiAssessRoute
   '/checkout/success': typeof CheckoutSuccessRoute
+  '/pricing/compare': typeof PricingCompareRoute
+  '/pricing/guide': typeof PricingGuideRoute
+  '/pricing/lifetime': typeof PricingLifetimeRoute
+  '/pricing/simple': typeof PricingSimpleRoute
+  '/pricing/': typeof PricingIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
@@ -91,6 +136,11 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/api/assess'
     | '/checkout/success'
+    | '/pricing/compare'
+    | '/pricing/guide'
+    | '/pricing/lifetime'
+    | '/pricing/simple'
+    | '/pricing/'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -100,6 +150,11 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/api/assess'
     | '/checkout/success'
+    | '/pricing/compare'
+    | '/pricing/guide'
+    | '/pricing/lifetime'
+    | '/pricing/simple'
+    | '/pricing'
     | '/api/public/payments/webhook'
   id:
     | '__root__'
@@ -109,6 +164,11 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/api/assess'
     | '/checkout/success'
+    | '/pricing/compare'
+    | '/pricing/guide'
+    | '/pricing/lifetime'
+    | '/pricing/simple'
+    | '/pricing/'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -119,6 +179,11 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiAssessRoute: typeof ApiAssessRoute
   CheckoutSuccessRoute: typeof CheckoutSuccessRoute
+  PricingCompareRoute: typeof PricingCompareRoute
+  PricingGuideRoute: typeof PricingGuideRoute
+  PricingLifetimeRoute: typeof PricingLifetimeRoute
+  PricingSimpleRoute: typeof PricingSimpleRoute
+  PricingIndexRoute: typeof PricingIndexRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
@@ -166,6 +231,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CheckoutSuccessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pricing/': {
+      id: '/pricing/'
+      path: '/pricing'
+      fullPath: '/pricing/'
+      preLoaderRoute: typeof PricingIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing/compare': {
+      id: '/pricing/compare'
+      path: '/pricing/compare'
+      fullPath: '/pricing/compare'
+      preLoaderRoute: typeof PricingCompareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing/guide': {
+      id: '/pricing/guide'
+      path: '/pricing/guide'
+      fullPath: '/pricing/guide'
+      preLoaderRoute: typeof PricingGuideRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing/lifetime': {
+      id: '/pricing/lifetime'
+      path: '/pricing/lifetime'
+      fullPath: '/pricing/lifetime'
+      preLoaderRoute: typeof PricingLifetimeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing/simple': {
+      id: '/pricing/simple'
+      path: '/pricing/simple'
+      fullPath: '/pricing/simple'
+      preLoaderRoute: typeof PricingSimpleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -183,6 +283,11 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   ApiAssessRoute: ApiAssessRoute,
   CheckoutSuccessRoute: CheckoutSuccessRoute,
+  PricingCompareRoute: PricingCompareRoute,
+  PricingGuideRoute: PricingGuideRoute,
+  PricingLifetimeRoute: PricingLifetimeRoute,
+  PricingSimpleRoute: PricingSimpleRoute,
+  PricingIndexRoute: PricingIndexRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
