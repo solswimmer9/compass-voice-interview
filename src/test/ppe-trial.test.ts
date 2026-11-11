@@ -6,11 +6,25 @@ import { countWords } from "@/content/words";
 import { buildPpeTrialSession, ppeFeedbackContext, ppeTutor } from "@/lib/ppe-trial.server";
 
 describe("PPE trial content", () => {
-  it("keeps PPE closed to students while every card is a draft", () => {
-    expect(ppeTutor().cards.length).toBeGreaterThan(0);
-    expect(cardsFor("ppe")).toHaveLength(0);
-    expect(isTutorAvailable("ppe")).toBe(false);
-    expect(selectCards(ppeTutor())).toHaveLength(0);
+  it("approves only the nine cards Solomon reviewed; the rest stay drafts", () => {
+    expect(
+      cardsFor("ppe")
+        .map((card) => card.id)
+        .sort(),
+    ).toEqual([
+      "democracy-and-growth",
+      "fairness-three-principles",
+      "housing-water-pollution",
+      "infrastructure-veto",
+      "mixed-neighbourhoods",
+      "organ-allocation",
+      "political-myth",
+      "prepunishment",
+      "welfare-cuts-fair",
+    ]);
+    expect(isTutorAvailable("ppe")).toBe(true);
+    for (const card of selectCards(ppeTutor())) expect(card.status).toBe("approved");
+    expect(ppeTutor().cards.some((card) => card.status === "draft")).toBe(true);
   });
 
   it("covers all three strands", () => {

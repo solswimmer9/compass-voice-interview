@@ -1,6 +1,6 @@
 # PPE cards for review (selection)
 
-Nine of the 40 draft PPE cards, three per strand, in full. Generated from `src/content/tutors/ppe/cards/`. All cards are drafts, so only tester accounts can hear them.
+Nine of the 40 PPE cards, three per strand, in full. These nine were approved by Solomon Allen on 2026-11-11; the other 31 are drafts. Generated from `src/content/tutors/ppe/cards/`. PPE is still limited to tester accounts.
 
 For each card: **Opening** is what Prof Matt asks first. **Prof Matt sees** is the text given to the voice tutor. **Background** goes only to the reasoning and feedback models. Reply with the card number and your comment; to change a card, edit its file, named after the id.
 

@@ -1,4 +1,4 @@
-// DRAFT from Solomon's PPE interview pack (11 November 2026), restructured by Claude.
+// Approved by Solomon Allen on 2026-11-11. From Solomon's PPE interview pack (11 November 2026), restructured by Claude.
 // Questions are the pack's original practice questions; summaries are in our own words.
 import type { TopicCard } from "../../../types.ts";
 
@@ -7,7 +7,7 @@ const card: TopicCard = {
   tutor: "ppe",
   strand: "philosophy",
   tags: ["punishment", "desert", "prediction", "liberty"],
-  status: "draft",
+  status: "approved",
   opening:
     "If a perfectly reliable machine predicted a murder tomorrow, could it be just to punish the person today?",
   live: "Hook: imagine a machine that never gets predictions wrong says someone will commit murder tomorrow. The tension: punishment seems to require that someone has done something, yet waiting means a death we could have prevented. Push on: if punishing them today prevents the murder, the prediction was false; does that make the case incoherent? Is locking someone up to prevent harm morally different from punishing them, even if they lose the same liberty? Separate prevention from deserved punishment, and certainty from probability.",
@@ -25,8 +25,9 @@ const card: TopicCard = {
       kind: "notes",
     },
   ],
-  reviewedBy: "",
-  reviewedAt: "",
+  reviewedBy: "Solomon Allen",
+  reviewedAt: "2026-11-11",
+  recheckBy: "2027-11-11",
 };
 
 export default card;

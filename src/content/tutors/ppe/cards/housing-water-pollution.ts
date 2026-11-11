@@ -1,4 +1,4 @@
-// DRAFT from Solomon's PPE interview pack (11 November 2026), restructured by Claude.
+// Approved by Solomon Allen on 2026-11-11. From Solomon's PPE interview pack (11 November 2026), restructured by Claude.
 // Questions are the pack's original practice questions; summaries are in our own words.
 import type { TopicCard } from "../../../types.ts";
 
@@ -7,7 +7,7 @@ const card: TopicCard = {
   tutor: "ppe",
   strand: "economics",
   tags: ["housing", "pollution", "regulation", "policy-design"],
-  status: "draft",
+  status: "approved",
   opening:
     "Is restricting new homes a fair way to reduce river pollution if other activities cause most of it?",
   live: "Hook: in parts of England, rules to protect rivers from nutrient pollution have held up new housing, even though farming and old sewage systems may cause much of the pollution. The tension: new homes add a little pollution and are easy to regulate; the bigger sources are harder to tackle. Push on: should costs follow responsibility for pollution, ability to pay, or ease of regulation? One study found modest pollution gains alongside fewer homes and higher prices, with building moving next door. What comparison would show whether schemes that offset pollution elsewhere really improve water quality?",
@@ -25,8 +25,9 @@ const card: TopicCard = {
       kind: "notes",
     },
   ],
-  reviewedBy: "",
-  reviewedAt: "",
+  reviewedBy: "Solomon Allen",
+  reviewedAt: "2026-11-11",
+  recheckBy: "2027-11-11",
 };
 
 export default card;

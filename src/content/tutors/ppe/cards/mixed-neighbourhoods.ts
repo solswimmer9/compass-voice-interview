@@ -1,4 +1,4 @@
-// DRAFT from Solomon's PPE interview pack (11 November 2026), restructured by Claude.
+// Approved by Solomon Allen on 2026-11-11. From Solomon's PPE interview pack (11 November 2026), restructured by Claude.
 // Questions are the pack's original practice questions; summaries are in our own words.
 import type { TopicCard } from "../../../types.ts";
 
@@ -7,7 +7,7 @@ const card: TopicCard = {
   tutor: "ppe",
   strand: "politics",
   tags: ["polarisation", "neighbourhoods", "causation", "evidence"],
-  status: "draft",
+  status: "approved",
   opening:
     "Would making neighbourhoods more politically mixed reduce hostility between political groups?",
   live: "Hook: people increasingly dislike those who vote the other way, and one popular explanation is that we live surrounded by people who agree with us. The tension: one large British study found people can tell how politically uniform their area is, but living in such an area is not linked to disliking the other side more. Push on: does the absence of a link prove neighbourhoods have no causal effect? What else could hide an effect? Could online networks matter more than neighbours, and how would the student test that?",
@@ -25,8 +25,9 @@ const card: TopicCard = {
       kind: "notes",
     },
   ],
-  reviewedBy: "",
-  reviewedAt: "",
+  reviewedBy: "Solomon Allen",
+  reviewedAt: "2026-11-11",
+  recheckBy: "2027-11-11",
 };
 
 export default card;

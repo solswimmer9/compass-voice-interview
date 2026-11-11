@@ -7,9 +7,9 @@ describe("isTutorAvailable", () => {
     expect(isTutorAvailable("geography")).toBe(true);
   });
 
-  it("is false for the PPE shell, which has no approved cards yet", () => {
+  it("is true for PPE once it has approved cards (the relay still limits PPE to testers)", () => {
     expect(tutorById("ppe")).toBeDefined();
-    expect(isTutorAvailable("ppe")).toBe(false);
+    expect(isTutorAvailable("ppe")).toBe(true);
   });
 
   it("is false for unknown or non-string ids", () => {

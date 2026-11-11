@@ -2,9 +2,9 @@
 // cards, while geography keeps its fixed prompt. Server-only.
 //
 // Access: only signed-in accounts in PREVIEW_TESTER_EMAILS (checked in live-relay.server.ts and
-// assess.server.ts). The trial never consumes or grants interview credits. Students cannot
-// start PPE until a card is approved, at which point this file should be replaced by the normal
-// content-layer path (isTutorAvailable("ppe") becomes true).
+// assess.server.ts). The trial never consumes or grants interview credits. Some PPE cards are now
+// approved, but students still cannot start PPE: opening it needs the normal content-layer path
+// with a credit check in place of this tester-only route.
 import { buildSession } from "../content/build-session.ts";
 import { tutorById } from "../content/index.ts";
 import { selectCards } from "../content/select-cards.ts";
