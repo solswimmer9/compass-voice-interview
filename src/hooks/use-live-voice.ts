@@ -14,6 +14,13 @@ export type LiveEvent = {
   [key: string]: unknown;
 };
 
+/**
+ * Why the last call ended. "dropped" means the call had connected and then the network,
+ * media or voice service failed, so it can be resumed with reconnect(). "failed" means it
+ * never got going.
+ */
+export type LiveEnding = "user" | "dropped" | "time_up" | "failed";
+
 type LiveState = {
   status: "idle" | "connecting" | "connected" | "stopping" | "closed";
   error: string | null;
@@ -22,6 +29,15 @@ type LiveState = {
   muted: boolean;
   playbackBlocked: boolean;
   interviewId: string | null;
+  ending: LiveEnding | null;
+  /** A friendly, non-error note from the server, such as the time-up message. */
+  notice: string | null;
+  /** Local clock time when the server will end the interview. */
+  endsAt: number | null;
+  /** True while the media connection is briefly interrupted but may still recover. */
+  unstable: boolean;
+  /** True when the current or last call resumed an earlier interview. */
+  resumed: boolean;
 };
 
 export type LiveStartContext = {
@@ -31,6 +47,8 @@ export type LiveStartContext = {
   readingId?: string;
 };
 
+type LiveResume = { interviewId: string; recap: string };
+
 const initialState: LiveState = {
   status: "idle",
   error: null,
@@ -39,7 +57,17 @@ const initialState: LiveState = {
   muted: false,
   playbackBlocked: false,
   interviewId: null,
+  ending: null,
+  notice: null,
+  endsAt: null,
+  unstable: false,
+  resumed: false,
 };
+
+/** Missing heartbeat acknowledgements for this long end the call. */
+export const HEARTBEAT_ACK_WINDOW_MS = 12_000;
+/** How long an interrupted media connection may try to recover on its own. */
+export const MEDIA_RECOVERY_GRACE_MS = 15_000;
 
 export function useLiveVoice(options: {
   url?: string;
@@ -51,9 +79,11 @@ export function useLiveVoice(options: {
   const mounted = useRef(false);
   const latest = useRef(options);
   const [call, setCall] = useState(initialState);
+  const callRef = useRef(call);
 
   useEffect(() => {
     latest.current = options;
+    callRef.current = call;
   });
   useEffect(() => {
     mounted.current = true;
@@ -61,11 +91,11 @@ export function useLiveVoice(options: {
       mounted.current = false;
       const voice = controller.current;
       controller.current = null;
-      voice?.stop();
+      voice?.end();
     };
   }, []);
 
-  const start = useCallback(() => {
+  const launch = useCallback((resume?: LiveResume) => {
     if (!mounted.current || controller.current) return;
     const audio = audioRef.current;
     if (!audio) {
@@ -84,6 +114,7 @@ export function useLiveVoice(options: {
     const voice = createLiveVoice({
       url: endpoint.href,
       audio,
+      resume,
       getStartContext: () => latest.current.getStartContext(),
       onEvent(event) {
         if (!mounted.current || controller.current !== voice) return;
@@ -94,16 +125,42 @@ export function useLiveVoice(options: {
             ...previous,
             interviewId: typeof event.interviewId === "string" ? event.interviewId : null,
           }));
+        } else if (event.type === "app.time.limit") {
+          const remaining = event["remainingMs"];
+          setCall((previous) => ({
+            ...previous,
+            endsAt:
+              typeof remaining === "number" && Number.isFinite(remaining) && remaining >= 0
+                ? Date.now() + remaining
+                : null,
+          }));
+        } else if (event.type === "app.time_up") {
+          const message = event["message"];
+          setCall((previous) => ({
+            ...previous,
+            notice: typeof message === "string" ? message.slice(0, 300) : "Time's up.",
+          }));
+        } else if (event.type === "app.media.unstable" || event.type === "app.media.stable") {
+          setCall((previous) => ({ ...previous, unstable: event.type === "app.media.unstable" }));
         } else if (event.type === "app.stopping") {
           setCall((previous) => ({ ...previous, status: "stopping", playbackBlocked: false }));
         } else if (event.type === "app.closed") {
           controller.current = null;
+          const ending = event["ending"];
           setCall((previous) => ({
             ...previous,
             status: "closed",
             muted: false,
             playbackBlocked: false,
+            unstable: false,
             finalized: event.finalized === true,
+            ending:
+              ending === "user" ||
+              ending === "dropped" ||
+              ending === "time_up" ||
+              ending === "failed"
+                ? ending
+                : "failed",
           }));
         } else if (event.type === "app.playback.blocked" || event.type === "app.playback.resumed") {
           setCall((previous) => ({
@@ -128,12 +185,47 @@ export function useLiveVoice(options: {
       },
     });
     controller.current = voice;
-    setCall({ ...initialState, status: "connecting" });
+    setCall((previous) =>
+      resume
+        ? {
+            ...initialState,
+            status: "connecting",
+            hasConnected: previous.hasConnected,
+            interviewId: previous.interviewId,
+            muted: false,
+            resumed: true,
+          }
+        : { ...initialState, status: "connecting" },
+    );
     void voice.start();
   }, []);
 
+  const start = useCallback(() => launch(), [launch]);
+
+  /**
+   * Resumes a dropped interview without using another credit. The recap of the
+   * conversation so far helps Dr River carry on where the call left off.
+   */
+  const reconnect = useCallback(
+    (recap: string) => {
+      const id = callRef.current.interviewId;
+      if (callRef.current.ending !== "dropped" || !id) return;
+      launch({ interviewId: id, recap });
+    },
+    [launch],
+  );
+
+  /** Gives up on resuming a dropped interview, so it is treated as finished. */
+  const dismissReconnect = useCallback(() => {
+    setCall((previous) =>
+      previous.ending === "dropped" && previous.status === "closed"
+        ? { ...previous, ending: "user" }
+        : previous,
+    );
+  }, []);
+
   const stop = useCallback(() => {
-    controller.current?.stop();
+    controller.current?.end();
   }, []);
   const setMuted = useCallback((muted: boolean) => {
     if (controller.current?.setMuted(muted)) setCall((previous) => ({ ...previous, muted }));
@@ -142,7 +234,16 @@ export function useLiveVoice(options: {
     void controller.current?.resumePlayback();
   }, []);
 
-  return { ...call, audioRef, start, stop, setMuted, resumePlayback };
+  return {
+    ...call,
+    audioRef,
+    start,
+    reconnect,
+    dismissReconnect,
+    stop,
+    setMuted,
+    resumePlayback,
+  };
 }
 
 function nextOpeningTurn() {
@@ -160,6 +261,7 @@ function nextOpeningTurn() {
 type LiveOptions = {
   url: string;
   audio: HTMLAudioElement;
+  resume?: LiveResume | undefined;
   getStartContext: () => Promise<LiveStartContext>;
   onEvent: (event: LiveEvent) => void;
 };
@@ -175,10 +277,15 @@ function createLiveVoice(options: LiveOptions) {
   let deadline: ReturnType<typeof setTimeout> | undefined;
   let cancelGathering: (() => void) | undefined;
   let lastAck = 0;
-  let lastHeartbeat = 0;
+  let mediaLostSince: number | undefined;
   let answerReceived = false;
   let finalized = false;
   let muted = false;
+  // How the call is ending, so the UI can tell a dropped call from one the student ended.
+  let wasActive = false;
+  let endedByUser = false;
+  let timeUp = false;
+  let resumable = true;
 
   function starting() {
     return state === "starting";
@@ -196,18 +303,24 @@ function createLiveVoice(options: LiveOptions) {
     }
   }
 
+  function ending(): LiveEnding {
+    if (timeUp) return "time_up";
+    if (endedByUser) return "user";
+    return wasActive && resumable ? "dropped" : "failed";
+  }
+
   function release() {
     if (state === "closed") return;
     state = "closed";
     clearInterval(heartbeat);
     clearTimeout(deadline);
     cancelGathering?.();
-    window.removeEventListener("pagehide", stop);
+    window.removeEventListener("pagehide", end);
     stopAudio();
     channel?.close();
     peer?.close();
     socket?.close();
-    options.onEvent({ type: "app.closed", finalized });
+    options.onEvent({ type: "app.closed", finalized, ending: ending() });
   }
 
   function stop() {
@@ -225,6 +338,13 @@ function createLiveVoice(options: LiveOptions) {
     deadline = setTimeout(release, 15_000);
     options.onEvent({ type: "app.stopping" });
     if (!socket || socket.readyState !== WebSocket.OPEN) release();
+  }
+
+  /** Ends the call at the student's request. */
+  function end() {
+    if (state === "stopping" || state === "closed") return;
+    endedByUser = true;
+    stop();
   }
 
   function setMuted(value: boolean) {
@@ -256,19 +376,21 @@ function createLiveVoice(options: LiveOptions) {
 
   function reportUnexpectedClosure(reason?: string) {
     if (state === "stopping" || state === "closed") return;
+    if (reason === "duration_limit") resumable = false;
+    // Once a call has connected the UI offers Reconnect instead of a new call.
+    const retry = wasActive ? "" : " Start a new call to retry.";
     const messages: Record<string, string> = {
-      startup_timeout: "Voice startup timed out. Start a new call to retry.",
-      initial_heartbeat_timeout: "Voice media did not connect. Start a new call to retry.",
-      heartbeat_timeout: "Voice connection was lost. Start a new call to retry.",
-      gateway_shutdown: "The voice service restarted. Start a new call to reconnect.",
+      startup_timeout: `Voice startup timed out.${retry}`,
+      initial_heartbeat_timeout: `Voice media did not connect.${retry}`,
+      heartbeat_timeout: `Voice connection was lost.${retry}`,
+      gateway_shutdown: `The voice service restarted.${retry}`,
       inactivity_timeout: "The voice call ended after inactivity.",
-      duration_limit: "The voice call reached its duration limit. Start a new call to continue.",
+      duration_limit: "The voice call reached its duration limit.",
     };
     options.onEvent({
       type: "app.error",
       error: {
-        message:
-          messages[reason ?? ""] ?? "The voice call ended unexpectedly. Start a new call to retry.",
+        message: messages[reason ?? ""] ?? `The voice call ended unexpectedly.${retry}`,
       },
     });
   }
@@ -279,30 +401,42 @@ function createLiveVoice(options: LiveOptions) {
 
   function pulse() {
     if (state !== "active") return;
-    if (Date.now() - lastAck >= 5000) return fail("Voice control connection lost");
-    if (Date.now() - lastHeartbeat >= 5000) return fail("Voice media connection lost");
-    if (!mediaReady()) return;
+    const now = Date.now();
+    if (now - lastAck >= HEARTBEAT_ACK_WINDOW_MS) return fail("Voice control connection lost.");
+    // Brief ICE interruptions ("disconnected") often recover by themselves, so allow a
+    // grace period before treating the call as dropped.
+    if (peer?.connectionState === "connected") {
+      if (mediaLostSince !== undefined) {
+        mediaLostSince = undefined;
+        options.onEvent({ type: "app.media.stable" });
+      }
+    } else if (mediaLostSince === undefined) {
+      mediaLostSince = now;
+      options.onEvent({ type: "app.media.unstable" });
+    } else if (now - mediaLostSince >= MEDIA_RECOVERY_GRACE_MS) {
+      return fail("Voice media connection lost.");
+    }
+    if (channel?.readyState !== "open") return;
     try {
+      // Keep the session alive while media recovers; the control socket is separate.
       send({ type: "gateway.heartbeat" });
-      lastHeartbeat = Date.now();
     } catch {
-      fail("Voice control connection failed");
+      fail("Voice control connection failed.");
     }
   }
 
   function activate() {
-    if (!answerReceived || !mediaReady()) return;
-    if (starting()) {
-      state = "active";
-      clearTimeout(deadline);
-      lastAck = Date.now();
-      lastHeartbeat = Date.now();
-      heartbeat = setInterval(pulse, 1000);
-      pulse();
-      if (state !== "active") return;
-      send({ type: "app.ready" });
-      options.onEvent({ type: "app.connected" });
-    } else pulse();
+    if (state === "active") return pulse();
+    if (!answerReceived || !mediaReady() || !starting()) return;
+    state = "active";
+    wasActive = true;
+    clearTimeout(deadline);
+    lastAck = Date.now();
+    heartbeat = setInterval(pulse, 1000);
+    pulse();
+    if (state !== "active") return;
+    send({ type: "app.ready" });
+    options.onEvent({ type: "app.connected" });
   }
 
   async function applyAnswer(event: LiveEvent) {
@@ -343,7 +477,7 @@ function createLiveVoice(options: LiveOptions) {
   async function start() {
     if (state !== "idle") return;
     state = "starting";
-    window.addEventListener("pagehide", stop);
+    window.addEventListener("pagehide", end);
     try {
       const startContext = await options.getStartContext();
       if (!starting()) return;
@@ -359,7 +493,7 @@ function createLiveVoice(options: LiveOptions) {
       peer = connection;
       for (const track of stream.getAudioTracks()) {
         track.enabled = !muted;
-        track.addEventListener("ended", stop);
+        track.addEventListener("ended", () => fail("Your microphone was disconnected."));
         connection.addTrack(track, stream);
       }
       connection.addEventListener("track", ({ track }) => {
@@ -369,9 +503,11 @@ function createLiveVoice(options: LiveOptions) {
         void resumePlayback();
       });
       connection.addEventListener("connectionstatechange", () => {
-        if (connection.connectionState === "failed")
-          fail("Voice media connection failed. Start a new call to retry.");
-        else if (connection.connectionState === "closed") fail("Voice media connection closed");
+        // "disconnected" is left to pulse(), which allows time to recover. There is no
+        // renegotiation channel through the relay, so an ICE restart cannot be completed;
+        // a call that does not recover is offered Reconnect instead.
+        if (connection.connectionState === "failed") fail("Voice media connection failed.");
+        else if (connection.connectionState === "closed") fail("Voice media connection closed.");
         else activate();
       });
       channel = connection.createDataChannel("oai-events");
@@ -386,8 +522,8 @@ function createLiveVoice(options: LiveOptions) {
           fail("Invalid voice session event");
         }
       });
-      channel.addEventListener("error", () => fail("Voice media connection failed"));
-      channel.addEventListener("close", stop);
+      channel.addEventListener("error", () => fail("Voice media connection failed."));
+      channel.addEventListener("close", () => fail("Voice media connection closed."));
       await connection.setLocalDescription(await connection.createOffer());
       if (!starting()) return;
       await gatherCandidates(connection);
@@ -398,7 +534,15 @@ function createLiveVoice(options: LiveOptions) {
       deadline = setTimeout(() => fail("Voice session did not start"), 50_000);
       socket.onopen = () => {
         if (!starting()) return release();
-        send({ type: "app.start", sdp, openingTurn: nextOpeningTurn(), ...startContext });
+        send({
+          type: "app.start",
+          sdp,
+          openingTurn: nextOpeningTurn(),
+          ...startContext,
+          ...(options.resume
+            ? { resumeInterviewId: options.resume.interviewId, recap: options.resume.recap }
+            : {}),
+        });
       };
       socket.onmessage = ({ data }) => {
         try {
@@ -409,6 +553,11 @@ function createLiveVoice(options: LiveOptions) {
             activate();
           } else if (event.type === "gateway.heartbeat.ack") {
             lastAck = Date.now();
+          } else if (event.type === "app.time_up") {
+            // A normal ending: the server closes the session once time is up.
+            timeUp = true;
+            options.onEvent(event);
+            return stop();
           } else if (event.type === "session.closed") {
             finalized =
               typeof event.usage?.seconds === "number" &&
@@ -431,12 +580,12 @@ function createLiveVoice(options: LiveOptions) {
           fail("Invalid voice event");
         }
       };
-      socket.onerror = () => fail("Voice connection failed");
+      socket.onerror = () => fail("Voice connection failed.");
       socket.onclose = () => {
         if (state !== "stopping" && state !== "closed") {
           options.onEvent({
             type: "app.error",
-            error: { message: "Voice control connection closed" },
+            error: { message: "Voice control connection closed." },
           });
         }
         release();
@@ -446,5 +595,5 @@ function createLiveVoice(options: LiveOptions) {
     }
   }
 
-  return { start, stop, setMuted, resumePlayback };
+  return { start, end, setMuted, resumePlayback };
 }

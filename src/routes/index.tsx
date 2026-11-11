@@ -10,6 +10,12 @@ import { DotPattern } from "@/components/ui/dot-pattern";
 import { INTERVIEW_MINUTES } from "@/lib/limits";
 import { useAccountSnapshot } from "@/hooks/useAccountSnapshot";
 import { isPreviewBrowser } from "@/lib/preview";
+import {
+  appendTranscriptFragment,
+  buildResumeRecap,
+  formatTranscript,
+  type TranscriptLine,
+} from "@/lib/transcript";
 
 const HEADLINE_WORDS = ["democratise", "open up", "demystify", "widen access to"];
 
@@ -36,64 +42,16 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-type Fragment = { text: string; start: number; end: number; sequence: number };
-type Line = {
-  role: "user" | "assistant";
-  text: string;
-  start: number;
-  end: number;
-  fragments: Fragment[];
-};
-
-function appendTranscriptFragment(lines: Line[], role: Line["role"], fragment: Fragment): Line[] {
-  const next = [...lines];
-  let index = -1;
-  for (let candidate = next.length - 1; candidate >= 0; candidate--) {
-    const line = next[candidate]!;
-    if (
-      line.role === role &&
-      fragment.start <= line.end + 500 &&
-      fragment.end >= line.start - 500
-    ) {
-      index = candidate;
-      break;
-    }
-  }
-  if (index < 0 && next.at(-1)?.role === role) index = next.length - 1;
-  if (index < 0) {
-    return [
-      ...next,
-      {
-        role,
-        text: fragment.text,
-        start: fragment.start,
-        end: fragment.end,
-        fragments: [fragment],
-      },
-    ];
-  }
-  const line = next[index]!;
-  const fragments = [...line.fragments, fragment].sort(
-    (a, b) => a.start - b.start || a.end - b.end || a.sequence - b.sequence,
-  );
-  next[index] = {
-    ...line,
-    start: Math.min(line.start, fragment.start),
-    end: Math.max(line.end, fragment.end),
-    fragments,
-    text: fragments.map((part) => part.text).join(""),
-  };
-  return next;
-}
-
 function Index() {
   return <InterviewPage />;
 }
 
 function InterviewPage() {
-  const [lines, setLines] = useState<Line[]>([]);
+  const [lines, setLines] = useState<TranscriptLine[]>([]);
   const endRef = useRef<HTMLDivElement>(null);
   const fragmentSequence = useRef(0);
+  // Each reconnect starts a new voice session whose timings restart from zero.
+  const transcriptSegment = useRef(0);
 
   const onEvent = useCallback((event: LiveEvent) => {
     if (
@@ -110,6 +68,7 @@ function InterviewPage() {
       start: typeof event.start_ms === "number" ? event.start_ms : 0,
       end: typeof event.end_ms === "number" ? event.end_ms : 0,
       sequence: ++fragmentSequence.current,
+      segment: transcriptSegment.current,
     };
     setLines((previous) => appendTranscriptFragment(previous, role, fragment));
   }, []);
@@ -129,14 +88,23 @@ function InterviewPage() {
   useEffect(() => setPreview(isPreviewBrowser()), []);
   const idle = call.status === "idle" || call.status === "closed";
 
+  const limitSeconds = INTERVIEW_MINUTES * 60;
+  const endsAt = call.endsAt;
   const [elapsed, setElapsed] = useState(0);
   useEffect(() => {
     if (call.status !== "connected") return;
     const startedAt = Date.now();
-    setElapsed(0);
-    const timer = setInterval(() => setElapsed(Math.floor((Date.now() - startedAt) / 1000)), 1000);
+    // Prefer the server's deadline, which also covers a resumed interview.
+    const tick = () =>
+      setElapsed(
+        endsAt === null
+          ? Math.floor((Date.now() - startedAt) / 1000)
+          : limitSeconds - Math.ceil(Math.max(0, endsAt - Date.now()) / 1000),
+      );
+    tick();
+    const timer = setInterval(tick, 1000);
     return () => clearInterval(timer);
-  }, [call.status]);
+  }, [call.status, endsAt, limitSeconds]);
   const clock = (seconds: number) =>
     `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
@@ -147,7 +115,16 @@ function InterviewPage() {
   const start = () => {
     setLines([]);
     fragmentSequence.current = 0;
+    transcriptSegment.current = 0;
     call.start();
+  };
+
+  const canReconnect =
+    call.status === "closed" && call.ending === "dropped" && Boolean(call.interviewId);
+  const reconnect = () => {
+    // Earlier lines stay; new ones are appended as a separate segment.
+    transcriptSegment.current += 1;
+    call.reconnect(buildResumeRecap(lines));
   };
 
   const interviewId = call.interviewId;
@@ -240,7 +217,22 @@ function InterviewPage() {
           <audio ref={call.audioRef} controls className="hidden" playsInline />
           <div className="flex flex-wrap items-center justify-center gap-3">
             {idle ? (
-              !account.user ? (
+              canReconnect ? (
+                <>
+                  <button
+                    onClick={reconnect}
+                    className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition hover:opacity-90"
+                  >
+                    Reconnect
+                  </button>
+                  <button
+                    onClick={call.dismissReconnect}
+                    className="rounded-full border px-6 py-3 font-medium"
+                  >
+                    End interview
+                  </button>
+                </>
+              ) : !account.user ? (
                 <Link
                   to="/auth"
                   className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
@@ -266,14 +258,22 @@ function InterviewPage() {
             ) : (
               <>
                 <span
-                  className={`h-3 w-3 rounded-full bg-accent ${call.status === "connected" ? "live-pulse" : "opacity-50"}`}
+                  role="img"
+                  aria-label={
+                    call.status === "connected" && !call.unstable ? "Live" : "Not live yet"
+                  }
+                  className={`h-3 w-3 rounded-full bg-accent ${call.status === "connected" && !call.unstable ? "live-pulse" : "opacity-50"}`}
                 />
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-muted-foreground" aria-live="polite">
                   {call.status === "connected"
-                    ? `In the interview room · ${clock(Math.min(elapsed, INTERVIEW_MINUTES * 60))} of ${INTERVIEW_MINUTES}:00`
+                    ? call.unstable
+                      ? "Connection interrupted · trying to recover…"
+                      : `In the interview room · ${clock(Math.max(0, Math.min(elapsed, limitSeconds)))} of ${INTERVIEW_MINUTES}:00`
                     : call.status === "stopping"
                       ? "Wrapping up…"
-                      : "Connecting…"}
+                      : call.resumed
+                        ? "Reconnecting…"
+                        : "Connecting…"}
                 </span>
                 <button
                   disabled={call.status !== "connected"}
@@ -293,8 +293,18 @@ function InterviewPage() {
             )}
           </div>
           <p className="mt-4 text-center text-xs text-muted-foreground">
-            Dr River speaks with a natural British voice powered by Lovable AI.
+            Dr River speaks with a natural British voice.
           </p>
+          {canReconnect && (
+            <div role="status" className="mt-4 rounded-md border px-4 py-3 text-center text-sm">
+              <p className="font-medium">The line dropped.</p>
+              <p className="mt-1 text-muted-foreground">
+                Reconnect to carry on where you left off. This won’t use another interview, and the
+                time you have left stays the same.
+              </p>
+              {call.error && <p className="mt-1 text-xs text-muted-foreground">{call.error}</p>}
+            </div>
+          )}
           {call.playbackBlocked && (
             <button
               onClick={call.resumePlayback}
@@ -323,13 +333,21 @@ function InterviewPage() {
               </p>
             )
           )}
-          {call.error && (
+          {call.error && !canReconnect && (
             <p role="alert" className="mt-4 text-sm text-destructive">
               {call.error}
             </p>
           )}
         </section>
 
+        {idle && call.ending === "time_up" && call.notice && (
+          <p
+            role="status"
+            className="mt-10 rounded-md border border-accent/60 px-4 py-3 text-center text-sm"
+          >
+            {call.notice}
+          </p>
+        )}
         {lines.length > 0 && (
           <section className="mt-10">
             <h2 className="font-serif text-3xl font-semibold">
@@ -363,13 +381,9 @@ function InterviewPage() {
           </section>
         )}
 
-        {showReplay && (
-          <AssessPanel
-            interviewId={call.interviewId}
-            initialTranscript={lines
-              .map((l) => `${l.role === "assistant" ? "Dr River" : "You"}: ${l.text.trim()}`)
-              .join("\n\n")}
-          />
+        {/* Feedback closes the interview for good, so wait until reconnecting is declined. */}
+        {showReplay && !canReconnect && (
+          <AssessPanel interviewId={call.interviewId} initialTranscript={formatTranscript(lines)} />
         )}
       </main>
       <footer className="relative z-10 mx-auto max-w-2xl px-6 pb-10 text-center text-xs text-muted-foreground">
