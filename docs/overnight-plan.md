@@ -12,18 +12,18 @@ Branch: `experiment/context-layer`. Nothing here touches `main`, the live site, 
 
 ## Work packages
 
-| # | Package | Source document | Agent | Depends on | Database needed |
-|---|---|---|---|---|---|
-| 1 | Content core: types, shared teaching rules, Dr River pack, card selection, prompt builder | context-layer-spec steps 1–2 | Opus | none | no |
-| 2 | Feedback quote verifier and generic-phrase detector | architecture §10 | Sonnet | none | no |
-| 3 | Grounded feedback pipeline: analyst and writer prompts, schemas, orchestration with the model call injected | architecture §9–10 | Sonnet | 2 | no |
-| 4 | Evaluation kit: transcript metrics (talk share, long turns, leading questions), scripted student definitions, thresholds | architecture §12, §14 | Sonnet | none | no |
-| 5 | Remaining geography cards, restructured from the existing briefing | context-layer-spec | Sonnet | 1 | no |
-| 6 | PPE tutor shell: persona slot and empty card list, disabled | pedagogy (PPE section) | Sonnet (with 5) | 1 | no |
-| 7 | Interview director: phases, turn state, difficulty rules, steering notes, run manifest | architecture §6, §11; pedagogy | Sonnet | 1 | no |
-| 8 | Student context logic: update from verified evidence, expiry, 80-word summary | architecture §7 | Sonnet (with 7) | 1, 2 | no (storage later) |
-| 9 | Wire the prompt builder into the relay and feedback; server accepts a tutor id, defaulting to geography | context-layer-spec step 2 | Opus | 1, 5, 6 | no |
-| 10 | Review, full checks, push, handover note, Lovable schema request | all | Orchestrator | all | writes the request only |
+| #   | Package                                                                                                                  | Source document                | Agent           | Depends on | Database needed         |
+| --- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------ | --------------- | ---------- | ----------------------- |
+| 1   | Content core: types, shared teaching rules, Dr River pack, card selection, prompt builder                                | context-layer-spec steps 1–2   | Opus            | none       | no                      |
+| 2   | Feedback quote verifier and generic-phrase detector                                                                      | architecture §10               | Sonnet          | none       | no                      |
+| 3   | Grounded feedback pipeline: analyst and writer prompts, schemas, orchestration with the model call injected              | architecture §9–10             | Sonnet          | 2          | no                      |
+| 4   | Evaluation kit: transcript metrics (talk share, long turns, leading questions), scripted student definitions, thresholds | architecture §12, §14          | Sonnet          | none       | no                      |
+| 5   | Remaining geography cards, restructured from the existing briefing                                                       | context-layer-spec             | Sonnet          | 1          | no                      |
+| 6   | PPE tutor shell: persona slot and empty card list, disabled                                                              | pedagogy (PPE section)         | Sonnet (with 5) | 1          | no                      |
+| 7   | Interview director: phases, turn state, difficulty rules, steering notes, run manifest                                   | architecture §6, §11; pedagogy | Sonnet          | 1          | no                      |
+| 8   | Student context logic: update from verified evidence, expiry, 80-word summary                                            | architecture §7                | Sonnet (with 7) | 1, 2       | no (storage later)      |
+| 9   | Wire the prompt builder into the relay and feedback; server accepts a tutor id, defaulting to geography                  | context-layer-spec step 2      | Opus            | 1, 5, 6    | no                      |
+| 10  | Review, full checks, push, handover note, Lovable schema request                                                         | all                            | Orchestrator    | all        | writes the request only |
 
 Packages 1, 2, 3 and 4 run in parallel. Then 5–8 in parallel. Then 9. Then 10.
 

@@ -23,9 +23,15 @@ export function LegalFooter() {
   return (
     <footer className="relative z-10 border-t px-6 py-6 text-center text-xs text-muted-foreground">
       <nav className="flex flex-wrap justify-center gap-4">
-        <Link to="/terms" className="hover:text-foreground">Terms &amp; Conditions</Link>
-        <Link to="/privacy" className="hover:text-foreground">Privacy Notice</Link>
-        <Link to="/refunds" className="hover:text-foreground">Refund Policy</Link>
+        <Link to="/terms" className="hover:text-foreground">
+          Terms &amp; Conditions
+        </Link>
+        <Link to="/privacy" className="hover:text-foreground">
+          Privacy Notice
+        </Link>
+        <Link to="/refunds" className="hover:text-foreground">
+          Refund Policy
+        </Link>
       </nav>
       <p className="mt-2">© 2026 {SELLER_NAME}. Payments are processed securely by Stripe.</p>
     </footer>

@@ -5,9 +5,15 @@ export const Route = createFileRoute("/terms")({
   head: () => ({
     meta: [
       { title: "Terms & Conditions | Oxbridge Interview Practice" },
-      { name: "description", content: "Terms for using the Oxbridge geography voice interview practice service." },
+      {
+        name: "description",
+        content: "Terms for using the Oxbridge geography voice interview practice service.",
+      },
       { property: "og:title", content: "Terms & Conditions | Oxbridge Interview Practice" },
-      { property: "og:description", content: "Terms for using the Oxbridge geography voice interview practice service." },
+      {
+        property: "og:description",
+        content: "Terms for using the Oxbridge geography voice interview practice service.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -26,20 +32,23 @@ function TermsPage() {
       <h2>The service</h2>
       <p>
         We offer AI-led mock interviews and written AI feedback on your reasoning. It is a practice
-        tool; it does not guarantee any admissions outcome and is not affiliated with any university.
+        tool; it does not guarantee any admissions outcome and is not affiliated with any
+        university.
       </p>
       <h2>Your account</h2>
       <p>
         You must give accurate information, keep your login details confidential, and you are
-        responsible for activity on your account. If you are under 18 you should have permission from
-        a parent or guardian.
+        responsible for activity on your account. If you are under 18 you should have permission
+        from a parent or guardian.
       </p>
       <h2>Acceptable use</h2>
       <p>You must not misuse the service, including by:</p>
       <ul>
         <li>using it unlawfully, or for fraud or spam;</li>
         <li>infringing anyone's intellectual property;</li>
-        <li>interfering with its security, e.g. malware, probing, scraping, or bypassing limits;</li>
+        <li>
+          interfering with its security, e.g. malware, probing, scraping, or bypassing limits;
+        </li>
         <li>reverse engineering, reselling or redistributing the service;</li>
         <li>
           trying to make the AI produce illegal, hateful, harassing or deceptive content (including
@@ -50,10 +59,10 @@ function TermsPage() {
       <p>
         You are responsible for what you say or upload and must have the right to share it. AI
         responses and feedback can be inaccurate or incomplete — check anything important yourself.
-        You keep any rights you hold in your input; you may use the feedback for your own preparation.
-        We may refuse, filter or remove content and restrict accounts that break these terms. To
-        report content that infringes your rights, contact us through your account email and we
-        will review and remove it where appropriate; repeat infringers will lose access.
+        You keep any rights you hold in your input; you may use the feedback for your own
+        preparation. We may refuse, filter or remove content and restrict accounts that break these
+        terms. To report content that infringes your rights, contact us through your account email
+        and we will review and remove it where appropriate; repeat infringers will lose access.
       </p>
       <h2>Intellectual property</h2>
       <p>
@@ -62,7 +71,9 @@ function TermsPage() {
       </p>
       <h2>Payments</h2>
       <p>
-        Payments are taken securely by our payment processor, Stripe. Prices are shown in GBP and include any applicable tax. Refunds are covered by our Refund Policy. Our offers are one-off payments, not subscriptions.
+        Payments are taken securely by our payment processor, Stripe. Prices are shown in GBP and
+        include any applicable tax. Refunds are covered by our Refund Policy. Our offers are one-off
+        payments, not subscriptions.
       </p>
       <h2>Availability</h2>
       <p>
@@ -78,8 +89,8 @@ function TermsPage() {
       <h2>Liability</h2>
       <p>
         Our total liability is limited to what you paid us in the 12 months before the claim. We are
-        not liable for indirect or consequential loss. Nothing limits liability for death or personal
-        injury caused by negligence, fraud, or anything else that cannot be limited by law.
+        not liable for indirect or consequential loss. Nothing limits liability for death or
+        personal injury caused by negligence, fraud, or anything else that cannot be limited by law.
       </p>
       <h2>General</h2>
       <p>

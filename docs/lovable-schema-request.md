@@ -9,6 +9,7 @@ Do not send this until the privacy notice has been updated to say that transcrip
 > Please make these database changes. Keep all existing tables, functions, policies and credit rules exactly as they are.
 >
 > **1. Add columns to `interview_sessions`** (all nullable, no defaults, so existing rows and functions are unaffected):
+>
 > - `tutor_id text`
 > - `card_ids text[]`
 > - `reading_id text`
@@ -20,6 +21,7 @@ Do not send this until the privacy notice has been updated to say that transcrip
 > - `ended_at timestamptz`
 >
 > **2. New table `student_context`:**
+>
 > - `user_id uuid not null`
 > - `tutor_id text not null`
 > - `context jsonb not null`
@@ -28,6 +30,7 @@ Do not send this until the privacy notice has been updated to say that transcrip
 > - Row-level security on. Signed-in users can `select` their own row only. No insert, update or delete policy for users.
 >
 > **3. New security-definer functions**, each using `auth.uid()`, raising "Sign in required" when it is null, with `search_path = public`, executable by `authenticated` and `service_role` only:
+>
 > - `save_interview_record(p_interview_id uuid, p_tutor_id text, p_card_ids text[], p_reading_id text, p_transcript jsonb, p_turn_states jsonb, p_run_manifest jsonb, p_metrics jsonb)` updates the caller's own row in `interview_sessions`, sets `ended_at = now()`, and returns true if a row was updated.
 > - `save_interview_feedback(p_interview_id uuid, p_feedback jsonb)` updates the caller's own row and returns true if a row was updated.
 > - `upsert_student_context(p_tutor_id text, p_context jsonb)` inserts or replaces the caller's own row in `student_context`.
@@ -41,16 +44,16 @@ Do not send this until the privacy notice has been updated to say that transcrip
 
 ## Why each piece
 
-| Item | Used by |
-|---|---|
-| `tutor_id`, `card_ids`, `reading_id` | Avoiding repeated topics; history page |
-| `transcript` | History page; feedback built from the server's copy instead of the browser's |
-| `turn_states`, `metrics` | Monitoring and evaluation (shadow mode) |
-| `feedback` | Showing past feedback |
-| `run_manifest` | Knowing which prompt and model versions produced an interview |
-| `student_context` | The per-student summary that shapes the next interview |
-| `delete_my_interview_data` | The deletion promise in the privacy notice |
-| Retention job | Deleting transcripts after each admissions cycle |
+| Item                                 | Used by                                                                      |
+| ------------------------------------ | ---------------------------------------------------------------------------- |
+| `tutor_id`, `card_ids`, `reading_id` | Avoiding repeated topics; history page                                       |
+| `transcript`                         | History page; feedback built from the server's copy instead of the browser's |
+| `turn_states`, `metrics`             | Monitoring and evaluation (shadow mode)                                      |
+| `feedback`                           | Showing past feedback                                                        |
+| `run_manifest`                       | Knowing which prompt and model versions produced an interview                |
+| `student_context`                    | The per-student summary that shapes the next interview                       |
+| `delete_my_interview_data`           | The deletion promise in the privacy notice                                   |
+| Retention job                        | Deleting transcripts after each admissions cycle                             |
 
 ## Things to check after Lovable applies it
 

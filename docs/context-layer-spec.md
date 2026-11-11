@@ -42,22 +42,26 @@ All of `src/content` is server-only, like `interview-briefing.ts` today.
 
 ```ts
 type TopicCard = {
-  id: string;                    // stable slug, stored against interviews
+  id: string; // stable slug, stored against interviews
   tutor: "geography" | "ppe";
-  strand: string;                // geography: "human" | "physical"; ppe: "philosophy" | "politics" | "economics"
+  strand: string; // geography: "human" | "physical"; ppe: "philosophy" | "politics" | "economics"
   tags: string[];
-  status: "draft" | "approved";  // only approved cards are ever selected
-  opening: string;               // the question as asked aloud; must fit the opening limit (see Constraints)
-  live: string;                  // max ~200 words. Hook, the core tension, 3-4 push-on lines.
-                                 // Plain language, no academic names. Goes to the voice model.
-  deep: string;                  // max ~500 words. The underlying argument, the main
-                                 // counter-positions, common weak moves by candidates.
-                                 // May name academics. Goes only to the backend and feedback models.
-  related: string[];             // card ids that follow naturally
-  sources: { title: string; url?: string; kind: "paper" | "book" | "podcast" | "video" | "notes" | "question" }[];
+  status: "draft" | "approved"; // only approved cards are ever selected
+  opening: string; // the question as asked aloud; must fit the opening limit (see Constraints)
+  live: string; // max ~200 words. Hook, the core tension, 3-4 push-on lines.
+  // Plain language, no academic names. Goes to the voice model.
+  deep: string; // max ~500 words. The underlying argument, the main
+  // counter-positions, common weak moves by candidates.
+  // May name academics. Goes only to the backend and feedback models.
+  related: string[]; // card ids that follow naturally
+  sources: {
+    title: string;
+    url?: string;
+    kind: "paper" | "book" | "podcast" | "video" | "notes" | "question";
+  }[];
   reviewedBy: string;
-  reviewedAt: string;            // ISO date
-  recheckBy?: string;            // set for cards based on recent research; 12 months after review
+  reviewedAt: string; // ISO date
+  recheckBy?: string; // set for cards based on recent research; 12 months after review
 };
 ```
 
@@ -109,9 +113,9 @@ Do not replay past transcripts into a prompt. Keep one small structured summary 
 type StudentMemory = {
   interviews: number;
   cardsDone: { id: string; at: string }[];
-  strengths: string[];        // max 3, each under 20 words
-  habits: string[];           // recurring weaknesses, max 3, each under 20 words
-  nextFocus: string;          // one sentence
+  strengths: string[]; // max 3, each under 20 words
+  habits: string[]; // recurring weaknesses, max 3, each under 20 words
+  nextFocus: string; // one sentence
 };
 ```
 
@@ -165,12 +169,12 @@ Steps 1–2 need no schema change and can ship first.
 
 ## Open decisions
 
-| # | Question | Default if unanswered |
-|---|---|---|
-| 1 | Name of the PPE tutor. "Dr Matt" reads as Dr Matt Williams of Jesus College, a real tutor. | A clearly fictional name, set in `persona.ts`. |
-| 2 | Is a PPE interview one strand or mixed? | Student picks philosophy, politics, economics or mixed. |
-| 3 | Who reviews PPE cards for accuracy? | No PPE card is approved until a named PPE reviewer exists. |
-| 4 | Do we hold permission to store podcast and video transcripts? | Keep them in gitignored `content-raw/` only; cards carry ideas in our own words and a link. |
-| 5 | How long are transcripts kept? | Until 31 August after the interview season, then deleted; memory kept. |
-| 6 | Can teachers on a school licence read student transcripts? | No. Teachers see counts, topics and feedback summaries only. |
-| 7 | Does the tutor say it remembers the student? | No, unless asked. It just acts on it. |
+| #   | Question                                                                                   | Default if unanswered                                                                       |
+| --- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| 1   | Name of the PPE tutor. "Dr Matt" reads as Dr Matt Williams of Jesus College, a real tutor. | A clearly fictional name, set in `persona.ts`.                                              |
+| 2   | Is a PPE interview one strand or mixed?                                                    | Student picks philosophy, politics, economics or mixed.                                     |
+| 3   | Who reviews PPE cards for accuracy?                                                        | No PPE card is approved until a named PPE reviewer exists.                                  |
+| 4   | Do we hold permission to store podcast and video transcripts?                              | Keep them in gitignored `content-raw/` only; cards carry ideas in our own words and a link. |
+| 5   | How long are transcripts kept?                                                             | Until 31 August after the interview season, then deleted; memory kept.                      |
+| 6   | Can teachers on a school licence read student transcripts?                                 | No. Teachers see counts, topics and feedback summaries only.                                |
+| 7   | Does the tutor say it remembers the student?                                               | No, unless asked. It just acts on it.                                                       |

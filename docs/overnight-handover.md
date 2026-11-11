@@ -10,15 +10,15 @@ Checks on the final commit: 425 tests pass (38 before tonight), type check clean
 
 ## What was built
 
-| Area | Where | Connected to the app? |
-|---|---|---|
-| Shared teaching rules, tutor packs, topic cards, card selection, prompt builder | `src/content/` | Yes, by the last commit |
-| Dr River pack: 14 approved cards, 24 drafts | `src/content/tutors/geography/` | Approved cards only |
-| PPE tutor shell, no content | `src/content/tutors/ppe/` | Registered, cannot start |
-| Quote verifier, generic-phrase detector, evidence-checked feedback pipeline | `src/lib/feedback/` | No |
-| Phase director, turn analyst prompt, run manifest, student context | `src/lib/interview/` | No |
-| Transcript metrics, thresholds, scripted student profiles, judge prompt | `src/lib/evals/` | No |
-| Database request, ready to paste | `docs/lovable-schema-request.md` | Not sent |
+| Area                                                                            | Where                            | Connected to the app?    |
+| ------------------------------------------------------------------------------- | -------------------------------- | ------------------------ |
+| Shared teaching rules, tutor packs, topic cards, card selection, prompt builder | `src/content/`                   | Yes, by the last commit  |
+| Dr River pack: 14 approved cards, 24 drafts                                     | `src/content/tutors/geography/`  | Approved cards only      |
+| PPE tutor shell, no content                                                     | `src/content/tutors/ppe/`        | Registered, cannot start |
+| Quote verifier, generic-phrase detector, evidence-checked feedback pipeline     | `src/lib/feedback/`              | No                       |
+| Phase director, turn analyst prompt, run manifest, student context              | `src/lib/interview/`             | No                       |
+| Transcript metrics, thresholds, scripted student profiles, judge prompt         | `src/lib/evals/`                 | No                       |
+| Database request, ready to paste                                                | `docs/lovable-schema-request.md` | Not sent                 |
 
 Separately, branch `feature/schools-pricing` adds a Schools card (£1,250 per admissions cycle, up to 30 students, by enquiry) to the pricing page.
 
@@ -49,16 +49,16 @@ If anything sounds worse than before, revert `c109dfc` and tell me what you hear
 
 ## Decisions waiting for you
 
-| # | Decision | What I did meanwhile |
-|---|---|---|
-| 1 | The 14 approved geography cards are marked "reviewed by Solomon Allen". They restructure your existing briefing, with short linking sentences added by the agent. Please read them. | Marked approved so interviews work |
-| 2 | 24 draft cards need fleshing out, or deleting. | Left as drafts; never shown to students |
-| 3 | PPE tutor name. | Placeholder "Dr Vale" |
-| 4 | PPE content. | None written. Upload it and it becomes cards for your approval |
-| 5 | Schools enquiry email. | Button reads "Enquiries opening soon" |
-| 6 | Schools plan terms: £1,250, 30 students, per cycle, "teacher overview in development". | My defaults |
-| 7 | Send the database request to Lovable? Update the privacy notice first. | Not sent |
-| 8 | Remove "body language" from video feedback? | Unchanged |
+| #   | Decision                                                                                                                                                                            | What I did meanwhile                                           |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| 1   | The 14 approved geography cards are marked "reviewed by Solomon Allen". They restructure your existing briefing, with short linking sentences added by the agent. Please read them. | Marked approved so interviews work                             |
+| 2   | 24 draft cards need fleshing out, or deleting.                                                                                                                                      | Left as drafts; never shown to students                        |
+| 3   | PPE tutor name.                                                                                                                                                                     | Placeholder "Dr Vale"                                          |
+| 4   | PPE content.                                                                                                                                                                        | None written. Upload it and it becomes cards for your approval |
+| 5   | Schools enquiry email.                                                                                                                                                              | Button reads "Enquiries opening soon"                          |
+| 6   | Schools plan terms: £1,250, 30 students, per cycle, "teacher overview in development".                                                                                              | My defaults                                                    |
+| 7   | Send the database request to Lovable? Update the privacy notice first.                                                                                                              | Not sent                                                       |
+| 8   | Remove "body language" from video feedback?                                                                                                                                         | Unchanged                                                      |
 
 ## Still to do, in order
 

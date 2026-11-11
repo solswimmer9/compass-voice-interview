@@ -24,7 +24,9 @@ The product idea, the teaching design and the engineering discipline are strong 
 ## The plan (80/20 order)
 
 ### Step 1: Close the money holes (about half a day)
+
 These are database changes, so they go through Lovable per `AGENTS.md`.
+
 - [ ] `REVOKE EXECUTE ON FUNCTION public.release_interview_credit(uuid) FROM authenticated;` and call it only from the relay with the service role plus a user-id check.
 - [ ] Refund failed starts based on what the server saw (the gateway session never started, or the call was under N seconds), not on the client's `app.ready` message.
 - [ ] Pick the payments environment (sandbox or live) on the server. Reject `sandbox` in production checkout, relay and account functions.
@@ -33,23 +35,27 @@ These are database changes, so they go through Lovable per `AGENTS.md`.
 - [ ] Cap claims per student on each school bundle. Validate the checkout `returnUrl` against the site's own origin.
 
 ### Step 2: Make the core loop trustworthy (2 to 3 days)
+
 - [ ] **Save the transcript on the server** in `finish()` in the relay, keyed by interview. `/api/assess` grades the stored copy, the editable textarea goes, and the replay survives a refresh.
 - [ ] **Don't burn feedback on failure.** Consume the credit only when the stream completes, or add a release on error or abort.
 - [ ] **Survive network blips.** Tolerate "disconnected" for about 15s, call `restartIce()`, widen the heartbeat window to 10 to 15s, and refund the credit if a call dies in its first few minutes.
 - [ ] **Time-cue the tutor.** Around 16 minutes, prompt it to start pulling the answers together. Around 19 minutes, have it close warmly with two strengths and two improvements. End with a goodbye, not an error banner.
 
 ### Step 3: Ship the work that's already built (2 to 3 days)
+
 - [ ] Reapply the content-layer switch (`62090d9`, reverted per `docs/overnight-handover.md`) and test it by voice, behind the tester flag.
 - [ ] Use the quote-verified feedback pipeline (`src/lib/feedback/pipeline.ts`), with the current feedback as fallback. Render the feedback as proper Markdown.
 - [ ] Tidy the delegation path. Merge transcript fragments into turns, cap the history, re-run only after the student finishes a turn, and remove the leftover study-schedule template code and the failure text that gets read out.
 
 ### Step 4: Cheap hygiene (half a day)
+
 - [ ] Add `bun run lint` to CI and fix the existing errors.
 - [ ] Move `appendTranscriptFragment` out of `src/routes/index.tsx` into `src/lib/transcript.ts` and unit-test it. Add one test of the interview page's states with `useLiveVoice` mocked.
 - [ ] Delete the 44 unused shadcn components and the dependencies nothing imports (recharts, cmdk, embla, vaul, date-fns, react-hook-form…).
 - [ ] Replace the "Lovable AI" credit in the customer copy.
 
 ### Deliberately not now
+
 Multi-subject and PPE, and more architecture docs. Two core roadmap items are still open: a real end-to-end purchase and refund, and audible two-way voice in a real browser. Those come first.
 
 ## Features worth adding (in order)
@@ -57,4 +63,4 @@ Multi-subject and PPE, and more architecture docs. Two core roadmap items are st
 1. **Free taster and a sample replay.** A 3-minute mini interview on one card for signed-out users, or a public annotated example transcript. This shows the value before signup, which is the biggest conversion lever.
 2. **Interview history and "Dr River remembers".** Saved transcripts and feedback, a trend of your recurring weak moves, and a next interview that targets your recurring habit. `src/content/memory.ts` and `student-context.ts` are already designed for this. It's the main reason to buy repeat packs.
 3. **Clickable replay plus a "re-answer this moment" drill.** Each feedback point jumps to the quoted turn, and a 2-minute mini-call replays your weakest exchange.
-4. *(For schools)* **A teacher dashboard with only anonymised cohort totals.** The £1,250 schools offer currently says "teacher overview in development".
+4. _(For schools)_ **A teacher dashboard with only anonymised cohort totals.** The £1,250 schools offer currently says "teacher overview in development".

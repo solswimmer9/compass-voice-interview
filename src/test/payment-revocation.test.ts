@@ -28,7 +28,10 @@ vi.mock("@/integrations/supabase/client.server", () => ({
 }));
 
 const request = () =>
-  new Request("https://example.test/api/public/payments/webhook?env=sandbox", { method: "POST", body: "{}" });
+  new Request("https://example.test/api/public/payments/webhook?env=sandbox", {
+    method: "POST",
+    body: "{}",
+  });
 
 describe("payment webhook refunds and disputes", () => {
   beforeEach(() => {
@@ -41,20 +44,26 @@ describe("payment webhook refunds and disputes", () => {
   it("zeroes credits on a full refund", async () => {
     verifyWebhook.mockResolvedValue({
       type: "charge.refunded",
-      data: { object: { payment_intent: "pi_1", refunded: true, amount: 1000, amount_refunded: 1000 } },
+      data: {
+        object: { payment_intent: "pi_1", refunded: true, amount: 1000, amount_refunded: 1000 },
+      },
     });
     const { handlePaymentWebhook } = await import("@/lib/payment-webhook.server");
     const response = await handlePaymentWebhook(request());
     expect(response.status).toBe(200);
     expect(sessionsList).toHaveBeenCalledWith({ payment_intent: "pi_1", limit: 1 });
-    expect(update).toHaveBeenCalledWith(expect.objectContaining({ interviews_remaining: 0, status: "refunded" }));
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({ interviews_remaining: 0, status: "refunded" }),
+    );
     expect(eqCalls).toContainEqual(["paddle_transaction_id", "cs_123"]);
   });
 
   it("ignores partial refunds", async () => {
     verifyWebhook.mockResolvedValue({
       type: "charge.refunded",
-      data: { object: { payment_intent: "pi_1", refunded: false, amount: 1000, amount_refunded: 200 } },
+      data: {
+        object: { payment_intent: "pi_1", refunded: false, amount: 1000, amount_refunded: 200 },
+      },
     });
     const { handlePaymentWebhook } = await import("@/lib/payment-webhook.server");
     await handlePaymentWebhook(request());
@@ -68,6 +77,8 @@ describe("payment webhook refunds and disputes", () => {
     });
     const { handlePaymentWebhook } = await import("@/lib/payment-webhook.server");
     await handlePaymentWebhook(request());
-    expect(update).toHaveBeenCalledWith(expect.objectContaining({ interviews_remaining: 0, status: "disputed" }));
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({ interviews_remaining: 0, status: "disputed" }),
+    );
   });
 });

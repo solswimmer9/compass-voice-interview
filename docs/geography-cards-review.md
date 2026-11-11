@@ -302,29 +302,29 @@ Weak moves to watch: assuming an empty place raises no questions of fairness; as
 
 Each is only a one-line question so far.
 
-| Opening question | Strand | File id |
-|---|---|---|
-| Which place has most changed how you think about the world, and why? | human | `place-changed-thinking` |
-| Is a border a line or a process? | human | `border-line-or-process` |
-| Why do cities exist where they do? | human | `cities-where` |
-| Should we rewild Britain? | human | `rewild-britain` |
-| Are fair-trade bananas really fair? | human | `fair-trade-bananas` |
-| How can we know the temperature of a year nobody recorded? | physical | `past-temperature` |
-| Should a court be allowed to look impressive? | human | `court-impressive` |
-| Can you be hopeful about somewhere and angry about it at the same time? | human | `hopeful-and-angry` |
-| Can one footballer change a war? | human | `footballer-war` |
-| Why might a town vote against its own economic interests, and is that even the right way to describe it? | human | `town-vote` |
-| Is a city ever finished? | human | `city-ever-finished` |
-| Why is a postcode a better predictor of some things than a person's character? | human | `inequality-postcode` |
-| When does someone stop being a migrant? | human | `migrant-when` |
-| Who gets to decide a country is "developing"? | human | `developing-who-decides` |
-| Why did the same virus produce different pandemics in different places? | human | `same-virus-different-pandemics` |
-| Why can a country export food while people there go hungry? | human | `food-export-hunger` |
-| Who should govern the Arctic as the ice retreats? | human | `geopolitics-arctic` |
-| Should maps be redrawn to remove colonial place names? | human | `colonial-place-names` |
-| How can ice that melted thousands of years ago still affect a landscape today? | physical | `old-ice-landscape` |
-| Why would anyone build a city next to a volcano? | human | `hazards-city-volcano` |
-| Is weather getting worse, or are we getting more exposed? | physical | `weather-worse-or-exposed` |
-| What is a native species, and how long does it take to become one? | physical | `native-species` |
-| Is planting trees a climate solution or a way of delaying one? | physical | `trees-climate-solution` |
-| What can a statistic about a place never tell you? | human | `statistic-limits` |
+| Opening question                                                                                         | Strand   | File id                          |
+| -------------------------------------------------------------------------------------------------------- | -------- | -------------------------------- |
+| Which place has most changed how you think about the world, and why?                                     | human    | `place-changed-thinking`         |
+| Is a border a line or a process?                                                                         | human    | `border-line-or-process`         |
+| Why do cities exist where they do?                                                                       | human    | `cities-where`                   |
+| Should we rewild Britain?                                                                                | human    | `rewild-britain`                 |
+| Are fair-trade bananas really fair?                                                                      | human    | `fair-trade-bananas`             |
+| How can we know the temperature of a year nobody recorded?                                               | physical | `past-temperature`               |
+| Should a court be allowed to look impressive?                                                            | human    | `court-impressive`               |
+| Can you be hopeful about somewhere and angry about it at the same time?                                  | human    | `hopeful-and-angry`              |
+| Can one footballer change a war?                                                                         | human    | `footballer-war`                 |
+| Why might a town vote against its own economic interests, and is that even the right way to describe it? | human    | `town-vote`                      |
+| Is a city ever finished?                                                                                 | human    | `city-ever-finished`             |
+| Why is a postcode a better predictor of some things than a person's character?                           | human    | `inequality-postcode`            |
+| When does someone stop being a migrant?                                                                  | human    | `migrant-when`                   |
+| Who gets to decide a country is "developing"?                                                            | human    | `developing-who-decides`         |
+| Why did the same virus produce different pandemics in different places?                                  | human    | `same-virus-different-pandemics` |
+| Why can a country export food while people there go hungry?                                              | human    | `food-export-hunger`             |
+| Who should govern the Arctic as the ice retreats?                                                        | human    | `geopolitics-arctic`             |
+| Should maps be redrawn to remove colonial place names?                                                   | human    | `colonial-place-names`           |
+| How can ice that melted thousands of years ago still affect a landscape today?                           | physical | `old-ice-landscape`              |
+| Why would anyone build a city next to a volcano?                                                         | human    | `hazards-city-volcano`           |
+| Is weather getting worse, or are we getting more exposed?                                                | physical | `weather-worse-or-exposed`       |
+| What is a native species, and how long does it take to become one?                                       | physical | `native-species`                 |
+| Is planting trees a climate solution or a way of delaying one?                                           | physical | `trees-climate-solution`         |
+| What can a statistic about a place never tell you?                                                       | human    | `statistic-limits`               |

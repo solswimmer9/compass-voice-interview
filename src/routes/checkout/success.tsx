@@ -51,8 +51,7 @@ function CheckoutSuccessPage() {
       }
     },
     retry: false,
-    refetchInterval: (q) =>
-      q.state.data?.confirmed || attempts >= MAX_ATTEMPTS ? false : POLL_MS,
+    refetchInterval: (q) => (q.state.data?.confirmed || attempts >= MAX_ATTEMPTS ? false : POLL_MS),
   });
 
   const confirmed = query.data?.confirmed === true;
@@ -66,8 +65,16 @@ function CheckoutSuccessPage() {
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
             Payment complete
           </p>
-          <h1 className="mt-4 font-serif text-4xl font-semibold">{query.data?.schoolBundle ? "Your school bundle is ready." : "Your interviews have been added."}</h1>
-          <p className="mt-4 text-muted-foreground">{query.data?.schoolBundle ? "Your school code and shared balance are ready." : "Return to your account to see the updated allowance."}</p>
+          <h1 className="mt-4 font-serif text-4xl font-semibold">
+            {query.data?.schoolBundle
+              ? "Your school bundle is ready."
+              : "Your interviews have been added."}
+          </h1>
+          <p className="mt-4 text-muted-foreground">
+            {query.data?.schoolBundle
+              ? "Your school code and shared balance are ready."
+              : "Return to your account to see the updated allowance."}
+          </p>
         </>
       ) : waiting ? (
         <>
@@ -88,7 +95,11 @@ function CheckoutSuccessPage() {
         to={query.data?.schoolBundle ? "/schools" : "/account"}
         className="mx-auto mt-8 rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
       >
-        {confirmed ? query.data?.schoolBundle ? "View school code" : "View my allowance" : "Go to my account"}
+        {confirmed
+          ? query.data?.schoolBundle
+            ? "View school code"
+            : "View my allowance"
+          : "Go to my account"}
       </Link>
     </main>
   );
