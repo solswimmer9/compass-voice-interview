@@ -17,7 +17,7 @@ import { INTERVIEW_MINUTES } from "@/lib/limits";
 import { GUEST_INTERVIEWS } from "@/lib/offer";
 import { useAccountSnapshot } from "@/hooks/useAccountSnapshot";
 import { isPreviewBrowser } from "@/lib/preview";
-import { appendTranscriptFragment, type Line } from "@/lib/transcript";
+import { appendTranscriptFragment, buildResumeRecap, type Line } from "@/lib/transcript";
 import { saveFinishedInterview } from "@/lib/finished-interview";
 
 /** The waiting room stays up at least this long, so it reads as a moment, not a flicker. */
@@ -78,6 +78,7 @@ function ObjectCard({ object }: { object: TableObject }) {
 function InterviewRoom() {
   const [lines, setLines] = useState<Line[]>([]);
   const fragmentSequence = useRef(0);
+  const transcriptSegment = useRef(0);
   const [cardIds, setCardIds] = useState<string[]>([]);
   const [tableObject, setTableObject] = useState<TableObject | null>(null);
 
@@ -105,6 +106,8 @@ function InterviewRoom() {
       start: typeof event.start_ms === "number" ? event.start_ms : 0,
       end: typeof event.end_ms === "number" ? event.end_ms : 0,
       sequence: ++fragmentSequence.current,
+      // Each reconnect starts a new voice session whose timings restart from zero.
+      segment: transcriptSegment.current,
     };
     setLines((previous) => appendTranscriptFragment(previous, role, fragment));
   }, []);
@@ -149,13 +152,22 @@ function InterviewRoom() {
   );
 
   const [elapsed, setElapsed] = useState(0);
+  const endsAt = call.endsAt;
   useEffect(() => {
     if (call.status !== "connected") return;
     const startedAt = Date.now();
-    setElapsed(0);
-    const timer = setInterval(() => setElapsed(Math.floor((Date.now() - startedAt) / 1000)), 1000);
+    const limitSeconds = INTERVIEW_MINUTES * 60;
+    // Prefer the server's deadline, which also covers a resumed interview's time left.
+    const tick = () =>
+      setElapsed(
+        endsAt === null
+          ? Math.floor((Date.now() - startedAt) / 1000)
+          : limitSeconds - Math.ceil(Math.max(0, endsAt - Date.now()) / 1000),
+      );
+    tick();
+    const timer = setInterval(tick, 1000);
     return () => clearInterval(timer);
-  }, [call.status]);
+  }, [call.status, endsAt]);
   const clock = (seconds: number) =>
     `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
@@ -165,6 +177,7 @@ function InterviewRoom() {
     setCardIds([]);
     setTableObject(null);
     fragmentSequence.current = 0;
+    transcriptSegment.current = 0;
     startedRef.current = true;
     setWaitedEnough(false);
     if (waitTimer.current) clearTimeout(waitTimer.current);
@@ -232,11 +245,22 @@ function InterviewRoom() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoStart, account.loading, guestUsedUp, outOfInterviews, search, navigate]);
 
-  // When the call ends with something said, go straight to the feedback letter.
+  // A call that connected and then dropped can be resumed without using another interview.
+  const canReconnect =
+    call.status === "closed" && call.ending === "dropped" && Boolean(call.interviewId);
+  const reconnect = () => {
+    // Earlier lines stay; new ones are kept as a separate segment.
+    transcriptSegment.current += 1;
+    call.reconnect(buildResumeRecap(lines, undefined, tutorName));
+  };
+
+  // When the call ends with something said, go straight to the feedback letter. Feedback closes
+  // the interview for good, so a dropped call waits until reconnecting is declined.
   const idle = call.status === "idle" || call.status === "closed";
   const handedOff = useRef(false);
   useEffect(() => {
     if (call.status !== "closed" || handedOff.current || !startedRef.current) return;
+    if (canReconnect) return;
     if (!lines.length || !call.interviewId) return;
     handedOff.current = true;
     saveFinishedInterview({
@@ -247,7 +271,7 @@ function InterviewRoom() {
       ...(tableObject ? { objectId: tableObject.objectId } : {}),
     });
     void navigate({ to: "/feedback" });
-  }, [call.status, call.interviewId, lines, ppe, cardIds, tableObject, navigate]);
+  }, [call.status, call.interviewId, canReconnect, lines, ppe, cardIds, tableObject, navigate]);
 
   const cancel = () => {
     call.stop();
@@ -288,7 +312,9 @@ function InterviewRoom() {
           onEnd={call.stop}
           playbackBlocked={call.playbackBlocked}
           onResumePlayback={call.resumePlayback}
-          error={call.error}
+          error={
+            call.error ?? (call.unstable ? "Connection is unstable. Trying to recover…" : null)
+          }
         />
       ) : (
         <main className="relative z-10 mx-auto flex min-h-[100svh] max-w-xl flex-col items-center justify-center px-6 py-16 text-center">
@@ -296,19 +322,43 @@ function InterviewRoom() {
             {subjectLabel}
           </p>
           <h1 className="mt-3 text-3xl font-medium tracking-tight sm:text-4xl">
-            {lines.length ? "Getting your letter ready…" : `Interview with ${tutorName}`}
+            {canReconnect
+              ? "The call dropped"
+              : lines.length
+                ? "Getting your letter ready…"
+                : `Interview with ${tutorName}`}
           </h1>
+          {canReconnect && (
+            <div className="mt-6 flex flex-col items-center gap-4">
+              <p className="text-muted-foreground">
+                Reconnect to carry on where you left off. This won’t use another interview, and the
+                time you have left still counts down.
+              </p>
+              <button
+                onClick={reconnect}
+                className="rounded-full bg-primary px-7 py-3 font-medium text-primary-foreground transition hover:opacity-90"
+              >
+                Reconnect
+              </button>
+              <button
+                onClick={call.dismissReconnect}
+                className="text-sm text-muted-foreground underline"
+              >
+                End interview and get feedback
+              </button>
+            </div>
+          )}
           {reading && (
             <p className="mt-3 text-muted-foreground">
               Reading interview: <span className="text-foreground">{reading.title}</span>
             </p>
           )}
-          {call.error && (
+          {call.error && !canReconnect && (
             <p role="alert" className="mt-4 text-sm text-destructive">
               {call.error}
             </p>
           )}
-          {!lines.length && (
+          {!lines.length && !canReconnect && (
             <div className="mt-8 flex flex-col items-center gap-4">
               {guestUsedUp ? (
                 <>
