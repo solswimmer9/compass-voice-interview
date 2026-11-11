@@ -54,8 +54,8 @@ differences.
 - One chat per task; start fresh when the task changes.
 - Add a rule only after an agent repeats a mistake, in the node nearest the code; prune after
   refactors and new models.
-- The builder never grades itself; fixes go to a fresh agent; stop after 3 rounds or when no
-  medium or high issue remains.
+- The builder never grades itself; reviewers and verifiers are fresh agents, fixes go back to the
+  builder; stop after 2–3 rounds or when no medium or high issue remains.
 - Verification means watching it run (browser, real call), not only green tests. Voice calls still
   need a human test until the sandbox can play audio.
 - Ask for an `implementation-notes.md` on any task with an ambiguous spec, and read it.

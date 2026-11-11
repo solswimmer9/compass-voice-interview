@@ -58,7 +58,8 @@ Move up only when the level below is reliable.
 
 - The builder never grades its own work. A separate verifier with a fresh context checks against
   something named: the spec, the tests, a reference, or the user flows.
-- A failed check goes to a **fresh** builder, not the tired one.
+- Fixes go back to the **same** builder, which knows why the code is the way it is; reviewers and
+  verifiers are always fresh agents (as in `task-lifecycle`).
 - Prefer checks that touch the real world: deterministic (compiler, schema, tests) → scored
   (Lighthouse, review severity) → real outcomes (conversion, feedback ratings). A persona judge is
   a starting point, never a replacement for a real signal.
