@@ -1,6 +1,6 @@
 // The PPE tutor (trial). Persona text is taken only from the "PPE" subsection of
-// docs/interview-pedagogy.md. The cards are drafts awaiting the owner's review; the reading list stays
-// empty until the owner chooses it.
+// docs/interview-pedagogy.md. The cards are drafts awaiting the owner's review; the reading list comes
+// from Solomon's PPE interview pack (11 November 2026).
 // Server-only.
 
 import type { ReadingListEntry, TutorPersona } from "../../types.ts";
@@ -50,7 +50,73 @@ No knowledge is assumed in philosophy or politics beyond general awareness. Econ
 
 When suggesting a follow-up, target the single weakest assumption and keep it answerable by a 17-year-old. On contested political topics, assess the reasoning only, never the conclusion.
 
-Feedback must quote what the candidate said. The approved reading list is empty: mention no scholarship and never invent a reference.`;
+Oxford's PPE admissions criteria emphasise sustained interest, logical analysis, evaluating arguments, flexibility, listening and clear expression. A good practice routine: define the key term; give a provisional answer with one reason; state which factual assumption and which value judgement it depends on; test it against a counterexample or a simple numerical case; revise the precise part the challenge affects; say what evidence or distinction would decide the issue.
 
-/** Empty on purpose: the owner chooses the PPE reading list. */
-export const PPE_READING_LIST: ReadingListEntry[] = [];
+Some topic notes draw on recent research papers. Never expect the candidate to know them, and judge the reasoning, not familiarity with the literature.
+
+Feedback must quote what the candidate said. Mention scholarship only from the approved reading list, and never invent a reference.`;
+
+/**
+ * From Solomon's PPE interview pack (11 November 2026). Only ever mention or recommend these, and
+ * only in feedback or when the student asks what to read.
+ */
+export const PPE_READING_LIST: ReadingListEntry[] = [
+  { author: "Ed Balls and George Osborne", title: "Political Currency (podcast)" },
+  {
+    author: "Jesus College Oxford, hosted by Matt Williams",
+    title: "What? Why? When? (podcast)",
+  },
+  {
+    author: "Daniel Butt",
+    title: "Immoderate Integrationism: History and Climate Justice",
+    year: 2026,
+  },
+  { author: "Alex Kaiserman", title: "What's Wrong with Prepunishment?", year: 2023 },
+  {
+    author: "Anil Gomes and Andrew Stephenson",
+    title: "On the Practical Necessity of the Categories",
+    year: 2026,
+  },
+  {
+    author: "John Kenny and Stephen D. Fisher",
+    title: "Europeans' climate consciousness: increased yet more politicised",
+    year: 2025,
+  },
+  {
+    author: "Alison Andrew and Abi Adams",
+    title: "Revealed Beliefs and the Marriage Market Return to Education",
+    year: 2025,
+  },
+  {
+    author: "Jean-Paul Carvalho, Mark Koyama and Cole Williams",
+    title: "Resisting Education",
+    year: 2024,
+  },
+  {
+    author: "Thomas Sinclair",
+    title: "Rights, conflicts, and the mechanics of claims",
+    year: 2024,
+  },
+  {
+    author: "Sophie Smith",
+    title: "Poetry, myth and storytelling in the history of political theory",
+    year: 2025,
+  },
+  {
+    author: "Jan David Bakker and Niclas Moneke",
+    title: "Combatting nutrient pollution through the housing market (working paper)",
+    year: 2026,
+  },
+  {
+    author: "James Tilley and Sara B. Hobolt",
+    title:
+      "The effect of politically homogenous neighbourhoods on affective polarization: Evidence from Britain",
+    year: 2025,
+  },
+  {
+    author: "Ben Ansell",
+    title:
+      "Six provocations on the origins and impacts of the UK housing emergency (with co-authors)",
+    year: 2025,
+  },
+];

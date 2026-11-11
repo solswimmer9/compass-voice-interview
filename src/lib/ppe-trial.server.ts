@@ -43,7 +43,7 @@ export async function buildPpeTrialSession(event: {
   return buildSession({ tutor, cards, allowDrafts: true });
 }
 
-/** Subject context for PPE feedback: reasoning guide plus the deep notes of the cards used. */
+/** Subject context for PPE feedback: reasoning guide, deep notes of the cards used, reading list. */
 export function ppeFeedbackContext(cardIds?: unknown): string {
   const tutor = ppeTutor();
   const byId = new Map(tutor.cards.map((card) => [card.id, card]));
@@ -59,8 +59,11 @@ export function ppeFeedbackContext(cardIds?: unknown): string {
     : "TOPIC NOTES\nThe interviewer drew its themes from these notes; the interview covered only some of them.";
   return [
     tutor.reasoningGuide,
-    `${lead} Use them to judge the reasoning.\n\n${cards
+    `${lead} Use them to judge the reasoning; never expect the candidate to know the academics named.\n\n${cards
       .map((card) => `${card.opening} [${card.id}]\n${card.deep}`)
       .join("\n\n")}`,
+    `APPROVED READING LIST\nOnly ever mention or recommend these, and never invent a reference.\n${tutor.readingList
+      .map((entry) => `- ${entry.author}, ${entry.title}${entry.year ? ` (${entry.year})` : ""}`)
+      .join("\n")}`,
   ].join("\n\n");
 }
