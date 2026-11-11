@@ -33,3 +33,7 @@
 🎬 What counts as a pass for a user flow?	End state reached ✅ · looks right ✅ · stored state right ✅. Console errors alone don't fail it but must be fixed or filed.	agentic-coding loops
 🥀 Why do some loops go stale? (Hogwarts: the Mirror of Erised)	Real-world verifiers converge on the same output. Restart with fresh data or inject new ideas from another loop.	agentic-coding loops
 🧪 Do it by hand first — why? (Hogwarts: brew it before you enchant the cauldron)	Doing the work a few times teaches you what <b>good</b> looks like, so you can teach the loop's check.	agentic-coding loops
+🧑‍🏫 Who fixes review findings? (Hogwarts: the student who wrote the essay)	The <b>same builder</b>, every time, so the branch has one author who knows why. Reviewers and verifiers are always <b>fresh</b> agents.	agentic-coding loops
+⚖️ Who gives a verification verdict? (Hogwarts: an examiner who didn't sit the exam)	A <b>separate agent</b> that didn't drive the flow reads the database, logs and screenshots. Route on its verdict, never the driver's claim.	agentic-coding loops
+🚪 Failed vs unreachable? (Hogwarts: a locked door vs a door that isn't there)	<b>Failed</b> = the code is wrong. <b>Unreachable</b> = the app never creates that state, so the code never runs. Report it and ask what reaches it.	agentic-coding loops
+🔑 Missing credential during verify? (Hogwarts: no wand, no spell)	Report the flow as <b>unverified</b>, plainly. Never swap in a weaker check, and don't loop on it — no code change fixes a credential.	agentic-coding loops

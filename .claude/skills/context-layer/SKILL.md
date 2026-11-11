@@ -5,6 +5,10 @@ description: Use when adding, moving or pruning agent context in this repo (AGEN
 
 # Context layer
 
+For a full audit or rebuild of the layer, run the course's `/context-layer-architect` skill (it
+explores, interviews you, then proposes files). It does about the first half; finish by hand with
+the rules below. Exact course prompts and templates: `prompts.md`, `adr-template.md`.
+
 Agents rarely fail for lack of a clever prompt; they fail because the plan was made without a fact
 that lived in someone's head. The context layer is a thin, token-cheap layer over the code that
 gives each agent the right facts at the moment it needs them, and nothing else.
@@ -19,7 +23,7 @@ Two rules decide everything: **signal over noise** (every extra line dilutes eve
 | How agents must behave here; durable stack facts; pointers | `AGENTS.md` (root). Keep it short: a pointer, not a holder | In place |
 | Rules for one area (where responsibility or a contract changes) | `AGENTS.md` inside that folder, e.g. `src/content/`, `src/lib/` | In place |
 | What must be true now: invariants, which surface enforces each, which test guards it | `docs/architecture/<subsystem>.md` | In place |
-| Why we decided something | `docs/decisions/NNNN-<what-we-say-no-to>.md` (template: `adr-template.md`) | Never edited; superseded |
+| Why we decided something | `docs/decisions/NNNN-<what-we-say-no-to>.md` (template: `adr-template.md`, from the course) | Never edited; superseded |
 | Words to use in prompts | `docs/glossary.md` | Append |
 | Task workflows and checklists | `.claude/skills/<name>/SKILL.md` | In place |
 | Hard rules ("never run X") | A hook or a test, not prose | In code |

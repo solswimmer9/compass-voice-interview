@@ -6,6 +6,11 @@ Engineering and the loop chapters), applied to this repo. The working versions a
 - `.claude/skills/context-layer/`: where each kind of fact lives, and how to keep it lean.
 - `.claude/skills/loop-design/`: spotting loop-shaped work and building loops that stop.
 - `.claude/skills/task-lifecycle/`: one task from spec to merge, with `.claude/merge-gate.md`.
+- `.claude/skills/context-layer-architect/`: the course's own audit skill, unchanged. Run
+  `/context-layer-architect` to audit and rebuild the layer (items 1–6 below).
+
+`task-lifecycle` is the course's own skill and references, with a short section on this repo's
+differences.
 
 ## The two ideas
 

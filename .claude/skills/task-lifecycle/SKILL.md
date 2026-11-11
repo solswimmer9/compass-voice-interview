@@ -1,53 +1,44 @@
 ---
 name: task-lifecycle
-description: Use when implementing a feature or fix in this repo end to end from a clear spec or issue - build, independent review, runtime verification and the merge gate. Not for content-only card edits (see src/content/README.md) or for designing new recurring loops (use loop-design).
+description: 'Ship a repo change as a reviewed and verified PR. Use when the user asks to implement, build, add, fix, or ship a non-trivial change, or wants an existing PR or branch reviewed, fixed and proven to work ("put this branch through the loop"). Not for a read-only review (that is code-review), content-only card edits (see src/content/README.md) or designing recurring loops (use loop-design).'
 ---
 
 # Task lifecycle
 
-One task, from a clear spec to a merged change. The main session orchestrates and owns the human
-gates; subagents with fresh context do the building, reviewing and verifying.
+From the Agentic Coding School task-lifecycle skill (cohort 3, "My Daily Task Lifecycle"), with
+this repo's differences at the end. The references are his, unchanged.
 
-## 0. Pickup: is the input clear enough?
+build → PR → review → fix → verify → final report → (merge → deploy → live check)
 
-Size does not matter; ambiguity does. Before building, check the spec has: a goal, non-goals,
-evidence (an error, a transcript, a screenshot), a way to know it is done, and **no hidden
-decision**: a choice a good engineer could make two ways with different results for students,
-data or money. If there is one, stop and ask; do not make the call silently.
+You are the orchestrator. Keep your hands off the code: you dispatch agents, carry results between them, keep the user posted, and stop before any merge. Brief each agent with the goal, not a method.
 
-## 1. Build
+One builder owns the change. Dispatch it once, and send every fix back to that same builder (continue it with SendMessage) so the branch has one author who knows why the code is the way it is. Reviewers and verifiers are always other, fresh agents that never saw the builder's reasoning, because a builder checking its own work proves nothing. Wait for each agent's result before moving on.
 
-- Work on the session's branch. Commit in small steps. Never rewrite pushed history (Lovable).
-- Read the nearest `AGENTS.md` nodes and `docs/glossary.md` first.
-- Keep `implementation-notes.md` (not committed) for decisions where the spec was ambiguous,
-  deviations, trade-offs and open questions; report them at the end.
+**Build.** The builder works on a new branch in a clean clone. If the ask names an issue with no reproduction, reproduce it first; if that fails, stop and say what was tried. It commits as it goes so a dead run can resume from the branch, and where the spec is silent it decides and records the call in the implementation notes (`references/implementation-notes.md`).
 
-## 2. Review (independent)
+**Review.** Open the PR, then read `references/review-round.md`. Claude's `/code-review` and Codex's `codex review` review the diff independently, and the builder fixes the confident findings. Up to two rounds; stop early when clean.
 
-- Run `/code-review` (high effort for logic changes, lower for small ones) in a fresh context.
-- For each finding, a neutral check confirms it is real before anyone fixes it.
-- A **fresh** fixer applies confirmed fixes. At most 2 rounds, or stop when no medium or high
-  finding remains. A change under ~30 lines with no new logic gets one light review.
+**Verify.** Read `references/verify-round.md`. A fresh agent drives each changed flow the way a user would, against the real app and a real non-production database, and the builder fixes what fails. Up to two rounds. A missing credential means unverified, said plainly, never swapped for a weaker check.
 
-## 3. Verify (runtime, not just tests)
+**Final report.** Present a final report to the user: the PR link and what was built, what review found and what was fixed, what's unresolved, one line per verified flow, and the open questions from the implementation notes with your recommended answers. Then ask "Merge PR #n?" and stop. Merging is the user's call.
 
-Tests prove the code agrees with itself; verification observes it running.
+**Merge.** When told to: squash-merge, confirm it reads MERGED, watch the deploy finish, then check the changed behavior on the live site without writing into real accounts. If it's broken, say so and ask about reverting. Never revert on your own.
 
-1. `bunx tsc --noEmit`, `bunx vitest run`, `bun run build`: must pass (the CI checks).
-2. Start the app (`bunx vite dev --host 127.0.0.1`) and drive the changed user flows with
-   Playwright. A flow passes only if: the user reaches the end state, it looks right, and the stored
-   state is right. Console errors and failed requests do not fail a flow alone but must be fixed or
-   filed as an issue.
-3. Voice calls cannot be fully verified in the sandbox (no WebRTC audio). Say so, and list the
-   manual call test for the owner.
-4. When unsure, it fails. Report BLOCKED, not PASS, when the environment cannot check something.
+## In this repo
 
-## 4. Merge gate
-
-Read `.claude/merge-gate.md` before merging. Never edit that file without asking the owner.
-
-## 5. After merge
-
-Check CI on `main` passes. Report: what changed, how it was verified, what was not verified, and
-any decisions for the owner. Remember `main` syncs to Lovable; the live site changes only when the
-owner publishes.
+- **Before building:** is the input clear? It needs a goal, non-goals, evidence, a way to know it
+  is done, and **no hidden decision** (a choice a good engineer could make two ways with different
+  results for students, data or money). If there is one, ask first.
+- **Branch:** the session's designated branch. Never force-push or rewrite pushed history: `main`
+  syncs to Lovable.
+- **Checks the builder runs before each push:** `bunx tsc --noEmit`, `bunx vitest run`,
+  `bun run build` (the CI on `main`).
+- **Reviewers:** `/code-review`. Codex is not installed here; say so in the report rather than
+  dropping the second review silently.
+- **Verify:** start the app with `bunx vite dev --host 127.0.0.1` and drive pages with Playwright
+  (pre-installed). There is no non-production database or Stripe in the sandbox, and no WebRTC
+  audio, so voice calls, payments and credit changes are **unverified** here: list the manual test
+  for the owner instead.
+- **Merge:** read `.claude/merge-gate.md` first; never edit it without the owner. The owner's
+  "merge it" in the conversation is the go-ahead. "Deploy" means the owner publishing in Lovable;
+  the agent's live check is CI passing on `main`.

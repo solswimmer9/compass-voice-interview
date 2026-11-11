@@ -33,7 +33,7 @@ use the editor.
 
 ## Working here
 
-- Skills: `context-layer` (where agent context goes), `task-lifecycle` (spec to merge), `loop-design` (recurring work), in `.claude/skills/`.
+- Skills in `.claude/skills/`: `context-layer` (where agent context goes; `/context-layer-architect` audits it), `task-lifecycle` (spec to merge), `loop-design` (recurring work).
 - Read `.claude/merge-gate.md` before merging to `main`; never edit it without the owner. Words for prompts: `docs/glossary.md`.
 
 ## Voice architecture
