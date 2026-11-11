@@ -1,0 +1,35 @@
+#separator:tab
+#html:true
+#notetype:Basic
+#deck:Agentic Coding · Hogwarts
+#tags column:3
+🏰 What is a <b>context layer</b>? (Hogwarts: the castle's portraits)	A thin layer of short notes over the code. Like portraits on each corridor, each one tells you only what matters <i>where you are standing</i>.	agentic-coding context
+📜 Root <b>AGENTS.md / CLAUDE.md</b> should be…? (Hogwarts: the Marauder's Map legend)	Short — a <b>pointer, not a holder</b>. It says where things are; detail lives in nodes near the code. Aim &lt; 60 lines.	agentic-coding context
+🚪 Where do you put a nested <b>AGENTS.md</b> (layer node)? (Hogwarts: common-room doors)	Only at <b>semantic boundaries</b>: where responsibility shifts, contracts matter, or code is unusual. Not in every folder — not every cupboard has a portrait.	agentic-coding context
+🪄 What does <b>progressive disclosure</b> mean? (Hogwarts: the Room of Requirement)	Give the minimum up front; the agent loads more <b>only when needed</b>. The room appears with exactly what you need, when you need it.	agentic-coding context
+📏 Layer node size rule?	&lt; 60 lines great · 60–300 okay · &gt; 300 too noisy → split into child nodes or skills. ✂️	agentic-coding context
+✅ What belongs in a node? (Hogwarts: Hermione's notes)	Commands first · minimal map · invariants <b>with the why</b> · pointers to example files · gotchas · which skill to use.	agentic-coding context
+🚫 What never belongs in a node? (Hogwarts: Lockhart's books)	Generic advice ("handle errors properly"), linter rules, standard conventions, build history, feature lists, tables of contents, plans. All fluff, no magic.	agentic-coding context
+👉 Prose or pointer? (Hogwarts: 'see the Half-Blood Prince's copy')	<b>Pointer.</b> "Copy this file for a new card" beats a paragraph. Real code is the strongest signal and never goes stale.	agentic-coding context
+🔒 Hard rule like "never run db push" — prose or hook? (Hogwarts: an Unbreakable Vow)	A <b>hook</b> (or test). Prose can be skimmed; a hook can't be ignored.	agentic-coding context
+🏛️ <b>ADR</b> = ? (Hogwarts: the Ministry's sealed decrees)	Architecture Decision Record in <code>docs/decisions/</code>: numbered, titled by what we say <b>no</b> to, <b>never edited — only superseded</b>.	agentic-coding context
+⚖️ Invariant vs ADR? (Hogwarts: castle rules today vs the Founders' reasons)	Invariant = what must be true <b>now</b> (edited in place). ADR = <b>why</b> we decided, back then (frozen).	agentic-coding context
+🗺️ Invariants across surfaces — the key rule? (Hogwarts: rules for every House)	Write one testable sentence, check each surface. <b>Don't soften the rule</b> to fit; a surface that can't comply is a finding.	agentic-coding context
+📖 Why keep a <b>glossary</b>? (Hogwarts: speaking Parseltongue)	Use the codebase's own words in prompts so the agent doesn't have to translate. Append after sessions with lots of steering.	agentic-coding context
+🌱 How should a context file grow? (Hogwarts: Neville's Mimbulus)	Start almost empty. Add a short rule only after the <b>same mistake twice</b>, check it works, prune after refactors and new models.	agentic-coding context
+🧹 Why start a <b>fresh chat</b> per task? (Hogwarts: a clean cauldron)	Mixed tasks pollute context; by the 3rd–4th switch quality drops even with room left.	agentic-coding context
+🔁 "Prompt loops, not agents" means? (Hogwarts: an enchanted quill that keeps writing)	Write prompts that keep running until a check says done. You maintain the loops; the loops maintain the software.	agentic-coding loops
+🧩 Five parts every loop needs? (Hogwarts: a potion recipe)	<b>Trigger · unit of work · check · exit · state.</b> No state = it brews the same potion twice.	agentic-coding loops
+🦉 Three signs a loop is hiding? (Hogwarts: you're acting like an owl)	1) You're the <b>message bus</b> copying between tools 🦉 2) <b>After-done rituals</b> 3) <b>Watch and react</b> checks.	agentic-coding loops
+🪜 Loop levels L1–L5? (Hogwarts: years at school)	L1 one turn · L2 builder/verifier · L3 full task lifecycle · L4 worker on a queue · L5 discovery (finds the work).	agentic-coding loops
+🧙 Builder/verifier — the golden rule? (Hogwarts: you can't mark your own O.W.L.s)	The builder <b>never grades itself</b>. A separate verifier with fresh context checks against something named; fixes go to a <b>fresh</b> builder.	agentic-coding loops
+🌍 Best kind of verifier? (Hogwarts: a real duel beats a practice dummy)	One that <b>touches the real world</b>: deterministic → scored → real outcomes. A persona judge is only a starting point.	agentic-coding loops
+🐍 How to use sycophancy for bugs? (Hogwarts: Slytherin attacks, Ravenclaw checks)	Leading prompt to <b>attack</b> ("find a bug in billing"), then a <b>neutral</b> check ("is this report real?") to drop invented ones.	agentic-coding loops
+⏹️ When to stop reviewing? (Hogwarts: Madam Hooch's whistle)	Max <b>3 rounds</b> or <b>no medium/high issues left</b> — whichever first. Verify likely flows, not the long tail.	agentic-coding loops
+🎯 Two ways a <b>/goal</b> fails? (Hogwarts: a Portkey to nowhere)	Runs forever (check too strict/impossible) or stops early (check vague). <b>Both are check problems.</b> Treat uncertainty as not done.	agentic-coding loops
+🧰 /loop vs Monitor? (Hogwarts: a clock vs a Sneakoscope)	<b>/loop</b> fires every N minutes (always costs). <b>Monitor</b> only wakes on a matching event — like a Sneakoscope spinning.	agentic-coding loops
+🚦 Pickup gate checks…? (Hogwarts: the Sorting Hat)	Is the input clear? Goal, non-goals, evidence, done-check, and <b>no hidden decision</b>. Ambiguity matters, not size.	agentic-coding loops
+🛡️ Merge gate: auto-merge only if…? (Hogwarts: Gringotts vault rules)	Simple · checked for its kind · cheap if wrong. Money, access, legal, migrations <b>always wait for the owner</b>. Agents can't edit the gate.	agentic-coding loops
+🎬 What counts as a pass for a user flow?	End state reached ✅ · looks right ✅ · stored state right ✅. Console errors alone don't fail it but must be fixed or filed.	agentic-coding loops
+🥀 Why do some loops go stale? (Hogwarts: the Mirror of Erised)	Real-world verifiers converge on the same output. Restart with fresh data or inject new ideas from another loop.	agentic-coding loops
+🧪 Do it by hand first — why? (Hogwarts: brew it before you enchant the cauldron)	Doing the work a few times teaches you what <b>good</b> looks like, so you can teach the loop's check.	agentic-coding loops

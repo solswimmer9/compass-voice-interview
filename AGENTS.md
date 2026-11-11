@@ -31,6 +31,11 @@ use the editor.
 
 <!-- LOVABLE:END -->
 
+## Working here
+
+- Skills: `context-layer` (where agent context goes), `task-lifecycle` (spec to merge), `loop-design` (recurring work), in `.claude/skills/`.
+- Read `.claude/merge-gate.md` before merging to `main`; never edit it without the owner. Words for prompts: `docs/glossary.md`.
+
 ## Voice architecture
 
 - Live interviews use Lovable AI Gateway Live through the persistent server relay and browser WebRTC hook; keep `LOVABLE_API_KEY` server-only. Post-interview assessments continue to use Lovable AI Gateway. This preserves natural two-way speech without depending on a separate voice-provider account.
