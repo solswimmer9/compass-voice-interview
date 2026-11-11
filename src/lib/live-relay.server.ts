@@ -1,8 +1,7 @@
 import { createOpenAI } from "@ai-sdk/openai";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { stepCountIs, streamText, type ModelMessage } from "ai";
+import { streamText, type ModelMessage } from "ai";
 import process from "node:process";
-import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 import {
   DR_RIVER_BRIEFING,
@@ -11,6 +10,7 @@ import {
   readingOpeningInstructions,
   REASONING_GUIDE,
 } from "./interview-briefing.ts";
+import { groupTurns } from "./evals/metrics.ts";
 import { readingById, READINGS } from "./readings.ts";
 import { INTERVIEW_MINUTES } from "./limits.ts";
 import { authenticateAccessToken } from "./request-auth.server.ts";
@@ -21,17 +21,26 @@ export type LiveConfig = {
   key: string;
   liveModel: string;
   backendModel: string;
+  /** Per session, set from app.start: the greeting and the selected practice reading. */
   openingInstructions?: string;
+  readingId?: string | undefined;
 };
 
-// Fill from co-loaded knowledge: the gateway URL, the Live model and the resolved chat model.
 const liveSettings = {
   baseURL: "https://ai.gateway.lovable.dev/v1",
   liveModel: "openai/gpt-live-1",
   backendModel: "openai/gpt-6-astra",
-  openingInstructions:
-    "Start now in British English. Briefly introduce yourself as Dr River, running a practice geography interview, then ask one warm, easy question about what draws the student to geography or what they notice about where they live, and listen.",
 };
+
+/** Silence after the student's last words before the backend is asked (or re-asked). */
+export const STUDENT_PAUSE_MS = 800;
+/** Minimum wait after a handoff, so trailing transcript can arrive first. */
+export const HANDOFF_SETTLE_MS = 300;
+/** Recent turns sent to the backend for a follow-up; feedback requests get the full transcript. */
+export const BACKEND_HISTORY_TURNS = 12;
+/** Given to the live model when the backend fails, so the student never hears about it. */
+export const DELEGATION_FALLBACK =
+  "Carry on in your own words as Dr River: pick out one assumption in what the student has just said and ask one short question about it.";
 
 export type LiveSocket = {
   readonly readyState: number;
@@ -137,48 +146,73 @@ export function handleLiveRequest(request: Request): Response {
   return new Response(null, response);
 }
 
-const readingsContext = `PRACTICE READINGS
-The app lists these articles for students to read before an interview. When the interview opens on one of these readings, or the student says they have read one, spend the first 10 to 15 minutes on it, as some colleges do: check they understood it, then test its argument. Do not claim to have read the full article; work from what the student says and this summary. In a reading interview, raise your own thoughts on that article one at a time, as challenges rather than lectures. In any other interview, do not bring up these readings or thoughts unless the student does.
-${READINGS.map((r) => `- "${r.title}" (${r.source}): ${r.context} Questions: ${r.questions.join(" ")} Your own thoughts (only in an interview on this reading): ${r.tutorThoughts.join(" ")}`).join("\n")}`;
+// Only the selected reading's summary and tutor thoughts go into the live prompt.
+function readingsContext(readingId: string | undefined) {
+  const reading = readingById(readingId);
+  if (!reading) {
+    return `PRACTICE READINGS
+The app lists these articles for students to read: ${READINGS.map((r) => `"${r.title}" (${r.source})`).join("; ")}. Do not bring them up yourself. If the student says they have read one, ask them to sum up its argument in their own words, then test that reasoning. Never claim to have read it.`;
+  }
+  return `PRACTICE READING
+This interview opens on "${reading.title}" (${reading.source}), which the student has just read. Spend the first 10 to 15 minutes on it, as some colleges do: check they understood it, then test its argument. Do not claim to have read the full article; work from what the student says and this summary: ${reading.context}
+Questions: ${reading.questions.join(" ")}
+Your own thoughts, to raise one at a time as challenges rather than lectures: ${reading.tutorThoughts.join(" ")}`;
+}
 
-const conversationInstructions = `${DR_RIVER_BRIEFING}
+/** The live model's session instructions for an interview, optionally on one practice reading. */
+export function liveInstructions(readingId?: string) {
+  return `${DR_RIVER_BRIEFING}
 
 ${NOTES_CONTEXT}
 
-${readingsContext}
+${readingsContext(readingId)}
 
 Voice: calm, unhurried and soothing, like a gentle documentary narrator; speak slowly with natural pauses.
-Mannerisms: Sound like a real British academic in a supervision, not a presenter. Keep most turns to one or two short sentences. Open replies with varied natural bridges, for example "Right, but consider...", "Fair enough, though...", "Let's pause there for a second...", "Mm, interesting. So...", "Hang on, go back to...", "I wonder whether...". Never use the same bridge twice in a row, and sometimes use none.
+Mannerisms: Sound like a real British academic in a supervision, not a presenter. Open replies with varied natural bridges, for example "Right, but consider...", "Fair enough, though...", "Let's pause there for a second...", "Mm, interesting. So...", "Hang on, go back to...", "I wonder whether...". Never use the same bridge twice in a row, and sometimes use none.
 Pause policy: Students think aloud and often pause mid-thought. Treat a short silence, a trailing "um", "so..." or an unfinished sentence as thinking, not the end of their turn: wait and stay quiet. Respond only once they have clearly finished a point. If they go quiet for a long while, gently say something brief like "Take your time" or "Think aloud if it helps", then wait again. Never fill silence with a new question or an answer.
 Backchannel policy: Use moderate listening sounds such as "mm" while the candidate thinks, without taking over.
 Interruption policy: Stop speaking and listen when the candidate interrupts.
 Delegation policy:
-Backend tools: A careful reasoning assistant that analyses the candidate's argument and suggests the sharpest follow-up challenge.
-Delegate to the backend when: The candidate gives a long or complex argument and you need a precise counter-argument, or they ask for detailed feedback on the interview.
-Do not delegate to the backend when: Greeting, asking the opening question, short follow-ups, hints, or clarifications. Wait for the backend result before presenting it.`;
-
-const studyScheduleInput = z
-  .object({
-    total_minutes: z.number().int().min(1).max(10_080),
-    days: z.number().int().min(1).max(30),
-  })
-  .strict();
-
-function planStudySchedule(args: z.infer<typeof studyScheduleInput>) {
-  const daily = Math.floor(args.total_minutes / args.days);
-  return {
-    total_minutes: args.total_minutes,
-    days: args.days,
-    sessions: Array.from({ length: args.days }, (_, index) => ({
-      day: index + 1,
-      minutes: daily + (index < args.total_minutes % args.days ? 1 : 0),
-    })),
-  };
+Backend tools: A careful reasoning assistant that analyses the candidate's argument and suggests the sharpest follow-up challenge, or drafts the feedback described under CARE.
+Delegate to the backend when: The candidate gives a long or complex argument and you need a precise counter-argument, or they ask for feedback.
+Do not delegate to the backend when: Greeting, asking the opening question, short follow-ups, hints, or clarifications.
+While you wait, stay quiet or use one brief natural holding phrase such as "Mm, let me think about that". Then say the result in your own words as Dr River. Never mention a backend, an assistant, a tool or a delay.`;
 }
 
-function isListeningSound(text: string) {
-  const normalized = text.toLowerCase().replace(/[\s\p{Pd}]/gu, "");
-  return /^(?:m+hm+|uhhuh)[.,!]*$/.test(normalized);
+/** Backchannel and hesitation sounds ("mm-hm", "uh-huh", "um", "erm") that add no reasoning. */
+export function isListeningSound(text: string) {
+  const normalized = text.toLowerCase().replace(/[\s\p{P}]/gu, "");
+  return /^(?:m+hm+|uhhuh|m+|h+m+|u+h+|u+m+|e+r+m*|a+h+)*$/.test(normalized);
+}
+
+function wantsFeedback(text: string) {
+  return /\bfeedback\b|\bhow (?:did|am|have) i (?:do|did|doing|done)\b/i.test(text);
+}
+
+/**
+ * The transcript as the backend sees it: deltas merged into one message per turn, fillers
+ * dropped, and only the last `limit` turns, with a note that earlier discussion is omitted.
+ */
+export function backendTranscript(
+  transcripts: readonly Pick<Transcript, "role" | "text" | "listeningSound">[],
+  limit = BACKEND_HISTORY_TURNS,
+): ModelMessage[] {
+  const turns = groupTurns(
+    transcripts
+      .filter(({ listeningSound }) => !listeningSound)
+      .map(({ role, text }) => ({ role, text, start_ms: 0, end_ms: 0 })),
+  );
+  const latestStudent = turns.filter(({ role }) => role === "user").at(-1);
+  const kept = latestStudent && wantsFeedback(latestStudent.text) ? turns : turns.slice(-limit);
+  const messages: ModelMessage[] = kept.map(({ role, text }) => ({ role, content: text }));
+  if (kept.length < turns.length) {
+    const note = `[Earlier discussion omitted: ${turns.length - kept.length} turns.]`;
+    const first = messages[0];
+    if (first?.role === "user")
+      messages[0] = { role: "user", content: `${note}\n${first.content}` };
+    else messages.unshift({ role: "user", content: note });
+  }
+  return messages;
 }
 
 async function answerQuestion(
@@ -186,8 +220,6 @@ async function answerQuestion(
   config: LiveConfig,
   correlation: { runID: string; sessionID: string | undefined; delegationID: string },
   signal: AbortSignal,
-  consumeInput: () => void,
-  onPlan: (plan: ReturnType<typeof planStudySchedule>) => void,
 ) {
   signal.throwIfAborted();
   const provider = createOpenAI({
@@ -198,22 +230,11 @@ async function answerQuestion(
       "X-Lovable-AIG-SDK": "vercel-ai-sdk",
     },
   });
-  let responseCursor = 0;
-  consumeInput();
   const result = streamText({
     model: provider.responses(config.backendModel),
     abortSignal: signal,
     maxRetries: 0,
-    stopWhen: stepCountIs(50),
     includeRawChunks: true,
-    prepareStep() {
-      consumeInput();
-      return { messages: [...messages] };
-    },
-    onStepFinish(step) {
-      messages.push(...step.response.messages.slice(responseCursor));
-      responseCursor = step.response.messages.length;
-    },
     headers: {
       "X-Lovable-AIG-Run-ID": correlation.runID,
       "X-Lovable-AIG-Metadata": JSON.stringify({
@@ -224,20 +245,16 @@ async function answerQuestion(
     providerOptions: {
       openai: {
         store: false,
+        // Each call is one fresh, single-step request, so no reasoning state is carried over.
         ...(config.backendModel !== "openai/chat-latest"
-          ? {
-              forceReasoning: true,
-              reasoningEffort: "medium",
-              reasoningSummary: "auto",
-              include: ["reasoning.encrypted_content"],
-            }
+          ? { forceReasoning: true, reasoningEffort: "medium" }
           : {}),
       },
     },
     system:
-      "You support a spoken Cambridge geography admissions interviewer. Transcripts may be incomplete or corrected; use the latest correction. " +
+      "You support a spoken Cambridge geography admissions interviewer. Transcripts are speech recognition and may be incomplete or corrected; use the latest correction. " +
       "Identify the weakest assumption in the candidate's latest reasoning and return one sharp, interviewer-style follow-up challenge, " +
-      "or, if feedback was requested, two strengths and two improvements. Do not give the model answer. At most 80 words, spoken style. You have no tools.\n\n" +
+      "or, if feedback was requested, two strengths and two improvements. Do not give the model answer. At most 80 words, spoken style.\n\n" +
       REASONING_GUIDE,
     messages,
   });
@@ -310,13 +327,9 @@ export function bindLiveConnection(
   let finished = false;
   let revision = 0;
   let task: AbortController | undefined;
-  const pendingDelegations: Array<{
-    event: ProviderEvent;
-    plan?: ReturnType<typeof planStudySchedule>;
-  }> = [];
+  const pendingDelegations: Array<{ event: ProviderEvent }> = [];
   let completedDelegation: (typeof pendingDelegations)[number] | undefined;
-  const backendMessages: ModelMessage[] = [];
-  let transcriptCursor = 0;
+  let lastStudentSpeech = 0;
   let restartTimer: ReturnType<typeof setTimeout> | undefined;
   let startupTimer: ReturnType<typeof setTimeout> | undefined;
   let closeTimer: ReturnType<typeof setTimeout> | undefined;
@@ -482,14 +495,12 @@ export function bindLiveConnection(
   function scheduleDelegation() {
     clearTimeout(restartTimer);
     if (closing || task || pendingDelegations.length === 0) return;
-    restartTimer = setTimeout(() => void runDelegation(), 300);
+    // Ask only once the student has paused, so one call covers their whole point.
+    const wait = Math.max(HANDOFF_SETTLE_MS, lastStudentSpeech + STUDENT_PAUSE_MS - Date.now());
+    restartTimer = setTimeout(() => void runDelegation(), wait);
   }
 
-  function deliverResult(
-    delegationID: string,
-    answer: string,
-    plan?: ReturnType<typeof planStudySchedule>,
-  ) {
+  function deliverResult(delegationID: string, answer: string) {
     if (closing) return;
     if (gateway?.readyState !== 1) return stop();
     try {
@@ -503,7 +514,6 @@ export function bindLiveConnection(
           }),
         );
       }
-      if (plan) emit({ type: "app.study_schedule.plan", delegation_id: delegationID, plan });
       completedDelegation = pendingDelegations.shift();
     } catch {
       stop();
@@ -515,43 +525,30 @@ export function bindLiveConnection(
     const event = pending?.event;
     const id = event?.delegation?.id;
     if (!pending || !event || !id || closing || task) return;
-    if (!transcripts.some(({ role, text }) => role === "user" && text.trim())) return;
+    // Rebuilt from the transcript each time: merged turns, recent history only.
+    const messages = backendTranscript(transcripts);
+    if (!messages.some(({ role }) => role === "user")) return;
     const controller = new AbortController();
     task = controller;
-    let taskRevision = revision;
+    const taskRevision = revision;
     try {
-      const answer = await answerQuestion(
-        backendMessages,
-        config,
-        { runID, sessionID, delegationID: id },
-        controller.signal,
-        () => {
-          const updates = transcripts.slice(transcriptCursor);
-          if (updates.some(({ role, listeningSound }) => role === "user" && !listeningSound))
-            delete pending.plan;
-          backendMessages.push(...updates.map(({ role, text }) => ({ role, content: text })));
-          transcriptCursor = transcripts.length;
-          taskRevision = revision;
-        },
-        (plan) => {
-          pending.plan = plan;
-        },
-      );
-      if (closing || controller.signal.aborted) return;
-      if (taskRevision !== revision) return;
-      deliverResult(id, answer.trim(), pending.plan);
-    } catch {
-      if (closing || controller.signal.aborted) return;
-      backendMessages.push({
-        role: "assistant",
-        content:
-          "The backend attempt failed. Completed tool results remain valid; verify uncertain external actions before any retry.",
-      });
-      if (taskRevision !== revision) return;
-      deliverResult(
-        id,
-        "The backend could not finish the answer. Ask whether the user wants to try again.",
-      );
+      let answer: string;
+      try {
+        answer = (
+          await answerQuestion(
+            messages,
+            config,
+            { runID, sessionID, delegationID: id },
+            controller.signal,
+          )
+        ).trim();
+      } catch (error) {
+        if (!controller.signal.aborted) console.error("Delegated follow-up failed", error);
+        answer = DELEGATION_FALLBACK;
+      }
+      // A result is stale once the student has said more; it is re-asked after their next pause.
+      if (closing || controller.signal.aborted || taskRevision !== revision) return;
+      deliverResult(id, answer);
     } finally {
       if (task === controller) task = undefined;
       scheduleDelegation();
@@ -629,7 +626,7 @@ export function bindLiveConnection(
       ) {
         const role = event.type === "session.input_transcript.delta" ? "user" : "assistant";
         if (!event.delta?.trim()) return;
-        const listeningSound = role === "user" && Boolean(task) && isListeningSound(event.delta);
+        const listeningSound = role === "user" && isListeningSound(event.delta);
         transcripts.push({
           role,
           text: event.delta,
@@ -637,9 +634,12 @@ export function bindLiveConnection(
           end_ms: event.end_ms ?? 0,
           listeningSound,
         });
-        if (listeningSound) return;
+        if (role === "user") lastStudentSpeech = Date.now();
+        // A filler only postpones a waiting run; it never discards one in flight.
+        if (listeningSound) return scheduleDelegation();
         if (role === "user") {
           revision++;
+          task?.abort();
           const offset = completedDelegation?.event.offset_ms;
           // Live has no transcript watermark; completed handoffs can receive late context.
           if (
@@ -663,7 +663,7 @@ export function bindLiveConnection(
             });
           }
         }
-        scheduleDelegation();
+        if (role === "user") scheduleDelegation();
       } else if (event.type === "session.delegation.created") {
         const id = event.delegation?.id;
         if (id && event.delegation?.target === "client" && !delegations.has(id)) {
@@ -709,7 +709,7 @@ export function bindLiveConnection(
         type: "session.start",
         session: {
           model: config.liveModel,
-          instructions: conversationInstructions,
+          instructions: liveInstructions(config.readingId),
           audio: { output: { voice: "vesper" } },
           delegation: { type: "client" },
         },
@@ -736,6 +736,7 @@ export function bindLiveConnection(
         }
         starting = true;
         const reading = readingById(event.readingId);
+        config.readingId = reading?.id;
         config.openingInstructions = reading
           ? readingOpeningInstructions(reading)
           : openingInstructions(event.openingTurn);
