@@ -14,12 +14,12 @@ export const confirmCheckoutSession = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { data: purchase, error } = await context.supabase
       .from("purchases")
-      .select("id")
+      .select("id, product_id")
       .eq("user_id", context.userId)
       .eq("paddle_transaction_id", data.sessionId)
       .eq("environment", data.environment)
       .eq("status", "completed")
       .maybeSingle();
     if (error) throw new Error("Could not confirm your payment");
-    return { confirmed: Boolean(purchase) };
+    return { confirmed: Boolean(purchase), schoolBundle: purchase?.product_id === "school_interview_bundle" };
   });

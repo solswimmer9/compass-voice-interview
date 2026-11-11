@@ -26,7 +26,19 @@ export const LIFETIME_ACCESS = {
   interviews: LIFETIME_INTERVIEWS,
 } as const;
 
-export const OFFERS = [INTERVIEW_PACK, LIFETIME_ACCESS] as const;
+export const SCHOOL_BUNDLE = {
+  productId: "school_interview_bundle",
+  priceId: "school_bundle_30_gbp",
+  name: "School Interview Bundle",
+  description: "30 shared interviews with AI feedback for up to 30 students, until the next 31 August.",
+  amountMinor: 125000,
+  currency: "gbp",
+  displayPrice: "£1,250",
+  interviews: 30,
+  maxStudents: 30,
+} as const;
+
+export const OFFERS = [INTERVIEW_PACK, LIFETIME_ACCESS, SCHOOL_BUNDLE] as const;
 export type Offer = (typeof OFFERS)[number];
 
 export function offerForPriceId(priceId: unknown): Offer | undefined {

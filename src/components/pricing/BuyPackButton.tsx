@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { INTERVIEW_PACK, type Offer } from "@/lib/offer";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 /** Buy button for an offer (the pack by default). Sends signed-out visitors to sign in first. */
 export function BuyPackButton({
@@ -31,14 +32,14 @@ export function BuyPackButton({
 
   return (
     <div>
-      <button
+      <Button
         type="button"
         disabled={loading || !user}
         onClick={() => setOpen(true)}
         className={cn(base, className)}
       >
         {label ?? `Buy · ${offer.displayPrice}`}
-      </button>
+      </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
           <DialogTitle>{offer.name}</DialogTitle>

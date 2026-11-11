@@ -1,5 +1,5 @@
 import { createStripeClient, verifyWebhook, type StripeEnv } from "@/lib/stripe.server";
-import { offerForPriceId } from "@/lib/offer";
+import { offerForPriceId, SCHOOL_BUNDLE } from "@/lib/offer";
 
 // Credits the purchase once per checkout session. The purchases table keeps its original
 // column names (paddle_transaction_id / paddle_customer_id); they now hold Stripe IDs.
@@ -25,7 +25,7 @@ async function fulfilCheckout(session: any, env: StripeEnv) {
       price_id: priceId,
       status: "completed",
       environment: env,
-      interviews_remaining: offer.interviews,
+      interviews_remaining: offer.productId === SCHOOL_BUNDLE.productId ? 0 : offer.interviews,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "paddle_transaction_id", ignoreDuplicates: true },

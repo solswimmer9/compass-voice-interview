@@ -77,6 +77,7 @@ export type Database = {
         Row: {
           created_at: string
           environment: string
+          expires_at: string | null
           id: string
           interviews_remaining: number
           paddle_customer_id: string
@@ -90,6 +91,7 @@ export type Database = {
         Insert: {
           created_at?: string
           environment?: string
+          expires_at?: string | null
           id?: string
           interviews_remaining?: number
           paddle_customer_id: string
@@ -103,6 +105,7 @@ export type Database = {
         Update: {
           created_at?: string
           environment?: string
+          expires_at?: string | null
           id?: string
           interviews_remaining?: number
           paddle_customer_id?: string
@@ -115,11 +118,101 @@ export type Database = {
         }
         Relationships: []
       }
+      school_bundles: {
+        Row: {
+          code: string
+          created_at: string
+          environment: string
+          expires_at: string
+          id: string
+          interviews_remaining: number
+          max_students: number
+          owner_id: string
+          purchase_id: string
+          status: string
+        }
+        Insert: {
+          code?: string
+          created_at?: string
+          environment: string
+          expires_at: string
+          id?: string
+          interviews_remaining?: number
+          max_students?: number
+          owner_id: string
+          purchase_id: string
+          status?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          environment?: string
+          expires_at?: string
+          id?: string
+          interviews_remaining?: number
+          max_students?: number
+          owner_id?: string
+          purchase_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_bundles_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: true
+            referencedRelation: "purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_claims: {
+        Row: {
+          bundle_id: string
+          created_at: string
+          id: string
+          purchase_id: string
+          user_id: string
+        }
+        Insert: {
+          bundle_id: string
+          created_at?: string
+          id?: string
+          purchase_id: string
+          user_id: string
+        }
+        Update: {
+          bundle_id?: string
+          created_at?: string
+          id?: string
+          purchase_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_claims_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "school_bundles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_claims_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: true
+            referencedRelation: "purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      claim_school_interview: {
+        Args: { p_code: string; p_environment: string }
+        Returns: Json
+      }
       consume_feedback: { Args: { p_interview_id: string }; Returns: boolean }
       consume_interview_credit: {
         Args: { p_environment: string }

@@ -53,6 +53,7 @@ function PrivacyPage() {
         <li>Authorities where required by law.</li>
       </ul>
       <h2>International transfers</h2>
+      <p>School purchases store the teacher's account, a shared school code, student claims and remaining interviews. Teachers can see their bundle balance, not students' transcripts, videos or individual feedback.</p>
       <p>
         Some providers process data outside the UK. Where they do, we rely on adequacy decisions or
         standard contractual clauses (including the UK addendum).

@@ -1,5 +1,9 @@
 # Roadmap
 
+- [x] Build school bundle checkout, shared-code claims, teacher balances, and refund-safe student credits.
+- [x] Verify signed-in school claims, balance updates, refund revocation, refunded-code rejection, school checkout rendering and mobile layout; keep existing tester access unchanged.
+- [ ] Publish school checkout and sync the school product to live — waits for Solomon to publish; a completed school payment remains unverified.
+
 - [x] Replace the legal seller placeholder with the approved name Solomon Allen and check the public policy pages.
 - [x] Voice geography interview MVP with transcript replay
 - [x] Calmer, narrator-style voice

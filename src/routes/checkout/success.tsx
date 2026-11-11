@@ -41,9 +41,10 @@ function CheckoutSuccessPage() {
     queryKey: ["checkout-confirmation", user?.id, sessionId],
     enabled: Boolean(user && sessionId),
     queryFn: async () => {
+      if (!sessionId) throw new Error("Missing checkout reference");
       try {
         return await confirmCheckoutSession({
-          data: { sessionId: sessionId!, environment: getPaymentsEnvironment() },
+          data: { sessionId, environment: getPaymentsEnvironment() },
         });
       } finally {
         setAttempts((n) => n + 1);
@@ -65,8 +66,8 @@ function CheckoutSuccessPage() {
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
             Payment complete
           </p>
-          <h1 className="mt-4 font-serif text-4xl font-semibold">Your interviews have been added.</h1>
-          <p className="mt-4 text-muted-foreground">Return to your account to see the updated allowance.</p>
+          <h1 className="mt-4 font-serif text-4xl font-semibold">{query.data?.schoolBundle ? "Your school bundle is ready." : "Your interviews have been added."}</h1>
+          <p className="mt-4 text-muted-foreground">{query.data?.schoolBundle ? "Your school code and shared balance are ready." : "Return to your account to see the updated allowance."}</p>
         </>
       ) : waiting ? (
         <>
@@ -84,10 +85,10 @@ function CheckoutSuccessPage() {
         </>
       )}
       <Link
-        to="/account"
+        to={query.data?.schoolBundle ? "/schools" : "/account"}
         className="mx-auto mt-8 rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
       >
-        {confirmed ? "View my allowance" : "Go to my account"}
+        {confirmed ? query.data?.schoolBundle ? "View school code" : "View my allowance" : "Go to my account"}
       </Link>
     </main>
   );

@@ -16,6 +16,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReadingsRouteImport } from './routes/readings'
 import { Route as RefundsRouteImport } from './routes/refunds'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SchoolsRouteImport } from './routes/schools'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ApiAssessRouteImport } from './routes/api/assess'
 import { Route as CheckoutSuccessRouteImport } from './routes/checkout/success'
@@ -57,6 +58,11 @@ const RefundsRoute = RefundsRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SchoolsRoute = SchoolsRouteImport.update({
+  id: '/schools',
+  path: '/schools',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -104,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/readings': typeof ReadingsRoute
   '/refunds': typeof RefundsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/schools': typeof SchoolsRoute
   '/terms': typeof TermsRoute
   '/api/assess': typeof ApiAssessRoute
   '/checkout/success': typeof CheckoutSuccessRoute
@@ -120,6 +127,7 @@ export interface FileRoutesByTo {
   '/readings': typeof ReadingsRoute
   '/refunds': typeof RefundsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/schools': typeof SchoolsRoute
   '/terms': typeof TermsRoute
   '/api/assess': typeof ApiAssessRoute
   '/checkout/success': typeof CheckoutSuccessRoute
@@ -137,6 +145,7 @@ export interface FileRoutesById {
   '/readings': typeof ReadingsRoute
   '/refunds': typeof RefundsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/schools': typeof SchoolsRoute
   '/terms': typeof TermsRoute
   '/api/assess': typeof ApiAssessRoute
   '/checkout/success': typeof CheckoutSuccessRoute
@@ -155,6 +164,7 @@ export interface FileRouteTypes {
     | '/readings'
     | '/refunds'
     | '/reset-password'
+    | '/schools'
     | '/terms'
     | '/api/assess'
     | '/checkout/success'
@@ -171,6 +181,7 @@ export interface FileRouteTypes {
     | '/readings'
     | '/refunds'
     | '/reset-password'
+    | '/schools'
     | '/terms'
     | '/api/assess'
     | '/checkout/success'
@@ -187,6 +198,7 @@ export interface FileRouteTypes {
     | '/readings'
     | '/refunds'
     | '/reset-password'
+    | '/schools'
     | '/terms'
     | '/api/assess'
     | '/checkout/success'
@@ -204,6 +216,7 @@ export interface RootRouteChildren {
   ReadingsRoute: typeof ReadingsRoute
   RefundsRoute: typeof RefundsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SchoolsRoute: typeof SchoolsRoute
   TermsRoute: typeof TermsRoute
   ApiAssessRoute: typeof ApiAssessRoute
   CheckoutSuccessRoute: typeof CheckoutSuccessRoute
@@ -262,6 +275,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/schools': {
+      id: '/schools'
+      path: '/schools'
+      fullPath: '/schools'
+      preLoaderRoute: typeof SchoolsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -324,6 +344,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReadingsRoute: ReadingsRoute,
   RefundsRoute: RefundsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SchoolsRoute: SchoolsRoute,
   TermsRoute: TermsRoute,
   ApiAssessRoute: ApiAssessRoute,
   CheckoutSuccessRoute: CheckoutSuccessRoute,

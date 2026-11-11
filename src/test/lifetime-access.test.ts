@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { INTERVIEW_PACK, LIFETIME_ACCESS, offerForPriceId } from "@/lib/offer";
+import { INTERVIEW_PACK, LIFETIME_ACCESS, SCHOOL_BUNDLE, offerForPriceId } from "@/lib/offer";
 
 const upsert = vi.fn();
 const verifyWebhook = vi.fn();
@@ -75,5 +75,11 @@ describe("payment webhook", () => {
     const { handlePaymentWebhook } = await import("@/lib/payment-webhook.server");
     await handlePaymentWebhook(completedPayment("unknown_price"));
     expect(upsert).not.toHaveBeenCalled();
+  });
+
+  it("records school purchases without granting the teacher personal interviews", async () => {
+    const { handlePaymentWebhook } = await import("@/lib/payment-webhook.server");
+    await handlePaymentWebhook(completedPayment(SCHOOL_BUNDLE.priceId));
+    expect(upsert).toHaveBeenCalledWith(expect.objectContaining({ product_id: "school_interview_bundle", interviews_remaining: 0 }), expect.anything());
   });
 });

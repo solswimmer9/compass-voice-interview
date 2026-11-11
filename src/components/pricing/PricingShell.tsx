@@ -37,6 +37,7 @@ export function PricingShell({ children, wide }: { children: ReactNode; wide?: b
         <Link to="/" className="text-muted-foreground hover:text-foreground">
           ← Back to interview practice
         </Link>
+        <Link to="/schools" className="text-muted-foreground hover:text-foreground">Schools</Link>
       </div>
       {children}
     </main>

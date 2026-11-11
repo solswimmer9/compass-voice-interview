@@ -17,7 +17,7 @@ export const getAccountSnapshot = createServerFn({ method: "GET" })
         .maybeSingle(),
       context.supabase
         .from("purchases")
-        .select("id, interviews_remaining, created_at, product_id")
+        .select("id, interviews_remaining, created_at, product_id, expires_at")
         .eq("user_id", context.userId)
         .eq("environment", data.environment)
         .eq("status", "completed")
@@ -32,7 +32,7 @@ export const getAccountSnapshot = createServerFn({ method: "GET" })
     if (profile.error || purchases.error || freeSessions.error)
       throw new Error("Could not load your account");
     const paidRemaining = (purchases.data ?? []).reduce(
-      (sum, purchase) => sum + purchase.interviews_remaining,
+      (sum, purchase) => sum + (!purchase.expires_at || new Date(purchase.expires_at).getTime() > Date.now() ? purchase.interviews_remaining : 0),
       0,
     );
     const lifetime = (purchases.data ?? []).some(
