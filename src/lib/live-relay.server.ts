@@ -15,6 +15,12 @@ import { readingById, READINGS } from "./readings.ts";
 import { INTERVIEW_MINUTES } from "./limits.ts";
 import { authenticateAccessToken } from "./request-auth.server.ts";
 import { isServerTester } from "./testers.ts";
+import {
+  buildPpeTrialSession,
+  isPpeTrialRequest,
+  PPE_TRIAL_CLOSED,
+  PPE_TRIAL_TUTOR_ID,
+} from "./ppe-trial.server.ts";
 
 export type LiveConfig = {
   baseURL: string;
@@ -181,9 +187,14 @@ function isListeningSound(text: string) {
   return /^(?:m+hm+|uhhuh)[.,!]*$/.test(normalized);
 }
 
+/** What the backend model is told about the interview. Geography keeps today's fixed wording. */
+type BackendBrief = { subject: string; guide: string };
+const GEOGRAPHY_BRIEF: BackendBrief = { subject: "Cambridge geography", guide: REASONING_GUIDE };
+
 async function answerQuestion(
   messages: ModelMessage[],
   config: LiveConfig,
+  brief: BackendBrief,
   correlation: { runID: string; sessionID: string | undefined; delegationID: string },
   signal: AbortSignal,
   consumeInput: () => void,
@@ -235,10 +246,10 @@ async function answerQuestion(
       },
     },
     system:
-      "You support a spoken Cambridge geography admissions interviewer. Transcripts may be incomplete or corrected; use the latest correction. " +
+      `You support a spoken ${brief.subject} admissions interviewer. Transcripts may be incomplete or corrected; use the latest correction. ` +
       "Identify the weakest assumption in the candidate's latest reasoning and return one sharp, interviewer-style follow-up challenge, " +
       "or, if feedback was requested, two strengths and two improvements. Do not give the model answer. At most 80 words, spoken style. You have no tools.\n\n" +
-      REASONING_GUIDE,
+      brief.guide,
     messages,
   });
   let completed = false;
@@ -327,6 +338,8 @@ export function bindLiveConnection(
   let greetingRequested = false;
   let greetingCommand: { id: string; type: "instructions" | "commentary" } | undefined;
   let greetingTimer: ReturnType<typeof setTimeout> | undefined;
+  let brief = GEOGRAPHY_BRIEF;
+  let instructions = conversationInstructions;
   const startTimer = setTimeout(() => {
     emit({ type: "app.error", error: { message: "Voice startup message timed out" } });
     stop();
@@ -395,6 +408,17 @@ export function bindLiveConnection(
     }
     interviewCredit = { id: result.interviewId, supabase: auth.supabase };
     return result.interviewId;
+  }
+
+  /** PPE trial: tester accounts only, and never touches interview credits. */
+  async function authorizePpeTrial(event: { accessToken?: unknown }): Promise<string> {
+    if (typeof event.accessToken !== "string" || !event.accessToken) {
+      throw new Error("Please sign in again before starting your interview.");
+    }
+    const auth = await authenticateAccessToken(event.accessToken);
+    if (!auth) throw new Error("Your sign-in has expired. Please sign in again.");
+    if (!isServerTester(auth.user.email)) throw new Error(PPE_TRIAL_CLOSED);
+    return "preview";
   }
 
   function requestGreeting() {
@@ -523,6 +547,7 @@ export function bindLiveConnection(
       const answer = await answerQuestion(
         backendMessages,
         config,
+        brief,
         { runID, sessionID, delegationID: id },
         controller.signal,
         () => {
@@ -709,7 +734,7 @@ export function bindLiveConnection(
         type: "session.start",
         session: {
           model: config.liveModel,
-          instructions: conversationInstructions,
+          instructions,
           audio: { output: { voice: "vesper" } },
           delegation: { type: "client" },
         },
@@ -735,6 +760,51 @@ export function bindLiveConnection(
           throw new Error("Voice startup message required");
         }
         starting = true;
+        if (event.tutorId !== undefined && event.tutorId !== "geography") {
+          if (!isPpeTrialRequest(event.tutorId)) {
+            throw new Error("Unknown tutor");
+          }
+          execution.waitUntil(
+            (async () => {
+              // Checked before the session is built; no credit is ever consumed or released.
+              const interviewId = await authorizePpeTrial(event);
+              const session = await buildPpeTrialSession(event);
+              if (closing) return;
+              config.openingInstructions = session.opening;
+              instructions = session.liveInstructions;
+              brief = { subject: "Oxford-style PPE", guide: session.backendContext };
+              const { tutorVersion, pedagogyVersion, cardIds, promptHash } = session;
+              // Versions only; never transcript text or user identifiers.
+              console.log(
+                JSON.stringify({
+                  event: "interview.session",
+                  trial: "ppe",
+                  tutorVersion,
+                  pedagogyVersion,
+                  cardIds,
+                  promptHash,
+                }),
+              );
+              emit({
+                type: "app.interview.started",
+                interviewId,
+                tutorId: PPE_TRIAL_TUTOR_ID,
+                cardIds,
+              });
+              await startSession(event.sdp);
+            })().catch((error) => {
+              if (!closing)
+                emit({
+                  type: "app.error",
+                  error: {
+                    message: error instanceof Error ? error.message : "Voice startup failed",
+                  },
+                });
+              stop();
+            }),
+          );
+          return;
+        }
         const reading = readingById(event.readingId);
         config.openingInstructions = reading
           ? readingOpeningInstructions(reading)

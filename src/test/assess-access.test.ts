@@ -76,4 +76,47 @@ describe("feedback access", () => {
     expect(rpc).not.toHaveBeenCalled();
     expect(streamText).toHaveBeenCalled();
   });
+
+  it("refuses PPE trial feedback for a non-tester before any allowance is used", async () => {
+    const { handleAssess } = await import("@/lib/assess.server");
+    const rpc = vi.fn();
+    authenticateRequest.mockResolvedValue({
+      user: { email: "student@example.com" },
+      supabase: { rpc },
+    });
+    const response = await handleAssess(
+      post(
+        PUBLISHED_URL,
+        {
+          transcript: "x",
+          interviewId: "00000000-0000-0000-0000-000000000000",
+          tutorId: "ppe",
+        },
+        "a.b.c",
+      ),
+    );
+    expect(response.status).toBe(403);
+    expect(rpc).not.toHaveBeenCalled();
+    expect(streamText).not.toHaveBeenCalled();
+  });
+
+  it("gives a tester PPE feedback from Dr Vale's notes", async () => {
+    const { handleAssess } = await import("@/lib/assess.server");
+    authenticateRequest.mockResolvedValue({
+      user: { email: "tester@example.com" },
+      supabase: { rpc: vi.fn() },
+    });
+    const response = await handleAssess(
+      post(
+        PUBLISHED_URL,
+        { transcript: "x", interviewId: "preview", tutorId: "ppe", cardIds: ["bag-charge"] },
+        "a.b.c",
+      ),
+    );
+    expect(response.status).toBe(200);
+    const { system } = streamText.mock.calls[0]![0] as { system: string };
+    expect(system).toContain("Oxford PPE admissions tutor");
+    expect(system).toContain("[bag-charge]");
+    expect(system).not.toContain("[rent-cap-day-after]");
+  });
 });

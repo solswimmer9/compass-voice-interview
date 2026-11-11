@@ -152,3 +152,137 @@ describe("Lovable live interview access", () => {
     );
   });
 });
+
+describe("PPE trial interviews", () => {
+  afterEach(() => vi.unstubAllEnvs());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.authenticate.mockResolvedValue({
+      user: { email: "owner@example.com" },
+      supabase: { rpc: mocks.rpc },
+    });
+    mocks.rpc.mockResolvedValue({ data: { allowed: true, interviewId }, error: null });
+    mocks.connect.mockRejectedValue(new Error("Voice startup failed for this test"));
+  });
+
+  function startPpe(_browser: ReturnType<typeof browserSocket>, extra: object = {}) {
+    return JSON.stringify({
+      type: "app.start",
+      sdp: "test-offer",
+      openingTurn: 2,
+      accessToken: "valid-access-token",
+      environment: "live",
+      tutorId: "ppe",
+      ...extra,
+    });
+  }
+
+  function bound() {
+    let handler: ((data: unknown) => void) | undefined;
+    const browser = browserSocket();
+    const socket: LiveSocket = {
+      ...browser.socket,
+      onMessage(h) {
+        handler = h;
+      },
+    };
+    bindLiveConnection(socket, config, executionContext(), mocks.connect);
+    return { browser, send: (data: string) => handler?.(data) };
+  }
+
+  it("refuses the PPE trial for a signed-in non-tester without touching credits", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "someone-else@example.com");
+    const { browser, send } = bound();
+
+    send(startPpe(browser));
+
+    await vi.waitFor(() =>
+      expect(browser.events).toContainEqual(
+        expect.objectContaining({
+          type: "app.error",
+          error: { message: expect.stringMatching(/PPE tutor is still being tested/) },
+        }),
+      ),
+    );
+    expect(mocks.connect).not.toHaveBeenCalled();
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+
+  it("refuses the PPE trial without sign-in", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
+    mocks.authenticate.mockResolvedValue(null);
+    const { browser, send } = bound();
+
+    send(startPpe(browser));
+
+    await vi.waitFor(() =>
+      expect(browser.events).toContainEqual(expect.objectContaining({ type: "app.error" })),
+    );
+    expect(mocks.connect).not.toHaveBeenCalled();
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+
+  it("refuses an unknown tutor without touching credits", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
+    const { browser, send } = bound();
+
+    send(startPpe(browser, { tutorId: "history" }));
+
+    await vi.waitFor(() =>
+      expect(browser.events).toContainEqual(expect.objectContaining({ type: "app.error" })),
+    );
+    expect(mocks.authenticate).not.toHaveBeenCalled();
+    expect(mocks.connect).not.toHaveBeenCalled();
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+
+  it("starts Dr Vale for a tester with PPE cards and no credit use", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
+    const sent: Array<Record<string, unknown>> = [];
+    mocks.connect.mockResolvedValue({
+      readyState: 1,
+      send(data: string) {
+        sent.push(JSON.parse(data) as Record<string, unknown>);
+      },
+      close: vi.fn(),
+      onMessage: vi.fn(),
+      onClose: vi.fn(),
+      onError: vi.fn(),
+    } satisfies LiveSocket);
+    const { browser, send } = bound();
+
+    send(startPpe(browser));
+
+    await vi.waitFor(() => expect(sent).toHaveLength(1));
+    expect(mocks.rpc).not.toHaveBeenCalled();
+    const started = browser.events.find((event) => event["type"] === "app.interview.started");
+    expect(started).toMatchObject({ interviewId: "preview", tutorId: "ppe" });
+    expect(started?.["cardIds"]).toHaveLength(3);
+    const session = sent[0]?.["session"] as { instructions: string };
+    expect(session.instructions).toContain("You are Dr Vale");
+    expect(session.instructions).not.toContain("Dr River");
+  });
+
+  it("keeps geography on the original Dr River prompt", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
+    const sent: Array<Record<string, unknown>> = [];
+    mocks.connect.mockResolvedValue({
+      readyState: 1,
+      send(data: string) {
+        sent.push(JSON.parse(data) as Record<string, unknown>);
+      },
+      close: vi.fn(),
+      onMessage: vi.fn(),
+      onClose: vi.fn(),
+      onError: vi.fn(),
+    } satisfies LiveSocket);
+    const { browser, send } = bound();
+
+    send(startPpe(browser, { tutorId: undefined }));
+
+    await vi.waitFor(() => expect(sent).toHaveLength(1));
+    const session = sent[0]?.["session"] as { instructions: string };
+    expect(session.instructions).toContain("Dr River");
+    expect(session.instructions).not.toContain("Dr Vale");
+  });
+});

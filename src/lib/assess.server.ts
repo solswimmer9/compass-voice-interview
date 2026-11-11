@@ -7,6 +7,7 @@ import { NOTES_CONTEXT, REASONING_GUIDE } from "./interview-briefing.ts";
 import { limitMessage, takeFeedback, visitorKey } from "./rate-limit.server.ts";
 import { authenticateRequest } from "./request-auth.server.ts";
 import { isServerTester } from "./testers.ts";
+import { isPpeTrialRequest, PPE_TRIAL_CLOSED, ppeFeedbackContext } from "./ppe-trial.server.ts";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1";
 const TEXT_MODEL = "openai/gpt-6-astra";
@@ -28,6 +29,22 @@ ${REASONING_GUIDE}
 ${NOTES_CONTEXT}
 When judging the candidate, give most weight to how far they developed the ideas above in their own words.`;
 
+// PPE trial feedback (tester accounts only). Same headings so the panel reads the same.
+const ppeSystem = (
+  cardIds: unknown,
+) => `You are an experienced Oxford PPE admissions tutor reviewing a practice interview.
+Assess the candidate's reasoning, not their knowledge alone. Use British English and Markdown with these sections:
+## Overall impression (2-3 sentences)
+## Strengths in reasoning (2-3 bullets, quote the candidate where possible)
+## Where the reasoning slipped (2-3 bullets: unstated premises, values asserted as facts, ignored second-round effects, shifting the meaning of a term, not engaging with pushback)
+## Targeted improvements (3 concrete, practicable actions for next time)
+## Try this next (one follow-up question to practise)
+If a video is provided, also briefly comment on delivery: pace, thinking aloud, composure and body language.
+Be honest, specific and encouraging. Under 400 words.
+
+${ppeFeedbackContext(cardIds)}
+When judging the candidate, give most weight to how far they developed the ideas above in their own words.`;
+
 export async function handleAssess(request: Request) {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) return Response.json({ error: "AI is not configured" }, { status: 500 });
@@ -35,6 +52,22 @@ export async function handleAssess(request: Request) {
   // Unlimited testing is per signed-in tester account, never by web address.
   const auth = await authenticateRequest(request);
   const preview = isServerTester(auth?.user.email);
+  let body: {
+    transcript?: unknown;
+    video?: unknown;
+    videoType?: unknown;
+    interviewId?: unknown;
+    tutorId?: unknown;
+    cardIds?: unknown;
+  };
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: "Invalid request" }, { status: 400 });
+  }
+  const ppe = isPpeTrialRequest(body.tutorId);
+  if (ppe && !preview) return Response.json({ error: PPE_TRIAL_CLOSED }, { status: 403 });
+
   if (!preview) {
     const allowed = takeFeedback(visitorKey(request));
     if (!allowed.ok) {
@@ -45,12 +78,6 @@ export async function handleAssess(request: Request) {
     }
   }
 
-  let body: { transcript?: unknown; video?: unknown; videoType?: unknown; interviewId?: unknown };
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json({ error: "Invalid request" }, { status: 400 });
-  }
   const transcript =
     typeof body.transcript === "string" ? body.transcript.trim().slice(0, 40_000) : "";
   const video = typeof body.video === "string" ? body.video : "";
@@ -59,6 +86,7 @@ export async function handleAssess(request: Request) {
       ? body.videoType
       : "video/mp4";
   const interviewId = typeof body.interviewId === "string" ? body.interviewId : "";
+  const system = ppe ? ppeSystem(body.cardIds) : SYSTEM;
   if (!transcript && !video)
     return Response.json({ error: "Add a transcript or a video" }, { status: 400 });
   if (video && video.length * 0.75 > MAX_VIDEO_BYTES)
@@ -104,7 +132,7 @@ export async function handleAssess(request: Request) {
   const result = video
     ? streamText({
         model: createLovableAiGatewayProvider(key, undefined, { baseURL: GATEWAY })(VIDEO_MODEL),
-        system: SYSTEM,
+        system,
         messages,
         maxRetries: 0,
         abortSignal: request.signal,
@@ -116,7 +144,7 @@ export async function handleAssess(request: Request) {
           headers: { "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
           fetch: createLovableAiGatewayRunIdFetch().fetch,
         }).responses(TEXT_MODEL),
-        system: SYSTEM,
+        system,
         messages,
         maxRetries: 0,
         abortSignal: request.signal,

@@ -14,8 +14,11 @@ import { isPreviewBrowser } from "@/lib/preview";
 const HEADLINE_WORDS = ["democratise", "open up", "demystify", "widen access to"];
 
 export const Route = createFileRoute("/")({
-  validateSearch: (search: Record<string, unknown>): { reading?: string } =>
-    typeof search["reading"] === "string" ? { reading: search["reading"] } : {},
+  validateSearch: (search: Record<string, unknown>): { reading?: string; tutor?: "ppe" } => ({
+    ...(typeof search["reading"] === "string" ? { reading: search["reading"] } : {}),
+    // PPE trial with Dr Vale. The server only lets tester accounts start it.
+    ...(search["tutor"] === "ppe" ? { tutor: "ppe" as const } : {}),
+  }),
   head: () => ({
     meta: [
       { title: "We are here to democratise Oxbridge" },
@@ -95,7 +98,13 @@ function InterviewPage() {
   const endRef = useRef<HTMLDivElement>(null);
   const fragmentSequence = useRef(0);
 
+  const [cardIds, setCardIds] = useState<string[]>([]);
   const onEvent = useCallback((event: LiveEvent) => {
+    if (event.type === "app.interview.started") {
+      const ids = Array.isArray(event["cardIds"]) ? event["cardIds"] : [];
+      setCardIds(ids.filter((id): id is string => typeof id === "string"));
+      return;
+    }
     if (
       (event.type !== "session.input_transcript.delta" &&
         event.type !== "session.output_transcript.delta") ||
@@ -114,15 +123,19 @@ function InterviewPage() {
     setLines((previous) => appendTranscriptFragment(previous, role, fragment));
   }, []);
 
-  const { reading: readingParam } = Route.useSearch();
-  const reading = readingById(readingParam);
+  const { reading: readingParam, tutor: tutorParam } = Route.useSearch();
+  const ppe = tutorParam === "ppe";
+  // Practice readings are geography articles, so the PPE trial ignores them.
+  const reading = ppe ? undefined : readingById(readingParam);
+  const tutorName = ppe ? "Dr Vale" : "Dr River";
   const getStartContext = useCallback(async () => {
     const environment = getPaymentsEnvironment();
     const { data } = await supabase.auth.getSession();
     const accessToken = data.session?.access_token;
     if (!accessToken) throw new Error("Please sign in again before starting your interview.");
+    if (ppe) return { accessToken, environment, tutorId: "ppe" as const };
     return { accessToken, environment, ...(reading ? { readingId: reading.id } : {}) };
-  }, [reading]);
+  }, [reading, ppe]);
   const call = useLiveVoice({ onEvent, getStartContext });
   const account = useAccountSnapshot();
   const [preview, setPreview] = useState(false);
@@ -146,6 +159,7 @@ function InterviewPage() {
 
   const start = () => {
     setLines([]);
+    setCardIds([]);
     fragmentSequence.current = 0;
     call.start();
   };
@@ -182,7 +196,7 @@ function InterviewPage() {
       <main className="relative z-10 mx-auto flex min-h-[100svh] max-w-2xl flex-col justify-center px-6 py-16">
         <div className="text-center">
           <p className="text-xs font-medium uppercase tracking-[0.25em] text-muted-foreground">
-            Oxbridge practice · Geography
+            {ppe ? "Oxford-style practice · PPE (trial)" : "Oxbridge practice · Geography"}
           </p>
           <h1
             aria-label="We are here to democratise Oxbridge"
@@ -205,10 +219,17 @@ function InterviewPage() {
             <p className="mt-3 text-foreground/90">
               Preparing for an Oxbridge interview has been too hard for too long. We change that.
             </p>
-            <p className="mt-2 text-foreground/90">
-              Practise out loud with Dr River, an AI tutor informed by real Cambridge geography
-              notes, who will challenge your reasoning.
-            </p>
+            {ppe ? (
+              <p className="mt-2 text-foreground/90">
+                Practise out loud with Dr Vale, an AI tutor for Oxford-style Philosophy, Politics
+                and Economics, who will test your premises and push on your arguments.
+              </p>
+            ) : (
+              <p className="mt-2 text-foreground/90">
+                Practise out loud with Dr River, an AI tutor informed by real Cambridge geography
+                notes, who will challenge your reasoning.
+              </p>
+            )}
           </div>
           <ol className="mt-8 grid gap-3 text-left text-sm sm:grid-cols-3">
             <li className="rounded-md border bg-card p-3">
@@ -228,6 +249,32 @@ function InterviewPage() {
           </ol>
         </div>
 
+        {(preview || ppe) && (
+          <p className="mt-6 text-center text-sm">
+            <span className="text-muted-foreground">Tutor: </span>
+            <Link
+              to="/"
+              search={{}}
+              className={ppe ? "text-muted-foreground underline" : "font-medium"}
+            >
+              Geography · Dr River
+            </Link>
+            <span className="text-muted-foreground"> | </span>
+            <Link
+              to="/"
+              search={{ tutor: "ppe" }}
+              className={ppe ? "font-medium" : "text-muted-foreground underline"}
+            >
+              PPE · Dr Vale (trial)
+            </Link>
+          </p>
+        )}
+        {ppe && (
+          <p className="mt-3 rounded-md border border-accent/60 px-4 py-3 text-center text-sm">
+            PPE trial for tester accounts. Dr Vale uses draft questions that are still being
+            reviewed, and no interview credits are used.
+          </p>
+        )}
         {reading && (
           <p className="mt-6 rounded-md border border-accent/60 px-4 py-3 text-center text-sm">
             Reading interview: <span className="font-medium">{reading.title}</span>.{" "}
@@ -247,7 +294,7 @@ function InterviewPage() {
                 >
                   Sign in to start
                 </Link>
-              ) : !preview && account.data?.totalRemaining === 0 ? (
+              ) : !preview && !ppe && account.data?.totalRemaining === 0 ? (
                 <Link
                   to="/pricing"
                   className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
@@ -293,14 +340,14 @@ function InterviewPage() {
             )}
           </div>
           <p className="mt-4 text-center text-xs text-muted-foreground">
-            Dr River speaks with a natural British voice powered by Lovable AI.
+            {tutorName} speaks with a natural British voice powered by Lovable AI.
           </p>
           {call.playbackBlocked && (
             <button
               onClick={call.resumePlayback}
               className="mx-auto mt-3 block rounded-full border px-4 py-2 text-sm"
             >
-              Play Dr River’s voice
+              Play {tutorName}’s voice
             </button>
           )}
           {preview ? (
@@ -337,7 +384,7 @@ function InterviewPage() {
             </h2>
             {showReplay && (
               <p className="mt-1 text-sm text-muted-foreground">
-                Read back how you argued. Where did Dr River push hardest?
+                Read back how you argued. Where did {tutorName} push hardest?
               </p>
             )}
             <ol className="mt-6 space-y-5">
@@ -347,7 +394,7 @@ function InterviewPage() {
                   className={line.role === "assistant" ? "border-l-2 border-accent pl-4" : "pl-4"}
                 >
                   <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                    {line.role === "assistant" ? "Dr River" : "You"}
+                    {line.role === "assistant" ? tutorName : "You"}
                   </p>
                   <p
                     className={
@@ -366,15 +413,16 @@ function InterviewPage() {
         {showReplay && (
           <AssessPanel
             interviewId={call.interviewId}
+            {...(ppe ? { tutorId: "ppe" as const, cardIds } : {})}
             initialTranscript={lines
-              .map((l) => `${l.role === "assistant" ? "Dr River" : "You"}: ${l.text.trim()}`)
+              .map((l) => `${l.role === "assistant" ? tutorName : "You"}: ${l.text.trim()}`)
               .join("\n\n")}
           />
         )}
       </main>
       <footer className="relative z-10 mx-auto max-w-2xl px-6 pb-10 text-center text-xs text-muted-foreground">
         Independent practice tool, not affiliated with the University of Cambridge or the University
-        of Oxford. Dr River is an AI and can make mistakes.
+        of Oxford. {tutorName} is an AI and can make mistakes.
       </footer>
     </div>
   );

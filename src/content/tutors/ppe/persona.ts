@@ -1,5 +1,6 @@
-// The PPE tutor shell. Persona text is taken only from the "PPE" subsection of
-// docs/interview-pedagogy.md. The owner writes all PPE questions, cards and readings himself.
+// The PPE tutor (trial). Persona text is taken only from the "PPE" subsection of
+// docs/interview-pedagogy.md. The cards are drafts awaiting the owner's review; the reading list stays
+// empty until the owner chooses it.
 // Server-only.
 
 import type { ReadingListEntry, TutorPersona } from "../../types.ts";

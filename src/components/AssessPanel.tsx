@@ -13,9 +13,14 @@ function readDataURL(file: File) {
 export function AssessPanel({
   initialTranscript,
   interviewId,
+  tutorId,
+  cardIds,
 }: {
   initialTranscript: string;
   interviewId: string | null;
+  /** Set for the PPE trial so feedback uses the PPE tutor's notes. */
+  tutorId?: "ppe";
+  cardIds?: string[];
 }) {
   const [transcript, setTranscript] = useState(initialTranscript);
   const [video, setVideo] = useState<File | null>(null);
@@ -40,7 +45,11 @@ export function AssessPanel({
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
       if (!token) throw new Error("Sign in to request feedback.");
-      const body: Record<string, string> = { transcript, interviewId };
+      const body: Record<string, string | string[]> = { transcript, interviewId };
+      if (tutorId) {
+        body["tutorId"] = tutorId;
+        if (cardIds?.length) body["cardIds"] = cardIds;
+      }
       if (video) {
         body["video"] = await readDataURL(video);
         body["videoType"] = video.type || "video/mp4";

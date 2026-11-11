@@ -16,6 +16,8 @@ export type BuildSessionInput = {
   cards: readonly TopicCard[];
   memory?: StudentMemory | null;
   reading?: SessionReading | null;
+  /** Accept draft cards. Only for tester-only experiments such as the PPE trial. */
+  allowDrafts?: boolean;
 };
 
 /** Today's openingInstructions() form, for any tutor. */
@@ -64,10 +66,12 @@ export async function buildSession({
   cards,
   memory = null,
   reading = null,
+  allowDrafts = false,
 }: BuildSessionInput): Promise<SessionContext> {
   for (const card of cards) {
     if (card.tutor !== tutor.id) throw new Error(`Card ${card.id} belongs to another tutor`);
-    if (card.status !== "approved") throw new Error(`Card ${card.id} is not approved`);
+    if (card.status !== "approved" && !allowDrafts)
+      throw new Error(`Card ${card.id} is not approved`);
   }
   const first = cards[0];
   if (!first && !reading) throw new Error("An interview needs a card or a reading");

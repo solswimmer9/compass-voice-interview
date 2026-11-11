@@ -12,6 +12,11 @@ export type SelectCardsOptions = {
   seed?: number;
   /** Total cards wanted, 1 to 3. Default 3. */
   count?: number;
+  /**
+   * Also consider draft cards. Only for tester-only experiments (the PPE trial); never set it for
+   * an interview a paying student can start.
+   */
+  includeDrafts?: boolean;
 };
 
 function validSeed(seed: unknown): number | undefined {
@@ -44,7 +49,7 @@ function lastDone(history: readonly CardDone[]): Map<string, number> {
  * 3. Then up to count-1 more from the first card's `related`, ranked not-done first, then a
  *    different strand from the first card, then least recently done, then `related` order.
  *    If `related` runs out, the rest of the candidates fill in by the same ranking.
- * Drafts are never returned.
+ * Drafts are never returned unless includeDrafts is set (tester-only experiments).
  */
 export function selectCards(
   tutor: Tutor,
@@ -55,7 +60,7 @@ export function selectCards(
   const seed = validSeed(options.seed);
   const candidates = tutor.cards.filter(
     (card) =>
-      card.status === "approved" &&
+      (card.status === "approved" || options.includeDrafts === true) &&
       card.tutor === tutor.id &&
       (options.strand === undefined || card.strand === options.strand),
   );
