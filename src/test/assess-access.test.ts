@@ -76,4 +76,34 @@ describe("feedback access", () => {
     expect(rpc).not.toHaveBeenCalled();
     expect(streamText).toHaveBeenCalled();
   });
+
+  it("builds the feedback system prompt from the tutor context", async () => {
+    const { handleAssess } = await import("@/lib/assess.server");
+    const { buildFeedbackContext } = await import("@/content/feedback-context");
+    const { cardsFor, tutorById } = await import("@/content");
+    const geography = tutorById("geography")!;
+    authenticateRequest.mockResolvedValue({
+      user: { email: "tester@example.com" },
+      supabase: { rpc: vi.fn() },
+    });
+    const systemFor = async (body: Record<string, unknown>) => {
+      streamText.mockClear();
+      await handleAssess(post(PUBLISHED_URL, { transcript: "x", ...body }, "a.b.c"));
+      return (streamText.mock.calls[0]?.[0] as { system: string }).system;
+    };
+
+    const defaultSystem = await systemFor({ interviewId: "preview" });
+    expect(defaultSystem).toContain("Cambridge geography admissions tutor");
+    expect(defaultSystem).toContain(buildFeedbackContext(geography));
+    expect(defaultSystem).toContain("## Try this next");
+
+    const card = cardsFor("geography")[0]!;
+    const other = cardsFor("geography")[1]!;
+    const cardSystem = await systemFor({ interviewId: "preview", cardIds: [card.id] });
+    expect(cardSystem).toContain(card.deep);
+    expect(cardSystem).not.toContain(other.deep);
+
+    // A tutor with no approved cards falls back to geography rather than failing.
+    expect(await systemFor({ interviewId: "preview", tutorId: "ppe" })).toBe(defaultSystem);
+  });
 });
