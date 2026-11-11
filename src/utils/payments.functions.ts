@@ -1,5 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequest } from "@tanstack/react-start/server";
 import type Stripe from "stripe";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { offerForPriceId } from "@/lib/offer";
@@ -37,28 +36,16 @@ async function resolveOrCreateCustomer(
 
 export const createCheckoutSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { priceId: string; returnUrl: string; environment?: "sandbox" | "live" }) => {
+  .validator((data: { priceId: string; returnUrl: string; environment: "sandbox" | "live" }) => {
     if (!offerForPriceId(data.priceId)) throw new Error("Invalid priceId");
-    if (
-      data.environment !== undefined &&
-      data.environment !== "sandbox" &&
-      data.environment !== "live"
-    )
+    if (data.environment !== "sandbox" && data.environment !== "live")
       throw new Error("Invalid environment");
-    if (typeof data.returnUrl !== "string") throw new Error("Invalid returnUrl");
     return data;
   })
   .handler(async ({ data, context }): Promise<CheckoutSessionResult> => {
     try {
-      const { createStripeClient, checkoutReturnUrl } = await import("@/lib/stripe.server");
-      const { resolvePaymentsEnvironment } = await import("@/lib/payments-env.server");
-      // The server decides sandbox or live; the browser's value is only checked against it.
-      const environment = resolvePaymentsEnvironment(data.environment);
-      const request = getRequest();
-      const origin = request.headers.get("origin") ?? new URL(request.url).origin;
-      const returnUrl = checkoutReturnUrl(data.returnUrl, origin);
-      if (!returnUrl) return { error: "Checkout could not start from this page." };
-      const stripe = createStripeClient(environment);
+      const { createStripeClient } = await import("@/lib/stripe.server");
+      const stripe = createStripeClient(data.environment);
       const { data: userData } = await context.supabase.auth.getUser();
       const prices = await stripe.prices.list({ lookup_keys: [data.priceId] });
       if (!prices.data.length) throw new Error("Price not found");
@@ -75,7 +62,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         line_items: [{ price: stripePrice.id, quantity: 1 }],
         mode: "payment",
         ui_mode: "embedded_page",
-        return_url: returnUrl,
+        return_url: data.returnUrl,
         customer: customerId,
         payment_intent_data: { description: product.name },
         managed_payments: { enabled: true },
@@ -83,8 +70,6 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       } as Stripe.Checkout.SessionCreateParams);
       return { clientSecret: session.client_secret ?? "" };
     } catch (error) {
-      if (error instanceof Error && error.name === "PaymentsEnvironmentError")
-        return { error: error.message };
       const { getStripeErrorMessage } = await import("@/lib/stripe.server");
       return { error: getStripeErrorMessage(error) };
     }

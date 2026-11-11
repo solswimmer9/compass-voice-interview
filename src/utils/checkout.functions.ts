@@ -11,19 +11,16 @@ export const confirmCheckoutSession = createServerFn({ method: "GET" })
         .string()
         .regex(/^cs_[a-zA-Z0-9_]+$/)
         .max(255),
-      // Optional and only checked; the server decides which environment to read.
-      environment: z.enum(["sandbox", "live"]).optional(),
+      environment: z.enum(["sandbox", "live"]),
     }),
   )
   .handler(async ({ data, context }) => {
-    const { resolvePaymentsEnvironment } = await import("@/lib/payments-env.server");
-    const environment = resolvePaymentsEnvironment(data.environment);
     const { data: purchase, error } = await context.supabase
       .from("purchases")
       .select("id, product_id")
       .eq("user_id", context.userId)
       .eq("paddle_transaction_id", data.sessionId)
-      .eq("environment", environment)
+      .eq("environment", data.environment)
       .eq("status", "completed")
       .maybeSingle();
     if (error) throw new Error("Could not confirm your payment");

@@ -1,38 +1,19 @@
 import { createStripeClient, verifyWebhook, type StripeEnv } from "@/lib/stripe.server";
 import { offerForPriceId, SCHOOL_BUNDLE } from "@/lib/offer";
 
-// The fields this handler reads from Stripe event objects. Signed events come from Stripe, but
-// every field is still treated as optional.
-type StripeRef = string | { id?: string } | null | undefined;
-type CheckoutSessionObject = {
-  id?: string;
-  metadata?: Record<string, string | undefined> | null;
-  customer?: StripeRef;
-  payment_status?: string;
-};
-type ChargeOrDisputeObject = {
-  payment_intent?: StripeRef;
-  refunded?: boolean;
-  amount_refunded?: number;
-  amount?: number;
-};
-
 // Credits the purchase once per checkout session. The purchases table keeps its original
 // column names (paddle_transaction_id / paddle_customer_id); they now hold Stripe IDs.
-async function fulfilCheckout(session: CheckoutSessionObject, env: StripeEnv) {
-  const userId = session.metadata?.["userId"];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- payments are managed in Lovable
+async function fulfilCheckout(session: any, env: StripeEnv) {
+  const userId = session.metadata?.userId;
   if (typeof userId !== "string" || !userId) {
     console.error("Payment completed without a user ID");
     return;
   }
-  const priceId = session.metadata?.["priceId"];
+  const priceId = session.metadata?.priceId;
   const offer = offerForPriceId(priceId);
   if (!offer) {
     console.warn("Skipping payment with an unrecognised price");
-    return;
-  }
-  if (typeof session.id !== "string" || !session.id) {
-    console.error("Payment completed without a checkout session ID");
     return;
   }
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -41,9 +22,9 @@ async function fulfilCheckout(session: CheckoutSessionObject, env: StripeEnv) {
       user_id: userId,
       paddle_transaction_id: session.id,
       paddle_customer_id:
-        typeof session.customer === "string" ? session.customer : (session.customer?.id ?? ""),
+        typeof session.customer === "string" ? session.customer : (session.customer?.id ?? null),
       product_id: offer.productId,
-      price_id: offer.priceId,
+      price_id: priceId,
       status: "completed",
       environment: env,
       interviews_remaining: offer.productId === SCHOOL_BUNDLE.productId ? 0 : offer.interviews,
@@ -57,7 +38,8 @@ async function fulfilCheckout(session: CheckoutSessionObject, env: StripeEnv) {
 // Refunds and disputes revoke the remaining credits. purchases.paddle_transaction_id holds the
 // Checkout Session ID, so the charge's payment intent is mapped back to its session via Stripe.
 async function revokeForCharge(
-  chargeOrDispute: ChargeOrDisputeObject,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- payments are managed in Lovable
+  chargeOrDispute: any,
   env: StripeEnv,
   status: "refunded" | "disputed",
 ) {
@@ -94,19 +76,21 @@ export async function handlePaymentWebhook(request: Request) {
   }
   try {
     const event = await verifyWebhook(request, env);
-    const object = (event.data.object ?? {}) as CheckoutSessionObject & ChargeOrDisputeObject;
+    const session = event.data.object;
     if (event.type === "checkout.session.completed") {
-      if (object.payment_status !== "unpaid") await fulfilCheckout(object, env);
+      if (session.payment_status !== "unpaid") await fulfilCheckout(session, env);
     } else if (event.type === "checkout.session.async_payment_succeeded") {
-      await fulfilCheckout(object, env);
+      await fulfilCheckout(session, env);
     } else if (event.type === "charge.refunded") {
       // Only full refunds revoke access; partial refunds leave the entitlement in place.
-      const refunded = object.amount_refunded ?? 0;
-      if (object.refunded === true || (refunded > 0 && refunded >= (object.amount ?? Infinity))) {
-        await revokeForCharge(object, env, "refunded");
+      if (
+        session.refunded === true ||
+        (session.amount_refunded > 0 && session.amount_refunded >= session.amount)
+      ) {
+        await revokeForCharge(session, env, "refunded");
       }
     } else if (event.type === "charge.dispute.created") {
-      await revokeForCharge(object, env, "disputed");
+      await revokeForCharge(session, env, "disputed");
     } else {
       console.log("Unhandled payment event:", event.type);
     }
