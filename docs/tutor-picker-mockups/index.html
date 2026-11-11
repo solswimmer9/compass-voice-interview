@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tutor picker mockups</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,700;1,400&display=swap" />
+<style>
+  /* Same tokens as src/styles.css */
+  :root {
+    --bg: oklch(0.145 0.004 270);
+    --fg: oklch(0.985 0 0);
+    --card: oklch(0.185 0.004 270);
+    --muted: oklch(0.27 0.004 270);
+    --muted-fg: oklch(0.72 0.005 270);
+    --accent: oklch(0.86 0.005 270);
+    --border: oklch(0.29 0.004 270);
+    --r: 0.25rem;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--fg); font-family: Inter, system-ui, sans-serif; }
+  a { color: inherit; text-decoration: none; }
+  .design { position: relative; width: 1200px; min-height: 820px; overflow: hidden; padding: 24px 0 64px; border-bottom: 1px solid var(--border); }
+  .dots { position: absolute; inset: 0; pointer-events: none;
+    background-image: radial-gradient(oklch(0.72 0.005 270 / 0.55) 1px, transparent 1px);
+    background-size: 16px 16px;
+    mask-image: radial-gradient(520px circle at 50% 35%, white, transparent); }
+  .wrap { position: relative; z-index: 1; margin: 0 auto; padding: 0 24px; }
+  nav { display: flex; justify-content: flex-end; gap: 20px; font-size: 14px; max-width: 1000px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 2; }
+  nav a { color: var(--muted-fg); } nav a.u { color: var(--fg); text-decoration: underline; }
+  .eyebrow { font-size: 12px; font-weight: 500; letter-spacing: .25em; text-transform: uppercase; color: var(--muted-fg); }
+  h1 { font-weight: 500; letter-spacing: -0.04em; line-height: 1.1; }
+  .tag { position: absolute; top: 20px; left: 24px; z-index: 3; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; background: var(--fg); color: var(--bg); padding: 4px 8px; border-radius: var(--r); font-weight: 700; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); }
+  .btn { display: inline-block; background: var(--fg); color: var(--bg); border-radius: 999px; padding: 10px 20px; font-weight: 500; font-size: 14px; }
+  .btn.ghost { background: transparent; color: var(--fg); border: 1px solid var(--border); }
+  .muted { color: var(--muted-fg); }
+  .mono { width: 48px; height: 48px; border-radius: 999px; border: 1px solid var(--border); display: grid; place-items: center; font-weight: 500; background: var(--muted); }
+  .soon { opacity: .45; }
+  .pill { display: inline-block; font-size: 11px; letter-spacing: .15em; text-transform: uppercase; border: 1px solid var(--border); border-radius: 999px; padding: 3px 9px; color: var(--muted-fg); }
+  .pill.live { color: var(--fg); border-color: var(--accent); }
+  .pill.live::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 99px; background: var(--accent); margin-right: 6px; vertical-align: 1px; }
+  .q { font-style: italic; font-size: 17px; border-left: 2px solid var(--accent); padding-left: 12px; }
+
+  /* A: Faculty grid */
+  #a .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
+  #a .card { padding: 24px; display: flex; flex-direction: column; gap: 14px; min-height: 290px; }
+  #a .card.on { border-color: var(--accent); }
+  #a .card .foot { margin-top: auto; display: flex; justify-content: space-between; align-items: center; }
+
+  /* B: Prospectus list */
+  #b .row { display: grid; grid-template-columns: 60px 1.1fr 1.6fr 140px 40px; align-items: center; gap: 20px; padding: 22px 8px; border-top: 1px solid var(--border); }
+  #b .row:last-child { border-bottom: 1px solid var(--border); }
+  #b .row.hover { background: var(--card); }
+  #b .num { font-size: 13px; color: var(--muted-fg); font-variant-numeric: tabular-nums; }
+  #b .subj { font-size: 26px; font-weight: 500; letter-spacing: -0.03em; }
+
+  /* C: Interview rooms */
+  #c .rooms { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 44px; }
+  #c .room { aspect-ratio: 3 / 4.2; padding: 20px; display: flex; flex-direction: column; position: relative; }
+  #c .room .door { position: absolute; inset: 56px 36px 150px; border: 1px solid var(--border); border-radius: 80px 80px 2px 2px; display: grid; place-items: center; }
+  #c .room.on .door { border-color: var(--accent); box-shadow: 0 0 40px -10px oklch(0.86 0.005 270 / .5) inset; }
+  #c .room .big { font-size: 64px; font-weight: 500; letter-spacing: -0.05em; }
+  #c .room .bottom { margin-top: auto; }
+
+  /* D: Subject then tutor */
+  #d .layout { display: grid; grid-template-columns: 300px 1fr; gap: 24px; margin-top: 36px; }
+  #d .side .item { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-radius: var(--r); font-size: 15px; }
+  #d .side .item.on { background: var(--card); border: 1px solid var(--border); font-weight: 500; }
+  #d .panel { padding: 32px; }
+  #d .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 24px; }
+  #d .stats .card { padding: 14px; background: var(--bg); }
+
+  /* E: Search and filter */
+  #e .search { display: flex; gap: 10px; align-items: center; padding: 14px 18px; border-radius: 999px; margin-top: 32px; }
+  #e .chips { display: flex; gap: 8px; margin-top: 16px; justify-content: center; flex-wrap: wrap; }
+  #e .chip { padding: 7px 14px; border: 1px solid var(--border); border-radius: 999px; font-size: 13px; color: var(--muted-fg); }
+  #e .chip.on { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+  #e .list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 28px; }
+  #e .tile { display: flex; gap: 16px; padding: 18px; align-items: center; }
+</style>
+</head>
+<body>
+
+<!-- ============ A. THE FACULTY ============ -->
+<section class="design" id="a">
+  <div class="dots"></div><span class="tag">A · The Faculty</span>
+  <nav><a>Readings</a><a>Pricing</a><a class="u">Your account</a></nav>
+  <div class="wrap" style="max-width:1000px; margin-top:56px; text-align:center">
+    <p class="eyebrow">Oxbridge practice · Choose your tutor</p>
+    <h1 style="font-size:56px; margin-top:16px">Who would you like<br/>to be interviewed by?</h1>
+    <p class="muted" style="margin-top:16px; font-size:17px">Each tutor is built from real interview context for their subject.</p>
+    <div class="grid" style="text-align:left">
+      <div class="card on">
+        <div style="display:flex; justify-content:space-between; align-items:center"><div class="mono">DR</div><span class="pill live">Live</span></div>
+        <div><p class="eyebrow">Geography · Cambridge</p><p style="font-size:22px; font-weight:500; margin-top:6px">Dr River</p></div>
+        <p class="muted" style="font-size:14px">Informed by real Cambridge geography notes. Will challenge how you reason about places, people and data.</p>
+        <div class="foot"><span class="muted" style="font-size:13px">20 min · voice</span><a class="btn">Interview →</a></div>
+      </div>
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center"><div class="mono">PM</div><span class="pill live">New</span></div>
+        <div><p class="eyebrow">PPE · Oxford</p><p style="font-size:22px; font-weight:500; margin-top:6px">Prof Matt</p></div>
+        <p class="muted" style="font-size:14px">Philosophy, Politics and Economics. Will test your premises and push hard on your arguments.</p>
+        <div class="foot"><span class="muted" style="font-size:13px">20 min · voice</span><a class="btn">Interview →</a></div>
+      </div>
+      <div class="card soon">
+        <div style="display:flex; justify-content:space-between; align-items:center"><div class="mono">?</div><span class="pill">Coming soon</span></div>
+        <div><p class="eyebrow">Next subject</p><p style="font-size:22px; font-weight:500; margin-top:6px">More tutors</p></div>
+        <p class="muted" style="font-size:14px">Tell us which subject you need next and we'll prioritise it.</p>
+        <div class="foot"><span></span><a class="btn ghost">Vote →</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ B. THE PROSPECTUS ============ -->
+<section class="design" id="b">
+  <div class="dots"></div><span class="tag">B · The Prospectus</span>
+  <nav><a>Readings</a><a>Pricing</a><a class="u">Your account</a></nav>
+  <div class="wrap" style="max-width:1000px; margin-top:56px">
+    <p class="eyebrow">Interviews · 2026 entry</p>
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:14px">
+      <h1 style="font-size:56px">Pick a subject.</h1>
+      <p class="muted" style="max-width:320px; font-size:15px; text-align:right">One tutor per subject. Twenty minutes, out loud, then a transcript and feedback.</p>
+    </div>
+    <div style="margin-top:44px">
+      <div class="row hover">
+        <span class="num">01</span>
+        <div><p class="subj">Geography</p><p class="muted" style="font-size:13px; margin-top:4px">Cambridge-style</p></div>
+        <div><p style="font-weight:500">Dr River</p><p class="muted" style="font-size:14px; margin-top:2px">“Why might a city flood more than the farmland around it?”</p></div>
+        <span class="pill live">Available</span>
+        <span style="font-size:22px">→</span>
+      </div>
+      <div class="row">
+        <span class="num">02</span>
+        <div><p class="subj">PPE</p><p class="muted" style="font-size:13px; margin-top:4px">Oxford-style</p></div>
+        <div><p style="font-weight:500">Prof Matt</p><p class="muted" style="font-size:14px; margin-top:2px">“Is it ever rational to vote in a general election?”</p></div>
+        <span class="pill live">Available</span>
+        <span style="font-size:22px">→</span>
+      </div>
+      <div class="row soon">
+        <span class="num">03</span>
+        <div><p class="subj">Economics</p><p class="muted" style="font-size:13px; margin-top:4px">Cambridge-style</p></div>
+        <div><p style="font-weight:500">Tutor in training</p><p class="muted" style="font-size:14px; margin-top:2px">Example placeholder</p></div>
+        <span class="pill">Coming soon</span><span></span>
+      </div>
+      <div class="row soon">
+        <span class="num">04</span>
+        <div><p class="subj">History</p><p class="muted" style="font-size:13px; margin-top:4px">Oxford-style</p></div>
+        <div><p style="font-weight:500">Tutor in training</p><p class="muted" style="font-size:14px; margin-top:2px">Example placeholder</p></div>
+        <span class="pill">Coming soon</span><span></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ C. THE CORRIDOR ============ -->
+<section class="design" id="c">
+  <div class="dots"></div><span class="tag">C · The Corridor</span>
+  <nav><a>Readings</a><a>Pricing</a><a class="u">Your account</a></nav>
+  <div class="wrap" style="max-width:1080px; margin-top:56px; text-align:center">
+    <p class="eyebrow">Interview day</p>
+    <h1 style="font-size:56px; margin-top:16px">Choose your door.</h1>
+    <p class="muted" style="margin-top:14px; font-size:17px">Behind each one, a tutor is waiting to question you.</p>
+    <div class="rooms" style="text-align:left">
+      <div class="card room on">
+        <p class="eyebrow">Room 1</p>
+        <div class="door"><span class="big">Ge</span></div>
+        <div class="bottom"><p style="font-weight:500; font-size:17px">Geography</p><p class="muted" style="font-size:13px">Dr River · Cambridge</p><a class="btn" style="margin-top:12px; width:100%; text-align:center">Knock & enter</a></div>
+      </div>
+      <div class="card room">
+        <p class="eyebrow">Room 2</p>
+        <div class="door"><span class="big">Pp</span></div>
+        <div class="bottom"><p style="font-weight:500; font-size:17px">PPE</p><p class="muted" style="font-size:13px">Prof Matt · Oxford</p><a class="btn ghost" style="margin-top:12px; width:100%; text-align:center">Knock & enter</a></div>
+      </div>
+      <div class="card room soon">
+        <p class="eyebrow">Room 3</p>
+        <div class="door"><span class="big">Ec</span></div>
+        <div class="bottom"><p style="font-weight:500; font-size:17px">Economics</p><p class="muted" style="font-size:13px">Door locked · coming soon</p><a class="btn ghost" style="margin-top:12px; width:100%; text-align:center">Notify me</a></div>
+      </div>
+      <div class="card room soon">
+        <p class="eyebrow">Room 4</p>
+        <div class="door"><span class="big">Hi</span></div>
+        <div class="bottom"><p style="font-weight:500; font-size:17px">History</p><p class="muted" style="font-size:13px">Door locked · coming soon</p><a class="btn ghost" style="margin-top:12px; width:100%; text-align:center">Notify me</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ D. THE BRIEFING ============ -->
+<section class="design" id="d">
+  <div class="dots"></div><span class="tag">D · The Briefing</span>
+  <nav><a>Readings</a><a>Pricing</a><a class="u">Your account</a></nav>
+  <div class="wrap" style="max-width:1000px; margin-top:56px">
+    <p class="eyebrow">Oxbridge practice</p>
+    <h1 style="font-size:48px; margin-top:14px">Choose a subject, meet your tutor.</h1>
+    <div class="layout">
+      <div class="side">
+        <p class="eyebrow" style="margin-bottom:10px">Subjects</p>
+        <div class="item on"><span>Geography</span><span class="pill live">Live</span></div>
+        <div class="item"><span>PPE</span><span class="pill live">New</span></div>
+        <div class="item soon"><span>Economics</span><span class="pill">Soon</span></div>
+        <div class="item soon"><span>History</span><span class="pill">Soon</span></div>
+        <div class="item soon"><span>Law</span><span class="pill">Soon</span></div>
+      </div>
+      <div class="card panel">
+        <div style="display:flex; gap:16px; align-items:center">
+          <div class="mono" style="width:64px; height:64px; font-size:20px">DR</div>
+          <div><p class="eyebrow">Geography · Cambridge-style</p><p style="font-size:28px; font-weight:500; letter-spacing:-0.03em; margin-top:4px">Dr River</p></div>
+        </div>
+        <p style="margin-top:20px; font-size:16px; line-height:1.55" class="muted">An AI tutor informed by real Cambridge geography notes. Expect to be asked to reason from evidence you've never seen before, then defend it.</p>
+        <p class="eyebrow" style="margin-top:24px">The kind of thing you'll hear</p>
+        <p class="q" style="margin-top:10px">“Why might a city flood more than the farmland around it?”</p>
+        <div class="stats">
+          <div class="card"><p class="muted" style="font-size:12px">Length</p><p style="font-weight:500; margin-top:2px">20 minutes</p></div>
+          <div class="card"><p class="muted" style="font-size:12px">Format</p><p style="font-weight:500; margin-top:2px">Voice, live</p></div>
+          <div class="card"><p class="muted" style="font-size:12px">After</p><p style="font-weight:500; margin-top:2px">Transcript + feedback</p></div>
+        </div>
+        <div style="display:flex; gap:12px; align-items:center; margin-top:28px">
+          <a class="btn" style="padding:12px 26px; font-size:15px">Start interview with Dr River</a>
+          <span class="muted" style="font-size:13px">3 interviews remaining</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ E. THE DIRECTORY ============ -->
+<section class="design" id="e">
+  <div class="dots"></div><span class="tag">E · The Directory</span>
+  <nav><a>Readings</a><a>Pricing</a><a class="u">Your account</a></nav>
+  <div class="wrap" style="max-width:860px; margin-top:56px; text-align:center">
+    <p class="eyebrow">Built for when there are lots of tutors</p>
+    <h1 style="font-size:52px; margin-top:16px">What are you applying for?</h1>
+    <div class="card search"><span class="muted">⌕</span><span class="muted">Search a subject, e.g. “Land Economy”</span></div>
+    <div class="chips">
+      <span class="chip on">All</span><span class="chip">Cambridge</span><span class="chip">Oxford</span><span class="chip">Sciences</span><span class="chip">Humanities</span><span class="chip">Social sciences</span>
+    </div>
+    <div class="list" style="text-align:left">
+      <div class="card tile"><div class="mono">DR</div><div style="flex:1"><p style="font-weight:500">Geography</p><p class="muted" style="font-size:13px">Dr River · Cambridge</p></div><a class="btn">Start</a></div>
+      <div class="card tile"><div class="mono">PM</div><div style="flex:1"><p style="font-weight:500">PPE</p><p class="muted" style="font-size:13px">Prof Matt · Oxford</p></div><a class="btn">Start</a></div>
+      <div class="card tile soon"><div class="mono">Ec</div><div style="flex:1"><p style="font-weight:500">Economics</p><p class="muted" style="font-size:13px">Coming soon</p></div><span class="pill">Soon</span></div>
+      <div class="card tile soon"><div class="mono">Hi</div><div style="flex:1"><p style="font-weight:500">History</p><p class="muted" style="font-size:13px">Coming soon</p></div><span class="pill">Soon</span></div>
+      <div class="card tile soon"><div class="mono">La</div><div style="flex:1"><p style="font-weight:500">Law</p><p class="muted" style="font-size:13px">Coming soon</p></div><span class="pill">Soon</span></div>
+      <div class="card tile soon"><div class="mono">NS</div><div style="flex:1"><p style="font-weight:500">Natural Sciences</p><p class="muted" style="font-size:13px">Coming soon</p></div><span class="pill">Soon</span></div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
