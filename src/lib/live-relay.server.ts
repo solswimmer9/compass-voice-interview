@@ -1,8 +1,7 @@
 import { createOpenAI } from "@ai-sdk/openai";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { stepCountIs, streamText, type ModelMessage } from "ai";
+import { streamText, type ModelMessage } from "ai";
 import process from "node:process";
-import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 import {
   DR_RIVER_BRIEFING,
@@ -13,6 +12,7 @@ import {
 } from "./interview-briefing.ts";
 import { readingById, readingsFor } from "./readings.ts";
 import { INTERVIEW_MINUTES, OBJECT_REVEAL_MINUTES } from "./limits.ts";
+import { groupTurns } from "./evals/metrics.ts";
 import { authenticateAccessToken } from "./request-auth.server.ts";
 import { isServerTester } from "./testers.ts";
 import { limitMessage, takeGuestInterview, visitorKey } from "./rate-limit.server.ts";
@@ -39,17 +39,26 @@ export type LiveConfig = {
   key: string;
   liveModel: string;
   backendModel: string;
+  /** Per session, set from app.start: the greeting and the selected practice reading. */
   openingInstructions?: string;
+  readingId?: string | undefined;
 };
 
-// Fill from co-loaded knowledge: the gateway URL, the Live model and the resolved chat model.
 const liveSettings = {
   baseURL: "https://ai.gateway.lovable.dev/v1",
   liveModel: "openai/gpt-live-1",
   backendModel: "openai/gpt-6-astra",
-  openingInstructions:
-    "Start now in British English. Briefly introduce yourself as Dr River, running a practice geography interview, then ask one warm, easy question about what draws the student to geography or what they notice about where they live, and listen.",
 };
+
+/** Silence after the student's last words before the backend is asked (or re-asked). */
+export const STUDENT_PAUSE_MS = 800;
+/** Minimum wait after a handoff, so trailing transcript can arrive first. */
+export const HANDOFF_SETTLE_MS = 300;
+/** Recent turns sent to the backend for a follow-up; feedback requests get the full transcript. */
+export const BACKEND_HISTORY_TURNS = 12;
+/** Given to the live model when the backend fails, so the student never hears about it. */
+export const DELEGATION_FALLBACK =
+  "Carry on in your own words, in character as the tutor: pick out one assumption in what the student has just said and ask one short question about it.";
 
 export type LiveSocket = {
   readonly readyState: number;
@@ -186,28 +195,40 @@ Backend tools: A careful reasoning assistant that analyses the candidate's argum
 Delegate to the backend when: The candidate gives a long or complex argument and you need a precise counter-argument, or they ask for detailed feedback on the interview.
 Do not delegate to the backend when: Greeting, asking the opening question, short follow-ups, hints, or clarifications. Wait for the backend result before presenting it.`;
 
-const studyScheduleInput = z
-  .object({
-    total_minutes: z.number().int().min(1).max(10_080),
-    days: z.number().int().min(1).max(30),
-  })
-  .strict();
-
-function planStudySchedule(args: z.infer<typeof studyScheduleInput>) {
-  const daily = Math.floor(args.total_minutes / args.days);
-  return {
-    total_minutes: args.total_minutes,
-    days: args.days,
-    sessions: Array.from({ length: args.days }, (_, index) => ({
-      day: index + 1,
-      minutes: daily + (index < args.total_minutes % args.days ? 1 : 0),
-    })),
-  };
+/** Backchannel and hesitation sounds ("mm-hm", "uh-huh", "um", "erm") that add no reasoning. */
+export function isListeningSound(text: string) {
+  const normalized = text.toLowerCase().replace(/[\s\p{P}]/gu, "");
+  return /^(?:m+hm+|uhhuh|m+|h+m+|u+h+|u+m+|e+r+m*|a+h+)*$/.test(normalized);
 }
 
-function isListeningSound(text: string) {
-  const normalized = text.toLowerCase().replace(/[\s\p{Pd}]/gu, "");
-  return /^(?:m+hm+|uhhuh)[.,!]*$/.test(normalized);
+function wantsFeedback(text: string) {
+  return /\bfeedback\b|\bhow (?:did|am|have) i (?:do|did|doing|done)\b/i.test(text);
+}
+
+/**
+ * The transcript as the backend sees it: deltas merged into one message per turn, fillers
+ * dropped, and only the last `limit` turns, with a note that earlier discussion is omitted.
+ */
+export function backendTranscript(
+  transcripts: readonly Pick<Transcript, "role" | "text" | "listeningSound">[],
+  limit = BACKEND_HISTORY_TURNS,
+): ModelMessage[] {
+  const turns = groupTurns(
+    transcripts
+      .filter(({ listeningSound }) => !listeningSound)
+      .map(({ role, text }) => ({ role, text, start_ms: 0, end_ms: 0 })),
+  );
+  const latestStudent = turns.filter(({ role }) => role === "user").at(-1);
+  const kept = latestStudent && wantsFeedback(latestStudent.text) ? turns : turns.slice(-limit);
+  const messages: ModelMessage[] = kept.map(({ role, text }) => ({ role, content: text }));
+  if (kept.length < turns.length) {
+    const note = `[Earlier discussion omitted: ${turns.length - kept.length} turns.]`;
+    const first = messages[0];
+    if (first?.role === "user")
+      messages[0] = { role: "user", content: `${note}\n${first.content}` };
+    else messages.unshift({ role: "user", content: note });
+  }
+  return messages;
 }
 
 /** What the backend model is told about the interview. Geography keeps today's fixed wording. */
@@ -220,8 +241,6 @@ async function answerQuestion(
   brief: BackendBrief,
   correlation: { runID: string; sessionID: string | undefined; delegationID: string },
   signal: AbortSignal,
-  consumeInput: () => void,
-  onPlan: (plan: ReturnType<typeof planStudySchedule>) => void,
 ) {
   signal.throwIfAborted();
   const provider = createOpenAI({
@@ -232,22 +251,11 @@ async function answerQuestion(
       "X-Lovable-AIG-SDK": "vercel-ai-sdk",
     },
   });
-  let responseCursor = 0;
-  consumeInput();
   const result = streamText({
     model: provider.responses(config.backendModel),
     abortSignal: signal,
     maxRetries: 0,
-    stopWhen: stepCountIs(50),
     includeRawChunks: true,
-    prepareStep() {
-      consumeInput();
-      return { messages: [...messages] };
-    },
-    onStepFinish(step) {
-      messages.push(...step.response.messages.slice(responseCursor));
-      responseCursor = step.response.messages.length;
-    },
     headers: {
       "X-Lovable-AIG-Run-ID": correlation.runID,
       "X-Lovable-AIG-Metadata": JSON.stringify({
@@ -258,13 +266,9 @@ async function answerQuestion(
     providerOptions: {
       openai: {
         store: false,
+        // Each call is one fresh, single-step request, so no reasoning state is carried over.
         ...(config.backendModel !== "openai/chat-latest"
-          ? {
-              forceReasoning: true,
-              reasoningEffort: "medium",
-              reasoningSummary: "auto",
-              include: ["reasoning.encrypted_content"],
-            }
+          ? { forceReasoning: true, reasoningEffort: "medium" }
           : {}),
       },
     },
@@ -349,13 +353,9 @@ export function bindLiveConnection(
   let finished = false;
   let revision = 0;
   let task: AbortController | undefined;
-  const pendingDelegations: Array<{
-    event: ProviderEvent;
-    plan?: ReturnType<typeof planStudySchedule>;
-  }> = [];
+  const pendingDelegations: Array<{ event: ProviderEvent }> = [];
   let completedDelegation: (typeof pendingDelegations)[number] | undefined;
-  const backendMessages: ModelMessage[] = [];
-  let transcriptCursor = 0;
+  let lastStudentSpeech = 0;
   let restartTimer: ReturnType<typeof setTimeout> | undefined;
   let startupTimer: ReturnType<typeof setTimeout> | undefined;
   let closeTimer: ReturnType<typeof setTimeout> | undefined;
@@ -633,14 +633,12 @@ export function bindLiveConnection(
   function scheduleDelegation() {
     clearTimeout(restartTimer);
     if (closing || task || pendingDelegations.length === 0) return;
-    restartTimer = setTimeout(() => void runDelegation(), 300);
+    // Ask only once the student has paused, so one call covers their whole point.
+    const wait = Math.max(HANDOFF_SETTLE_MS, lastStudentSpeech + STUDENT_PAUSE_MS - Date.now());
+    restartTimer = setTimeout(() => void runDelegation(), wait);
   }
 
-  function deliverResult(
-    delegationID: string,
-    answer: string,
-    plan?: ReturnType<typeof planStudySchedule>,
-  ) {
+  function deliverResult(delegationID: string, answer: string) {
     if (closing) return;
     if (gateway?.readyState !== 1) return stop();
     try {
@@ -654,7 +652,6 @@ export function bindLiveConnection(
           }),
         );
       }
-      if (plan) emit({ type: "app.study_schedule.plan", delegation_id: delegationID, plan });
       completedDelegation = pendingDelegations.shift();
     } catch {
       stop();
@@ -666,44 +663,31 @@ export function bindLiveConnection(
     const event = pending?.event;
     const id = event?.delegation?.id;
     if (!pending || !event || !id || closing || task) return;
-    if (!transcripts.some(({ role, text }) => role === "user" && text.trim())) return;
+    // Rebuilt from the transcript each time: merged turns, recent history only.
+    const messages = backendTranscript(transcripts);
+    if (!messages.some(({ role }) => role === "user")) return;
     const controller = new AbortController();
     task = controller;
-    let taskRevision = revision;
+    const taskRevision = revision;
     try {
-      const answer = await answerQuestion(
-        backendMessages,
-        config,
-        brief,
-        { runID, sessionID, delegationID: id },
-        controller.signal,
-        () => {
-          const updates = transcripts.slice(transcriptCursor);
-          if (updates.some(({ role, listeningSound }) => role === "user" && !listeningSound))
-            delete pending.plan;
-          backendMessages.push(...updates.map(({ role, text }) => ({ role, content: text })));
-          transcriptCursor = transcripts.length;
-          taskRevision = revision;
-        },
-        (plan) => {
-          pending.plan = plan;
-        },
-      );
-      if (closing || controller.signal.aborted) return;
-      if (taskRevision !== revision) return;
-      deliverResult(id, answer.trim(), pending.plan);
-    } catch {
-      if (closing || controller.signal.aborted) return;
-      backendMessages.push({
-        role: "assistant",
-        content:
-          "The backend attempt failed. Completed tool results remain valid; verify uncertain external actions before any retry.",
-      });
-      if (taskRevision !== revision) return;
-      deliverResult(
-        id,
-        "The backend could not finish the answer. Ask whether the user wants to try again.",
-      );
+      let answer: string;
+      try {
+        answer = (
+          await answerQuestion(
+            messages,
+            config,
+            brief,
+            { runID, sessionID, delegationID: id },
+            controller.signal,
+          )
+        ).trim();
+      } catch (error) {
+        if (!controller.signal.aborted) console.error("Delegated follow-up failed", error);
+        answer = DELEGATION_FALLBACK;
+      }
+      // A result is stale once the student has said more; it is re-asked after their next pause.
+      if (closing || controller.signal.aborted || taskRevision !== revision) return;
+      deliverResult(id, answer);
     } finally {
       if (task === controller) task = undefined;
       scheduleDelegation();
@@ -773,7 +757,7 @@ export function bindLiveConnection(
       ) {
         const role = event.type === "session.input_transcript.delta" ? "user" : "assistant";
         if (!event.delta?.trim()) return;
-        const listeningSound = role === "user" && Boolean(task) && isListeningSound(event.delta);
+        const listeningSound = role === "user" && isListeningSound(event.delta);
         transcripts.push({
           role,
           text: event.delta,
@@ -781,9 +765,12 @@ export function bindLiveConnection(
           end_ms: event.end_ms ?? 0,
           listeningSound,
         });
-        if (listeningSound) return;
+        if (role === "user") lastStudentSpeech = Date.now();
+        // A filler only postpones a waiting run; it never discards one in flight.
+        if (listeningSound) return scheduleDelegation();
         if (role === "user") {
           revision++;
+          task?.abort();
           const offset = completedDelegation?.event.offset_ms;
           // Live has no transcript watermark; completed handoffs can receive late context.
           if (
@@ -807,7 +794,7 @@ export function bindLiveConnection(
             });
           }
         }
-        scheduleDelegation();
+        if (role === "user") scheduleDelegation();
       } else if (event.type === "session.delegation.created") {
         const id = event.delegation?.id;
         if (id && event.delegation?.target === "client" && !delegations.has(id)) {
