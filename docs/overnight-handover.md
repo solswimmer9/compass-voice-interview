@@ -1,5 +1,7 @@
 # Overnight handover (11 November 2026)
 
+> **Update, 11 November:** this branch was merged into `main` **without** the prompt switch. Commit `c109dfc` is reverted on `main` (by `62090d9`), so live interviews still use the original fixed prompt. To switch Dr River to the topic cards after a successful voice test, revert `62090d9`.
+
 Branch `experiment/context-layer`, ten commits ahead of `main`, pushed. `main`, the live site, the database, the interface, the models and the gateway settings are untouched.
 
 Checks on the final commit: 425 tests pass (38 before tonight), type check clean, production build succeeds. Lint is clean on everything added; the only lint errors are in `src/test/payment-revocation.test.ts`, which was already like that on `main`.
