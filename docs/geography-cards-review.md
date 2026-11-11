@@ -270,13 +270,15 @@ Weak moves to watch: assuming a problem must be solved at the same scale as its 
 
 `trees-or-gold` · human · leads on to: outdoors-ownership, ai-climate, trees-climate-solution
 
-**Dr River sees** (23 words)
+**Dr River sees** (116 words)
 
-Explore this question with the shared moves: are trees more valuable than gold? Ask what the student means by valuable, and to whom.
+Hook: gold is prized largely because it is scarce, while a living tree gives shade, holds soil, stores carbon and shelters other species, yet often earns money only once it is cut down. The tension: price and value are not the same thing, and someone decides which one counts. Push on: valuable to whom, a logger, a city in a heatwave, a family downstream of a cleared hillside? Why can a standing tree earn nothing while a felled one earns money? Does putting a price on a forest protect it or make it easier to trade away? Does the answer change between one street tree and a whole forest, or between next year and next century?
 
-**Background** (19 words)
+**Background** (84 words)
 
-Owner's question, added 2026-11-11. No supporting material yet; the owner will add the argument, push-on lines and weak moves.
+The question turns on what "valuable" means and who gets to say. A strong answer separates price (what something sells for) from value (what depends on it), notices that the same tree is worth different things to different people and at different scales, and sees that markets tend to pay for what can be removed and sold.
+
+Weak moves to watch: treating "valuable" as having one obvious meaning; treating nature as politically neutral; a both-sides summary without a position; conceding as soon as challenged.
 
 **Sources:** Owner's question: trees are more valuable than gold
 
@@ -284,13 +286,15 @@ Owner's question, added 2026-11-11. No supporting material yet; the owner will a
 
 `mining-the-moon` · human · leads on to: outdoors-ownership, trees-or-gold, geopolitics-arctic
 
-**Dr River sees** (15 words)
+**Dr River sees** (124 words)
 
-Explore this question with the shared moves: what do you think about mining the moon?
+Hook: the Moon has water ice near its poles and useful metals, and several countries and companies plan to extract them. A 1967 treaty says no country can claim the Moon as its territory, but it is much less clear who owns what is dug out. The tension: this is a place nobody owns and nobody lives in, so do the usual arguments about mining still apply? Push on: who can get there first, and who is left out? If no people or wildlife are harmed, is anything wrong with it? Is it like the deep sea or Antarctica, and what did we decide there? Would it ease pressure on the Earth or just carry the same habits further? Who should write the rules?
 
-**Background** (19 words)
+**Background** (94 words)
 
-Owner's question, added 2026-11-11. No supporting material yet; the owner will add the argument, push-on lines and weak moves.
+The question tests whether the student can reason about ownership, access and rules in a place with no residents and no borders. A strong answer asks who benefits and who is excluded, compares it with other places treated as shared (the deep sea, Antarctica), and separates "is it harmful?" from "is it fair?".
+
+Weak moves to watch: assuming an empty place raises no questions of fairness; assuming a problem must be solved at the same scale as its cause; treating "countries" as single actors when companies are involved; a both-sides summary without a position.
 
 **Sources:** Owner's question: mining the moon
 
