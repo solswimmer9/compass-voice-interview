@@ -3,8 +3,7 @@ import { streamText, type ModelMessage } from "ai";
 import process from "node:process";
 import { createLovableAiGatewayProvider } from "./ai/gateway-helpers.ts";
 import { createLovableAiGatewayRunIdFetch } from "./ai/run-id.ts";
-import { isTutorAvailable, tutorById, type Tutor } from "../content/index.ts";
-import { buildFeedbackContext, interviewerSubject } from "../content/feedback-context.ts";
+import { NOTES_CONTEXT, REASONING_GUIDE } from "./interview-briefing.ts";
 import { limitMessage, takeFeedback, visitorKey } from "./rate-limit.server.ts";
 import { authenticateRequest } from "./request-auth.server.ts";
 import { isServerTester } from "./testers.ts";
@@ -14,18 +13,7 @@ const TEXT_MODEL = "openai/gpt-6-astra";
 const VIDEO_MODEL = "google/gemini-3.8-flash";
 const MAX_VIDEO_BYTES = 20 * 1024 * 1024;
 
-const DEFAULT_TUTOR_ID = "geography";
-
-// The browser does not send tutorId or cardIds yet; unknown or unavailable tutors fall back to geography.
-function feedbackTutor(tutorId: unknown): Tutor {
-  const tutor = tutorById(tutorId);
-  return tutor && isTutorAvailable(tutor.id) ? tutor : (tutorById(DEFAULT_TUTOR_ID) as Tutor);
-}
-
-const system = (
-  tutor: Tutor,
-  cardIds: unknown,
-) => `You are an experienced ${interviewerSubject(tutor)} admissions tutor reviewing a practice interview.
+const SYSTEM = `You are an experienced Cambridge geography admissions tutor reviewing a practice interview.
 Assess the candidate's reasoning, not their knowledge alone. Use British English and Markdown with these sections:
 ## Overall impression (2-3 sentences)
 ## Strengths in reasoning (2-3 bullets, quote the candidate where possible)
@@ -35,7 +23,9 @@ Assess the candidate's reasoning, not their knowledge alone. Use British English
 If a video is provided, also briefly comment on delivery: pace, thinking aloud, composure and body language.
 Be honest, specific and encouraging. Under 400 words.
 
-${buildFeedbackContext(tutor, cardIds)}
+${REASONING_GUIDE}
+
+${NOTES_CONTEXT}
 When judging the candidate, give most weight to how far they developed the ideas above in their own words.`;
 
 export async function handleAssess(request: Request) {
@@ -55,14 +45,7 @@ export async function handleAssess(request: Request) {
     }
   }
 
-  let body: {
-    transcript?: unknown;
-    video?: unknown;
-    videoType?: unknown;
-    interviewId?: unknown;
-    tutorId?: unknown;
-    cardIds?: unknown;
-  };
+  let body: { transcript?: unknown; video?: unknown; videoType?: unknown; interviewId?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -103,7 +86,6 @@ export async function handleAssess(request: Request) {
       );
   }
 
-  const SYSTEM = system(feedbackTutor(body.tutorId), body.cardIds);
   const intro = transcript
     ? `Interview transcript:\n\n${transcript}`
     : "No transcript was provided; assess from the video.";

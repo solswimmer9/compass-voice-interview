@@ -4,11 +4,14 @@ import { stepCountIs, streamText, type ModelMessage } from "ai";
 import process from "node:process";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
-import { isTutorAvailable, tutorById, type SessionContext, type Tutor } from "../content/index.ts";
-import { buildSession } from "../content/build-session.ts";
-import { selectCards, type SelectCardsOptions } from "../content/select-cards.ts";
-import { interviewerSubject } from "../content/feedback-context.ts";
-import { readingById } from "./readings.ts";
+import {
+  DR_RIVER_BRIEFING,
+  NOTES_CONTEXT,
+  openingInstructions,
+  readingOpeningInstructions,
+  REASONING_GUIDE,
+} from "./interview-briefing.ts";
+import { readingById, READINGS } from "./readings.ts";
 import { INTERVIEW_MINUTES } from "./limits.ts";
 import { authenticateAccessToken } from "./request-auth.server.ts";
 import { isServerTester } from "./testers.ts";
@@ -134,26 +137,23 @@ export function handleLiveRequest(request: Request): Response {
   return new Response(null, response);
 }
 
-const DEFAULT_TUTOR_ID = "geography";
+const readingsContext = `PRACTICE READINGS
+The app lists these articles for students to read before an interview. When the interview opens on one of these readings, or the student says they have read one, spend the first 10 to 15 minutes on it, as some colleges do: check they understood it, then test its argument. Do not claim to have read the full article; work from what the student says and this summary. In a reading interview, raise your own thoughts on that article one at a time, as challenges rather than lectures. In any other interview, do not bring up these readings or thoughts unless the student does.
+${READINGS.map((r) => `- "${r.title}" (${r.source}): ${r.context} Questions: ${r.questions.join(" ")} Your own thoughts (only in an interview on this reading): ${r.tutorThoughts.join(" ")}`).join("\n")}`;
 
-/** Builds one interview's prompts from the content layer. Throws if no session can be built. */
-async function buildInterviewSession(
-  tutor: Tutor,
-  event: { readingId?: unknown; openingTurn?: unknown; strand?: unknown },
-): Promise<SessionContext> {
-  // Practice readings are geography articles; other tutors ignore readingId.
-  const reading = tutor.id === "geography" ? readingById(event.readingId) : undefined;
-  const options: SelectCardsOptions = {};
-  if (typeof event.openingTurn === "number") options.seed = event.openingTurn;
-  // No stored history or memory yet: pass the student's card history and memory here once saved.
-  let cards = selectCards(tutor, [], options);
-  if (typeof event.strand === "string") {
-    // An unknown strand, or one with no approved cards, falls back to every approved card.
-    const inStrand = selectCards(tutor, [], { ...options, strand: event.strand });
-    if (inStrand.length) cards = inStrand;
-  }
-  return buildSession({ tutor, cards, reading: reading ?? null });
-}
+const conversationInstructions = `${DR_RIVER_BRIEFING}
+
+${NOTES_CONTEXT}
+
+${readingsContext}
+
+Voice: calm, unhurried and soothing, like a gentle documentary narrator; speak slowly with natural pauses.
+Backchannel policy: Use moderate listening sounds such as "mm" while the candidate thinks, without taking over.
+Interruption policy: Stop speaking and listen when the candidate interrupts.
+Delegation policy:
+Backend tools: A careful reasoning assistant that analyses the candidate's argument and suggests the sharpest follow-up challenge.
+Delegate to the backend when: The candidate gives a long or complex argument and you need a precise counter-argument, or they ask for detailed feedback on the interview.
+Do not delegate to the backend when: Greeting, asking the opening question, short follow-ups, hints, or clarifications. Wait for the backend result before presenting it.`;
 
 const studyScheduleInput = z
   .object({
@@ -182,7 +182,6 @@ function isListeningSound(text: string) {
 async function answerQuestion(
   messages: ModelMessage[],
   config: LiveConfig,
-  context: { tutor: Tutor; backendContext: string },
   correlation: { runID: string; sessionID: string | undefined; delegationID: string },
   signal: AbortSignal,
   consumeInput: () => void,
@@ -234,10 +233,10 @@ async function answerQuestion(
       },
     },
     system:
-      `You support a spoken ${interviewerSubject(context.tutor)} admissions interviewer. Transcripts may be incomplete or corrected; use the latest correction. ` +
+      "You support a spoken Cambridge geography admissions interviewer. Transcripts may be incomplete or corrected; use the latest correction. " +
       "Identify the weakest assumption in the candidate's latest reasoning and return one sharp, interviewer-style follow-up challenge, " +
       "or, if feedback was requested, two strengths and two improvements. Do not give the model answer. At most 80 words, spoken style. You have no tools.\n\n" +
-      context.backendContext,
+      REASONING_GUIDE,
     messages,
   });
   let completed = false;
@@ -326,7 +325,6 @@ export function bindLiveConnection(
   let greetingRequested = false;
   let greetingCommand: { id: string; type: "instructions" | "commentary" } | undefined;
   let greetingTimer: ReturnType<typeof setTimeout> | undefined;
-  let interview: { tutor: Tutor; session: SessionContext } | undefined;
   const startTimer = setTimeout(() => {
     emit({ type: "app.error", error: { message: "Voice startup message timed out" } });
     stop();
@@ -514,7 +512,7 @@ export function bindLiveConnection(
     const pending = pendingDelegations[0];
     const event = pending?.event;
     const id = event?.delegation?.id;
-    if (!pending || !event || !id || closing || task || !interview) return;
+    if (!pending || !event || !id || closing || task) return;
     if (!transcripts.some(({ role, text }) => role === "user" && text.trim())) return;
     const controller = new AbortController();
     task = controller;
@@ -523,7 +521,6 @@ export function bindLiveConnection(
       const answer = await answerQuestion(
         backendMessages,
         config,
-        { tutor: interview.tutor, backendContext: interview.session.backendContext },
         { runID, sessionID, delegationID: id },
         controller.signal,
         () => {
@@ -678,7 +675,7 @@ export function bindLiveConnection(
     }
   }
 
-  async function startSession(sdp: string, instructions: string) {
+  async function startSession(sdp: string) {
     if (closing || browser.readyState !== 1) return;
     clearTimeout(startTimer);
     startupTimer = setTimeout(() => {
@@ -710,7 +707,7 @@ export function bindLiveConnection(
         type: "session.start",
         session: {
           model: config.liveModel,
-          instructions,
+          instructions: conversationInstructions,
           audio: { output: { voice: "vesper" } },
           delegation: { type: "client" },
         },
@@ -736,39 +733,16 @@ export function bindLiveConnection(
           throw new Error("Voice startup message required");
         }
         starting = true;
-        // The browser does not send tutorId yet, so the default keeps today's geography interview.
-        const tutor = tutorById(
-          typeof event.tutorId === "string" ? event.tutorId : DEFAULT_TUTOR_ID,
-        );
-        // Refuse before authorizeStart so no interview credit is consumed.
-        if (!tutor || !isTutorAvailable(tutor.id)) {
-          emit({ type: "app.error", error: { message: "That tutor is not available yet." } });
-          stop();
-          return;
-        }
+        const reading = readingById(event.readingId);
+        config.openingInstructions = reading
+          ? readingOpeningInstructions(reading)
+          : openingInstructions(event.openingTurn);
         execution.waitUntil(
           (async () => {
-            // Built before authorizeStart: a content error must not consume a credit.
-            const session = await buildInterviewSession(tutor, event);
-            interview = { tutor, session };
-            config.openingInstructions = session.opening;
             const interviewId = await authorizeStart(event);
             if (closing) return;
-            const { tutorId, tutorVersion, pedagogyVersion, cardIds, promptHash } = session;
-            // Versions only; never transcript text or user identifiers.
-            console.log(
-              JSON.stringify({
-                event: "interview.session",
-                tutorId,
-                tutorVersion,
-                pedagogyVersion,
-                cardIds,
-                promptHash,
-                readingId: session.readingId ?? null,
-              }),
-            );
-            emit({ type: "app.interview.started", interviewId, tutorId, cardIds, promptHash });
-            await startSession(event.sdp, session.liveInstructions);
+            emit({ type: "app.interview.started", interviewId });
+            await startSession(event.sdp);
           })().catch((error) => {
             if (!closing)
               emit({
