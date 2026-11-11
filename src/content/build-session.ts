@@ -53,6 +53,11 @@ function readingListLine(entry: ReadingListEntry) {
   return `- ${entry.author}, ${entry.title}${entry.year ? ` (${entry.year})` : ""}`;
 }
 
+/** The approved reading list section shared by backendContext and feedback context. */
+export function approvedReadingList(tutor: Tutor): string {
+  return `APPROVED READING LIST\nOnly ever mention or recommend these, and only in feedback or when the student asks what to read. Never invent a reference.\n${tutor.readingList.map(readingListLine).join("\n")}`;
+}
+
 async function sha256Hex(text: string): Promise<string> {
   // Web Crypto: global in Cloudflare Workers, Node 20+ and browsers.
   const digest = await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
@@ -102,7 +107,7 @@ export async function buildSession({
       ? `PRACTICE READING\n"${reading.title}" (${reading.source}): ${reading.context}\nQuestions: ${reading.questions.join(" ")}\nTutor's own angles: ${reading.tutorThoughts.join(" ")}`
       : "",
     `STUDENT HISTORY\n${renderMemoryFull(memory)}`,
-    `APPROVED READING LIST\nOnly ever mention or recommend these, and only in feedback or when the student asks what to read. Never invent a reference.\n${tutor.readingList.map(readingListLine).join("\n")}`,
+    approvedReadingList(tutor),
   ]
     .filter(Boolean)
     .join("\n\n");
