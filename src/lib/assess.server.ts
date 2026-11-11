@@ -7,7 +7,7 @@ import { NOTES_CONTEXT, REASONING_GUIDE } from "./interview-briefing.ts";
 import { limitMessage, takeFeedback, visitorKey } from "./rate-limit.server.ts";
 import { authenticateRequest } from "./request-auth.server.ts";
 import { isServerTester } from "./testers.ts";
-import { isPpeTrialRequest, PPE_TRIAL_CLOSED, ppeFeedbackContext } from "./ppe-trial.server.ts";
+import { isPpeRequest, ppeFeedbackContext } from "./ppe.server.ts";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1";
 const TEXT_MODEL = "openai/gpt-6-astra";
@@ -29,9 +29,10 @@ ${REASONING_GUIDE}
 ${NOTES_CONTEXT}
 When judging the candidate, give most weight to how far they developed the ideas above in their own words.`;
 
-// PPE trial feedback (tester accounts only). Same headings so the panel reads the same.
+// PPE feedback. Same headings so the panel reads the same. Draft cards' notes only for testers.
 const ppeSystem = (
   cardIds: unknown,
+  includeDrafts: boolean,
 ) => `You are an experienced Oxford PPE admissions tutor reviewing a practice interview.
 Assess the candidate's reasoning, not their knowledge alone. Use British English and Markdown with these sections:
 ## Overall impression (2-3 sentences)
@@ -42,7 +43,7 @@ Assess the candidate's reasoning, not their knowledge alone. Use British English
 If a video is provided, also briefly comment on delivery: pace, thinking aloud, composure and body language.
 Be honest, specific and encouraging. Under 400 words.
 
-${ppeFeedbackContext(cardIds)}
+${ppeFeedbackContext(cardIds, { includeDrafts })}
 When judging the candidate, give most weight to how far they developed the ideas above in their own words.`;
 
 export async function handleAssess(request: Request) {
@@ -65,8 +66,7 @@ export async function handleAssess(request: Request) {
   } catch {
     return Response.json({ error: "Invalid request" }, { status: 400 });
   }
-  const ppe = isPpeTrialRequest(body.tutorId);
-  if (ppe && !preview) return Response.json({ error: PPE_TRIAL_CLOSED }, { status: 403 });
+  const ppe = isPpeRequest(body.tutorId);
 
   if (!preview) {
     const allowed = takeFeedback(visitorKey(request));
@@ -86,7 +86,7 @@ export async function handleAssess(request: Request) {
       ? body.videoType
       : "video/mp4";
   const interviewId = typeof body.interviewId === "string" ? body.interviewId : "";
-  const system = ppe ? ppeSystem(body.cardIds) : SYSTEM;
+  const system = ppe ? ppeSystem(body.cardIds, preview) : SYSTEM;
   if (!transcript && !video)
     return Response.json({ error: "Add a transcript or a video" }, { status: 400 });
   if (video && video.length * 0.75 > MAX_VIDEO_BYTES)

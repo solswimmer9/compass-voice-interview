@@ -77,27 +77,33 @@ describe("feedback access", () => {
     expect(streamText).toHaveBeenCalled();
   });
 
-  it("refuses PPE trial feedback for a non-tester before any allowance is used", async () => {
+  it("checks the feedback allowance for a student's PPE interview and uses approved notes only", async () => {
     const { handleAssess } = await import("@/lib/assess.server");
-    const rpc = vi.fn();
+    const rpc = vi.fn().mockResolvedValue({ data: true, error: null });
     authenticateRequest.mockResolvedValue({
-      user: { email: "student@example.com" },
+      user: { email: "student-ppe@example.com" },
       supabase: { rpc },
     });
-    const response = await handleAssess(
-      post(
-        PUBLISHED_URL,
-        {
-          transcript: "x",
-          interviewId: "00000000-0000-0000-0000-000000000000",
-          tutorId: "ppe",
-        },
-        "a.b.c",
-      ),
+    const request = post(
+      PUBLISHED_URL,
+      {
+        transcript: "x",
+        interviewId: "00000000-0000-0000-0000-000000000000",
+        tutorId: "ppe",
+        cardIds: ["prepunishment", "bag-charge"],
+      },
+      "a.b.c",
     );
-    expect(response.status).toBe(403);
-    expect(rpc).not.toHaveBeenCalled();
-    expect(streamText).not.toHaveBeenCalled();
+    // Its own visitor, so the in-memory feedback rate limit from earlier tests does not apply.
+    request.headers.set("x-forwarded-for", "203.0.113.77");
+    const response = await handleAssess(request);
+    expect(response.status).toBe(200);
+    expect(rpc).toHaveBeenCalledWith("consume_feedback", expect.anything());
+    const { system } = streamText.mock.calls[0]![0] as { system: string };
+    expect(system).toContain("Oxford PPE admissions tutor");
+    expect(system).toContain("[prepunishment]");
+    // bag-charge is a draft: a student's feedback never draws on draft notes.
+    expect(system).not.toContain("[bag-charge]");
   });
 
   it("gives a tester PPE feedback from Prof Matt's notes", async () => {

@@ -16,7 +16,7 @@ const HEADLINE_WORDS = ["democratise", "open up", "demystify", "widen access to"
 export const Route = createFileRoute("/")({
   validateSearch: (search: Record<string, unknown>): { reading?: string; tutor?: "ppe" } => ({
     ...(typeof search["reading"] === "string" ? { reading: search["reading"] } : {}),
-    // PPE trial with Prof Matt. The server only lets tester accounts start it.
+    // PPE with Prof Matt. Uses an interview credit like geography (none for tester accounts).
     ...(search["tutor"] === "ppe" ? { tutor: "ppe" as const } : {}),
   }),
   head: () => ({
@@ -125,7 +125,7 @@ function InterviewPage() {
 
   const { reading: readingParam, tutor: tutorParam } = Route.useSearch();
   const ppe = tutorParam === "ppe";
-  // Practice readings are geography articles, so the PPE trial ignores them.
+  // Practice readings are geography articles, so PPE interviews ignore them.
   const reading = ppe ? undefined : readingById(readingParam);
   const tutorName = ppe ? "Prof Matt" : "Dr River";
   const getStartContext = useCallback(async () => {
@@ -196,7 +196,7 @@ function InterviewPage() {
       <main className="relative z-10 mx-auto flex min-h-[100svh] max-w-2xl flex-col justify-center px-6 py-16">
         <div className="text-center">
           <p className="text-xs font-medium uppercase tracking-[0.25em] text-muted-foreground">
-            {ppe ? "Oxford-style practice · PPE (trial)" : "Oxbridge practice · Geography"}
+            {ppe ? "Oxford-style practice · PPE" : "Oxbridge practice · Geography"}
           </p>
           <h1
             aria-label="We are here to democratise Oxbridge"
@@ -249,7 +249,7 @@ function InterviewPage() {
           </ol>
         </div>
 
-        {(preview || ppe) && (
+        {idle && (
           <p className="mt-6 text-center text-sm">
             <span className="text-muted-foreground">Tutor: </span>
             <Link
@@ -265,14 +265,8 @@ function InterviewPage() {
               search={{ tutor: "ppe" }}
               className={ppe ? "font-medium" : "text-muted-foreground underline"}
             >
-              PPE · Prof Matt (trial)
+              PPE · Prof Matt
             </Link>
-          </p>
-        )}
-        {ppe && (
-          <p className="mt-3 rounded-md border border-accent/60 px-4 py-3 text-center text-sm">
-            PPE trial for tester accounts. Prof Matt uses draft questions that are still being
-            reviewed, and no interview credits are used.
           </p>
         )}
         {reading && (
@@ -294,7 +288,7 @@ function InterviewPage() {
                 >
                   Sign in to start
                 </Link>
-              ) : !preview && !ppe && account.data?.totalRemaining === 0 ? (
+              ) : !preview && account.data?.totalRemaining === 0 ? (
                 <Link
                   to="/pricing"
                   className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"

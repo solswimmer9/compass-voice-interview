@@ -43,7 +43,7 @@ function LifetimePricing() {
           <ul className="mt-6 flex-1 space-y-3 text-sm">
             <li className="flex gap-3">
               <Check />
-              {pack.interviews} voice interviews with Dr River
+              {pack.interviews} voice interviews with Dr River or Prof Matt
             </li>
             <li className="flex gap-3">
               <Check />
@@ -71,7 +71,7 @@ function LifetimePricing() {
           <ul className="mt-6 flex-1 space-y-3 text-sm">
             <li className="flex gap-3">
               <Check />
-              Unlimited voice interviews with Dr River, up to {minutes} minutes each
+              Unlimited voice interviews with Dr River or Prof Matt, up to {minutes} minutes each
             </li>
             <li className="flex gap-3">
               <Check />

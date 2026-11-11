@@ -15,12 +15,7 @@ import { readingById, READINGS } from "./readings.ts";
 import { INTERVIEW_MINUTES } from "./limits.ts";
 import { authenticateAccessToken } from "./request-auth.server.ts";
 import { isServerTester } from "./testers.ts";
-import {
-  buildPpeTrialSession,
-  isPpeTrialRequest,
-  PPE_TRIAL_CLOSED,
-  PPE_TRIAL_TUTOR_ID,
-} from "./ppe-trial.server.ts";
+import { buildPpeSession, isPpeRequest, PPE_TUTOR_ID } from "./ppe.server.ts";
 
 export type LiveConfig = {
   baseURL: string;
@@ -382,17 +377,27 @@ export function bindLiveConnection(
     execution.waitUntil(creditRelease);
   }
 
-  async function authorizeStart(event: {
-    accessToken?: unknown;
-    environment?: unknown;
-  }): Promise<string> {
+  /**
+   * Signs the student in and consumes one interview credit (none for testers). `beforeCredit`
+   * runs after sign-in and before any credit is taken, so work that can fail, such as building a
+   * PPE interview, never costs a credit.
+   */
+  async function authorizeStart(
+    event: {
+      accessToken?: unknown;
+      environment?: unknown;
+    },
+    beforeCredit?: (tester: boolean) => Promise<void>,
+  ): Promise<string> {
     if (typeof event.accessToken !== "string" || !event.accessToken) {
       throw new Error("Please sign in again before starting your interview.");
     }
     const auth = await authenticateAccessToken(event.accessToken);
     if (!auth) throw new Error("Your sign-in has expired. Please sign in again.");
     // Unlimited testing is per signed-in tester account, never by web address.
-    if (isServerTester(auth.user.email)) return "preview";
+    const tester = isServerTester(auth.user.email);
+    await beforeCredit?.(tester);
+    if (tester) return "preview";
     if (event.environment !== "sandbox" && event.environment !== "live") {
       throw new Error("Your interview settings could not be checked.");
     }
@@ -408,17 +413,6 @@ export function bindLiveConnection(
     }
     interviewCredit = { id: result.interviewId, supabase: auth.supabase };
     return result.interviewId;
-  }
-
-  /** PPE trial: tester accounts only, and never touches interview credits. */
-  async function authorizePpeTrial(event: { accessToken?: unknown }): Promise<string> {
-    if (typeof event.accessToken !== "string" || !event.accessToken) {
-      throw new Error("Please sign in again before starting your interview.");
-    }
-    const auth = await authenticateAccessToken(event.accessToken);
-    if (!auth) throw new Error("Your sign-in has expired. Please sign in again.");
-    if (!isServerTester(auth.user.email)) throw new Error(PPE_TRIAL_CLOSED);
-    return "preview";
   }
 
   function requestGreeting() {
@@ -761,15 +755,18 @@ export function bindLiveConnection(
         }
         starting = true;
         if (event.tutorId !== undefined && event.tutorId !== "geography") {
-          if (!isPpeTrialRequest(event.tutorId)) {
+          if (!isPpeRequest(event.tutorId)) {
             throw new Error("Unknown tutor");
           }
           execution.waitUntil(
             (async () => {
-              // Checked before the session is built; no credit is ever consumed or released.
-              const interviewId = await authorizePpeTrial(event);
-              const session = await buildPpeTrialSession(event);
-              if (closing) return;
+              let session: Awaited<ReturnType<typeof buildPpeSession>> | undefined;
+              // Built after sign-in and before the credit: drafts for testers, approved cards
+              // only for everyone else, and a build failure never costs a credit.
+              const interviewId = await authorizeStart(event, async (tester) => {
+                session = await buildPpeSession(event, { includeDrafts: tester });
+              });
+              if (closing || !session) return;
               config.openingInstructions = session.opening;
               instructions = session.liveInstructions;
               brief = { subject: "Oxford-style PPE", guide: session.backendContext };
@@ -778,7 +775,7 @@ export function bindLiveConnection(
               console.log(
                 JSON.stringify({
                   event: "interview.session",
-                  trial: "ppe",
+                  tutorId: PPE_TUTOR_ID,
                   tutorVersion,
                   pedagogyVersion,
                   cardIds,
@@ -788,7 +785,7 @@ export function bindLiveConnection(
               emit({
                 type: "app.interview.started",
                 interviewId,
-                tutorId: PPE_TRIAL_TUTOR_ID,
+                tutorId: PPE_TUTOR_ID,
                 cardIds,
               });
               await startSession(event.sdp);

@@ -153,7 +153,7 @@ describe("Lovable live interview access", () => {
   });
 });
 
-describe("PPE trial interviews", () => {
+describe("PPE interviews", () => {
   afterEach(() => vi.unstubAllEnvs());
   beforeEach(() => {
     vi.clearAllMocks();
@@ -190,8 +190,53 @@ describe("PPE trial interviews", () => {
     return { browser, send: (data: string) => handler?.(data) };
   }
 
-  it("refuses the PPE trial for a signed-in non-tester without touching credits", async () => {
+  function gateway(sent: Array<Record<string, unknown>>): LiveSocket {
+    return {
+      readyState: 1,
+      send(data: string) {
+        sent.push(JSON.parse(data) as Record<string, unknown>);
+      },
+      close: vi.fn(),
+      onMessage: vi.fn(),
+      onClose: vi.fn(),
+      onError: vi.fn(),
+    };
+  }
+
+  it("makes a signed-in non-tester use one credit and hear approved PPE cards only", async () => {
     vi.stubEnv("PREVIEW_TESTER_EMAILS", "someone-else@example.com");
+    const sent: Array<Record<string, unknown>> = [];
+    mocks.connect.mockResolvedValue(gateway(sent));
+    const { ppeTutor } = await import("@/lib/ppe.server");
+    const approved = new Set(
+      ppeTutor()
+        .cards.filter((card) => card.status === "approved")
+        .map((card) => card.id),
+    );
+    for (let turn = 0; turn < 12; turn++) {
+      vi.clearAllMocks();
+      mocks.rpc.mockResolvedValue({ data: { allowed: true, interviewId }, error: null });
+      sent.length = 0;
+      const { browser, send } = bound();
+
+      send(startPpe(browser, { openingTurn: turn }));
+
+      await vi.waitFor(() => expect(sent).toHaveLength(1));
+      expect(mocks.rpc).toHaveBeenCalledTimes(1);
+      expect(mocks.rpc).toHaveBeenCalledWith("consume_interview_credit", {
+        p_environment: "live",
+      });
+      const started = browser.events.find((event) => event["type"] === "app.interview.started");
+      expect(started).toMatchObject({ interviewId, tutorId: "ppe" });
+      for (const id of started?.["cardIds"] as string[]) expect(approved.has(id), id).toBe(true);
+      const session = sent[0]?.["session"] as { instructions: string };
+      expect(session.instructions).toContain("You are Prof Matt");
+    }
+  });
+
+  it("does not start PPE for a student whose credits are used up", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "someone-else@example.com");
+    mocks.rpc.mockResolvedValue({ data: { allowed: false }, error: null });
     const { browser, send } = bound();
 
     send(startPpe(browser));
@@ -200,15 +245,14 @@ describe("PPE trial interviews", () => {
       expect(browser.events).toContainEqual(
         expect.objectContaining({
           type: "app.error",
-          error: { message: expect.stringMatching(/PPE tutor is still being tested/) },
+          error: { message: expect.stringMatching(/free interview has been used/) },
         }),
       ),
     );
     expect(mocks.connect).not.toHaveBeenCalled();
-    expect(mocks.rpc).not.toHaveBeenCalled();
   });
 
-  it("refuses the PPE trial without sign-in", async () => {
+  it("refuses PPE without sign-in", async () => {
     vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
     mocks.authenticate.mockResolvedValue(null);
     const { browser, send } = bound();
@@ -236,19 +280,10 @@ describe("PPE trial interviews", () => {
     expect(mocks.rpc).not.toHaveBeenCalled();
   });
 
-  it("starts Prof Matt for a tester with PPE cards and no credit use", async () => {
+  it("starts Prof Matt for a tester with no credit use", async () => {
     vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
     const sent: Array<Record<string, unknown>> = [];
-    mocks.connect.mockResolvedValue({
-      readyState: 1,
-      send(data: string) {
-        sent.push(JSON.parse(data) as Record<string, unknown>);
-      },
-      close: vi.fn(),
-      onMessage: vi.fn(),
-      onClose: vi.fn(),
-      onError: vi.fn(),
-    } satisfies LiveSocket);
+    mocks.connect.mockResolvedValue(gateway(sent));
     const { browser, send } = bound();
 
     send(startPpe(browser));
@@ -266,16 +301,7 @@ describe("PPE trial interviews", () => {
   it("keeps geography on the original Dr River prompt", async () => {
     vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
     const sent: Array<Record<string, unknown>> = [];
-    mocks.connect.mockResolvedValue({
-      readyState: 1,
-      send(data: string) {
-        sent.push(JSON.parse(data) as Record<string, unknown>);
-      },
-      close: vi.fn(),
-      onMessage: vi.fn(),
-      onClose: vi.fn(),
-      onError: vi.fn(),
-    } satisfies LiveSocket);
+    mocks.connect.mockResolvedValue(gateway(sent));
     const { browser, send } = bound();
 
     send(startPpe(browser, { tutorId: undefined }));

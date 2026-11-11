@@ -5,9 +5,9 @@ export const Route = createFileRoute("/terms")({
   head: () => ({
     meta: [
       { title: "Terms & Conditions | Oxbridge Interview Practice" },
-      { name: "description", content: "Terms for using the Oxbridge geography voice interview practice service." },
+      { name: "description", content: "Terms for using the Oxbridge geography and PPE voice interview practice service." },
       { property: "og:title", content: "Terms & Conditions | Oxbridge Interview Practice" },
-      { property: "og:description", content: "Terms for using the Oxbridge geography voice interview practice service." },
+      { property: "og:description", content: "Terms for using the Oxbridge geography and PPE voice interview practice service." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -19,7 +19,7 @@ function TermsPage() {
   return (
     <LegalLayout title="Terms & Conditions">
       <p>
-        This service (Oxbridge geography interview practice with an AI voice tutor and AI feedback)
+        This service (Oxbridge geography and PPE interview practice with AI voice tutors and AI feedback)
         is provided by {SELLER_NAME} ("we", "us"). When you use it, your contract is with{" "}
         {SELLER_NAME}. By using the service you agree to these terms.
       </p>

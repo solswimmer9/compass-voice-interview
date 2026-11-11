@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest";
 import { cardsFor, isTutorAvailable, LIMITS, tutorById } from "@/content";
 import { selectCards } from "@/content/select-cards";
 import { countWords } from "@/content/words";
-import { buildPpeTrialSession, ppeFeedbackContext, ppeTutor } from "@/lib/ppe-trial.server";
+import { buildPpeSession, ppeFeedbackContext, ppeTutor } from "@/lib/ppe.server";
 
-describe("PPE trial content", () => {
+describe("PPE content", () => {
   it("approves only the nine cards Solomon reviewed; the rest stay drafts", () => {
     expect(
       cardsFor("ppe")
@@ -35,7 +35,7 @@ describe("PPE trial content", () => {
   it("builds a Prof Matt session within the live budget for every opening card", async () => {
     const tutor = ppeTutor();
     for (let turn = 0; turn < tutor.cards.length; turn++) {
-      const session = await buildPpeTrialSession({ openingTurn: turn });
+      const session = await buildPpeSession({ openingTurn: turn }, { includeDrafts: true });
       expect(session.tutorId).toBe("ppe");
       expect(session.cardIds).toHaveLength(3);
       expect(session.opening).toContain("Prof Matt");
@@ -49,25 +49,44 @@ describe("PPE trial content", () => {
   });
 
   it("rotates the opening card by openingTurn", async () => {
-    const a = await buildPpeTrialSession({ openingTurn: 0 });
-    const b = await buildPpeTrialSession({ openingTurn: 1 });
+    const a = await buildPpeSession({ openingTurn: 0 });
+    const b = await buildPpeSession({ openingTurn: 1 });
     expect(a.cardIds[0]).not.toBe(b.cardIds[0]);
   });
 
   it("restricts to a strand when asked and ignores unknown strands", async () => {
-    const economics = await buildPpeTrialSession({ openingTurn: 0, strand: "economics" });
+    const economics = await buildPpeSession({ openingTurn: 0, strand: "economics" });
     for (const id of economics.cardIds) {
       expect(tutorById("ppe")?.cards.find((card) => card.id === id)?.strand).toBe("economics");
     }
-    const unknown = await buildPpeTrialSession({ openingTurn: 0, strand: "history" });
+    const unknown = await buildPpeSession({ openingTurn: 0, strand: "history" });
     expect(unknown.cardIds).toHaveLength(3);
   });
 
   it("limits feedback notes to the interview's cards, ignoring unknown ids", () => {
-    const context = ppeFeedbackContext(["museum-entry-free", "river-person", 4]);
+    const context = ppeFeedbackContext(["museum-entry-free", "river-person", 4], {
+      includeDrafts: true,
+    });
     expect(context).toContain("[museum-entry-free]");
     expect(context).not.toContain("[river-person]");
     expect(context).not.toContain("[bag-charge]");
-    expect(ppeFeedbackContext()).toContain("[bag-charge]");
+    expect(ppeFeedbackContext(undefined, { includeDrafts: true })).toContain("[bag-charge]");
+  });
+
+  it("gives students approved cards only, in every rotation", async () => {
+    for (let turn = 0; turn < 20; turn++) {
+      const session = await buildPpeSession({ openingTurn: turn });
+      for (const id of session.cardIds) {
+        expect(ppeTutor().cards.find((card) => card.id === id)?.status, id).toBe("approved");
+      }
+    }
+  });
+
+  it("keeps draft notes out of student feedback", () => {
+    const context = ppeFeedbackContext(["bag-charge", "prepunishment"]);
+    expect(context).toContain("[prepunishment]");
+    expect(context).not.toContain("[bag-charge]");
+    expect(ppeFeedbackContext()).not.toContain("[bag-charge]");
+    expect(ppeFeedbackContext(undefined, { includeDrafts: true })).toContain("[bag-charge]");
   });
 });

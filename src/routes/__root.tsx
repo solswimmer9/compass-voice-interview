@@ -88,13 +88,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Oxbridge Interview Sparring Partner" },
       {
         name: "description",
-        content: "Practise Cambridge geography interviews with a voice tutor.",
+        content: "Practise Cambridge geography and Oxford PPE interviews with a voice tutor.",
       },
       { name: "author", content: "Lovable" },
       { property: "og:title", content: "Oxbridge Interview Sparring Partner" },
       {
         property: "og:description",
-        content: "Practise Cambridge geography interviews with a voice tutor.",
+        content: "Practise Cambridge geography and Oxford PPE interviews with a voice tutor.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
