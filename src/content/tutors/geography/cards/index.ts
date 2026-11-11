@@ -39,6 +39,8 @@ import weatherWorseOrExposed from "./weather-worse-or-exposed.ts";
 import nativeSpecies from "./native-species.ts";
 import treesClimateSolution from "./trees-climate-solution.ts";
 import statisticLimits from "./statistic-limits.ts";
+import treesOrGold from "./trees-or-gold.ts";
+import miningTheMoon from "./mining-the-moon.ts";
 
 export const GEOGRAPHY_CARDS: TopicCard[] = [
   riverPerson,
@@ -55,6 +57,8 @@ export const GEOGRAPHY_CARDS: TopicCard[] = [
   legalRightLocation,
   organisationalResponsibility,
   aiClimate,
+  treesOrGold,
+  miningTheMoon,
   placeChangedThinking,
   borderLineOrProcess,
   citiesWhere,

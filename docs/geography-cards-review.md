@@ -1,6 +1,6 @@
 # Geography cards for review
 
-14 approved cards, in full, followed by a list of the 24 drafts. Generated from `src/content/tutors/geography/cards/` on the `experiment/context-layer` branch.
+16 approved cards, in full, followed by a list of the 24 drafts. Generated from `src/content/tutors/geography/cards/` on the `experiment/context-layer` branch.
 
 For each card: **Opening** is what Dr River asks first. **Dr River sees** is the text given to the voice tutor. **Background** goes only to the reasoning and feedback models. To change a card, edit its file, named after the id.
 
@@ -265,6 +265,34 @@ On contested issues never share or imply an opinion.
 Weak moves to watch: assuming a problem must be solved at the same scale as its cause; a both-sides summary without reaching a position; conceding as soon as challenged, or repeating the same point more loudly.
 
 **Sources:** Dr River question line: Can AI solve climate change?
+
+## 15. Are trees more valuable than gold?
+
+`trees-or-gold` · human · leads on to: outdoors-ownership, ai-climate, trees-climate-solution
+
+**Dr River sees** (23 words)
+
+Explore this question with the shared moves: are trees more valuable than gold? Ask what the student means by valuable, and to whom.
+
+**Background** (19 words)
+
+Owner's question, added 2026-11-11. No supporting material yet; the owner will add the argument, push-on lines and weak moves.
+
+**Sources:** Owner's question: trees are more valuable than gold
+
+## 16. What do you think about mining the moon?
+
+`mining-the-moon` · human · leads on to: outdoors-ownership, trees-or-gold, geopolitics-arctic
+
+**Dr River sees** (15 words)
+
+Explore this question with the shared moves: what do you think about mining the moon?
+
+**Background** (19 words)
+
+Owner's question, added 2026-11-11. No supporting material yet; the owner will add the argument, push-on lines and weak moves.
+
+**Sources:** Owner's question: mining the moon
 
 ## Drafts (never shown to students)
 
