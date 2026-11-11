@@ -14,7 +14,8 @@ vi.mock("@/integrations/supabase/client.server", () => ({
     from: () => ({
       update: (values: unknown) => {
         update(values);
-        const chain: any = {
+        type Chain = { eq: (col: string, val: unknown) => Chain | Promise<{ error: null }> };
+        const chain: Chain = {
           eq: (col: string, val: unknown) => {
             eqCalls.push([col, val]);
             return eqCalls.length % 2 === 0 ? Promise.resolve({ error: null }) : chain;
