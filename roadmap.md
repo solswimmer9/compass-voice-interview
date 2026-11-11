@@ -25,3 +25,4 @@
 - [ ] Verify audible two-way playback in a real browser — blocked: the sandbox browser produces no WebRTC audio candidates; Lovable session creation and final usage are verified
 - [x] Switch payments to Stripe after the previous provider rejected AI products; recreate £20 pack and £100 lifetime products
 - [x] Claim the Stripe account and complete live-payment setup in the Payments tab
+- [x] Rename PPE tutor to Prof Matt

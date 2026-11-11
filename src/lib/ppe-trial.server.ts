@@ -1,4 +1,4 @@
-// PPE trial: lets tester accounts run Oxford-style PPE interviews with Dr Vale from the draft PPE
+// PPE trial: lets tester accounts run Oxford-style PPE interviews with Prof Matt from the draft PPE
 // cards, while geography keeps its fixed prompt. Server-only.
 //
 // Access: only signed-in accounts in PREVIEW_TESTER_EMAILS (checked in live-relay.server.ts and

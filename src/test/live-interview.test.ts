@@ -236,7 +236,7 @@ describe("PPE trial interviews", () => {
     expect(mocks.rpc).not.toHaveBeenCalled();
   });
 
-  it("starts Dr Vale for a tester with PPE cards and no credit use", async () => {
+  it("starts Prof Matt for a tester with PPE cards and no credit use", async () => {
     vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
     const sent: Array<Record<string, unknown>> = [];
     mocks.connect.mockResolvedValue({
@@ -259,7 +259,7 @@ describe("PPE trial interviews", () => {
     expect(started).toMatchObject({ interviewId: "preview", tutorId: "ppe" });
     expect(started?.["cardIds"]).toHaveLength(3);
     const session = sent[0]?.["session"] as { instructions: string };
-    expect(session.instructions).toContain("You are Dr Vale");
+    expect(session.instructions).toContain("You are Prof Matt");
     expect(session.instructions).not.toContain("Dr River");
   });
 
@@ -283,6 +283,6 @@ describe("PPE trial interviews", () => {
     await vi.waitFor(() => expect(sent).toHaveLength(1));
     const session = sent[0]?.["session"] as { instructions: string };
     expect(session.instructions).toContain("Dr River");
-    expect(session.instructions).not.toContain("Dr Vale");
+    expect(session.instructions).not.toContain("Prof Matt");
   });
 });

@@ -29,7 +29,7 @@ export type LiveStartContext = {
   environment: "sandbox" | "live";
   /** Optional practice reading this interview opens on. */
   readingId?: string;
-  /** "ppe" runs the tester-only PPE trial with Dr Vale; omitted means geography. */
+  /** "ppe" runs the tester-only PPE trial with Prof Matt; omitted means geography. */
   tutorId?: "ppe";
 };
 

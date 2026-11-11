@@ -16,7 +16,7 @@ const HEADLINE_WORDS = ["democratise", "open up", "demystify", "widen access to"
 export const Route = createFileRoute("/")({
   validateSearch: (search: Record<string, unknown>): { reading?: string; tutor?: "ppe" } => ({
     ...(typeof search["reading"] === "string" ? { reading: search["reading"] } : {}),
-    // PPE trial with Dr Vale. The server only lets tester accounts start it.
+    // PPE trial with Prof Matt. The server only lets tester accounts start it.
     ...(search["tutor"] === "ppe" ? { tutor: "ppe" as const } : {}),
   }),
   head: () => ({
@@ -127,7 +127,7 @@ function InterviewPage() {
   const ppe = tutorParam === "ppe";
   // Practice readings are geography articles, so the PPE trial ignores them.
   const reading = ppe ? undefined : readingById(readingParam);
-  const tutorName = ppe ? "Dr Vale" : "Dr River";
+  const tutorName = ppe ? "Prof Matt" : "Dr River";
   const getStartContext = useCallback(async () => {
     const environment = getPaymentsEnvironment();
     const { data } = await supabase.auth.getSession();
@@ -221,7 +221,7 @@ function InterviewPage() {
             </p>
             {ppe ? (
               <p className="mt-2 text-foreground/90">
-                Practise out loud with Dr Vale, an AI tutor for Oxford-style Philosophy, Politics
+                Practise out loud with Prof Matt, an AI tutor for Oxford-style Philosophy, Politics
                 and Economics, who will test your premises and push on your arguments.
               </p>
             ) : (
@@ -265,13 +265,13 @@ function InterviewPage() {
               search={{ tutor: "ppe" }}
               className={ppe ? "font-medium" : "text-muted-foreground underline"}
             >
-              PPE · Dr Vale (trial)
+              PPE · Prof Matt (trial)
             </Link>
           </p>
         )}
         {ppe && (
           <p className="mt-3 rounded-md border border-accent/60 px-4 py-3 text-center text-sm">
-            PPE trial for tester accounts. Dr Vale uses draft questions that are still being
+            PPE trial for tester accounts. Prof Matt uses draft questions that are still being
             reviewed, and no interview credits are used.
           </p>
         )}
@@ -339,9 +339,6 @@ function InterviewPage() {
               </>
             )}
           </div>
-          <p className="mt-4 text-center text-xs text-muted-foreground">
-            {tutorName} speaks with a natural British voice powered by Lovable AI.
-          </p>
           {call.playbackBlocked && (
             <button
               onClick={call.resumePlayback}
@@ -352,7 +349,7 @@ function InterviewPage() {
           )}
           {preview ? (
             <p className="mt-2 text-center text-xs text-muted-foreground">
-              Preview mode · unlimited testing for tester accounts
+              Tester mode · unlimited
             </p>
           ) : (
             account.user &&
@@ -421,8 +418,7 @@ function InterviewPage() {
         )}
       </main>
       <footer className="relative z-10 mx-auto max-w-2xl px-6 pb-10 text-center text-xs text-muted-foreground">
-        Independent practice tool, not affiliated with the University of Cambridge or the University
-        of Oxford. {tutorName} is an AI and can make mistakes.
+        Not affiliated with Oxford or Cambridge. AI can make mistakes.
       </footer>
     </div>
   );

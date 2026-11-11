@@ -100,7 +100,7 @@ describe("feedback access", () => {
     expect(streamText).not.toHaveBeenCalled();
   });
 
-  it("gives a tester PPE feedback from Dr Vale's notes", async () => {
+  it("gives a tester PPE feedback from Prof Matt's notes", async () => {
     const { handleAssess } = await import("@/lib/assess.server");
     authenticateRequest.mockResolvedValue({
       user: { email: "tester@example.com" },

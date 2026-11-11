@@ -18,13 +18,13 @@ describe("PPE trial content", () => {
     expect([...strands].sort()).toEqual(["economics", "philosophy", "politics"]);
   });
 
-  it("builds a Dr Vale session within the live budget for every opening card", async () => {
+  it("builds a Prof Matt session within the live budget for every opening card", async () => {
     const tutor = ppeTutor();
     for (let turn = 0; turn < tutor.cards.length; turn++) {
       const session = await buildPpeTrialSession({ openingTurn: turn });
       expect(session.tutorId).toBe("ppe");
       expect(session.cardIds).toHaveLength(3);
-      expect(session.opening).toContain("Dr Vale");
+      expect(session.opening).toContain("Prof Matt");
       expect(session.opening).toContain("Oxford-style PPE");
       expect(new TextEncoder().encode(session.opening).length).toBeLessThan(LIMITS.openingBytes);
       expect(countWords(session.liveInstructions)).toBeLessThanOrEqual(
