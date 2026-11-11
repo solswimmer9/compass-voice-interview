@@ -53,7 +53,13 @@ export const takeInterview = createRateLimiter([
   { limit: 6, ms: DAY },
 ]);
 
+// Keyed on the signed-in user's id, checked after sign-in, so a whole school behind one
+// network address is not blocked by a few students.
 export const takeFeedback = createRateLimiter([
   { limit: 4, ms: HOUR },
   { limit: 10, ms: DAY },
 ]);
+
+// A loose per-address guard against floods of requests before sign-in is checked. High enough
+// that a classroom sharing one address never reaches it.
+export const takeFeedbackRequest = createRateLimiter([{ limit: 120, ms: HOUR }]);

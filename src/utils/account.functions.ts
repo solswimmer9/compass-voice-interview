@@ -3,12 +3,15 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { FREE_INTERVIEWS, LIFETIME_ACCESS } from "@/lib/offer";
 
-const environmentSchema = z.enum(["sandbox", "live"]);
+// The browser's environment is optional and only checked; the server decides which to read.
+const environmentSchema = z.enum(["sandbox", "live"]).optional();
 
 export const getAccountSnapshot = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .validator(z.object({ environment: environmentSchema }))
   .handler(async ({ data, context }) => {
+    const { resolvePaymentsEnvironment } = await import("@/lib/payments-env.server");
+    const environment = resolvePaymentsEnvironment(data.environment);
     const [profile, purchases, freeSessions] = await Promise.all([
       context.supabase
         .from("profiles")
@@ -19,20 +22,24 @@ export const getAccountSnapshot = createServerFn({ method: "GET" })
         .from("purchases")
         .select("id, interviews_remaining, created_at, product_id, expires_at")
         .eq("user_id", context.userId)
-        .eq("environment", data.environment)
+        .eq("environment", environment)
         .eq("status", "completed")
         .order("created_at", { ascending: false }),
       context.supabase
         .from("interview_sessions")
         .select("id", { count: "exact", head: true })
         .eq("user_id", context.userId)
-        .eq("environment", data.environment)
+        .eq("environment", environment)
         .is("purchase_id", null),
     ]);
     if (profile.error || purchases.error || freeSessions.error)
       throw new Error("Could not load your account");
     const paidRemaining = (purchases.data ?? []).reduce(
-      (sum, purchase) => sum + (!purchase.expires_at || new Date(purchase.expires_at).getTime() > Date.now() ? purchase.interviews_remaining : 0),
+      (sum, purchase) =>
+        sum +
+        (!purchase.expires_at || new Date(purchase.expires_at).getTime() > Date.now()
+          ? purchase.interviews_remaining
+          : 0),
       0,
     );
     const lifetime = (purchases.data ?? []).some(
