@@ -30,7 +30,8 @@ export const SCHOOL_BUNDLE = {
   productId: "school_interview_bundle",
   priceId: "school_bundle_30_gbp",
   name: "School Interview Bundle",
-  description: "30 shared interviews with AI feedback for up to 30 students, until the next 31 August.",
+  description:
+    "30 shared interviews with AI feedback for up to 30 students, until the next 31 August.",
   amountMinor: 125000,
   currency: "gbp",
   displayPrice: "£1,250",
