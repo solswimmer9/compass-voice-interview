@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { FeedbackMarkdown } from "@/components/FeedbackMarkdown";
 
 function readDataURL(file: File) {
   return new Promise<string>((resolve, reject) => {
@@ -111,6 +112,7 @@ export function AssessPanel({
         {busy && (
           <button
             onClick={() => abortRef.current?.abort()}
+            title="Once feedback has started, stopping still uses this interview's feedback."
             className="rounded-full border px-4 py-2 text-sm"
           >
             Stop
@@ -126,8 +128,8 @@ export function AssessPanel({
         <p className="mt-6 text-sm text-muted-foreground">Reading your answers…</p>
       )}
       {output && (
-        <div className="mt-6 whitespace-pre-wrap leading-relaxed">
-          {output.replace(/^#+\s?/gm, "").replace(/\*\*/g, "")}
+        <div className="mt-6">
+          <FeedbackMarkdown source={output} />
         </div>
       )}
     </section>
