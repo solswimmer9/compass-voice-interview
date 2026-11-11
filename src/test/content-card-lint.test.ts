@@ -2,7 +2,7 @@
 // every card file, and the test fails if one is not registered in its tutor's cards/index.ts.
 import { describe, expect, it } from "vitest";
 
-import { LIMITS, TUTORS } from "@/content";
+import { isTutorAvailable, LIMITS, TUTORS } from "@/content";
 import { cardOpening } from "@/content/build-session";
 import type { SourceKind, TopicCard, Tutor } from "@/content/types";
 import { countWords } from "@/content/words";
@@ -45,13 +45,13 @@ function surnames(tutor: Tutor, card: TopicCard) {
 const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
 
 describe("card lint", () => {
-  it("has at least one approved card per tutor", () => {
+  it("has approved cards for every tutor that is available, and only the empty shells have none", () => {
+    // A tutor may be an empty shell (no cards yet); it is then not startable (isTutorAvailable).
     for (const tutor of TUTORS) {
-      expect(
-        tutor.cards.some((card) => card.status === "approved"),
-        tutor.id,
-      ).toBe(true);
+      const hasApproved = tutor.cards.some((card) => card.status === "approved");
+      expect(isTutorAvailable(tutor.id), tutor.id).toBe(hasApproved);
     }
+    expect(isTutorAvailable("geography")).toBe(true);
   });
 
   it("registers every card file in its tutor's cards/index.ts", () => {
