@@ -150,7 +150,7 @@ Weak moves to watch: assuming a problem must be solved at the same scale as its 
 
 **Sources:** Dr River question line: Does acting locally matter if the problem is global?; Solomon's Part II geography notes: micropolitics and the scale of hope
 
-## 9. Is any disaster purely natural?
+## 9. In what ways might a disaster be considered political?
 
 `disaster-natural` · human · leads on to: volcano-eruption-styles, river-natural-or-human
 
