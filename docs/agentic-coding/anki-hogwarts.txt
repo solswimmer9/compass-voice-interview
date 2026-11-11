@@ -22,7 +22,7 @@
 🧩 Five parts every loop needs? (Hogwarts: a potion recipe)	<b>Trigger · unit of work · check · exit · state.</b> No state = it brews the same potion twice.	agentic-coding loops
 🦉 Three signs a loop is hiding? (Hogwarts: you're acting like an owl)	1) You're the <b>message bus</b> copying between tools 🦉 2) <b>After-done rituals</b> 3) <b>Watch and react</b> checks.	agentic-coding loops
 🪜 Loop levels L1–L5? (Hogwarts: years at school)	L1 one turn · L2 builder/verifier · L3 full task lifecycle · L4 worker on a queue · L5 discovery (finds the work).	agentic-coding loops
-🧙 Builder/verifier — the golden rule? (Hogwarts: you can't mark your own O.W.L.s)	The builder <b>never grades itself</b>. A separate verifier with fresh context checks against something named; fixes go to a <b>fresh</b> builder.	agentic-coding loops
+🧙 Builder/verifier — the golden rule? (Hogwarts: you can't mark your own O.W.L.s)	The builder <b>never grades itself</b>. A separate verifier with fresh context checks against something named.	agentic-coding loops
 🌍 Best kind of verifier? (Hogwarts: a real duel beats a practice dummy)	One that <b>touches the real world</b>: deterministic → scored → real outcomes. A persona judge is only a starting point.	agentic-coding loops
 🐍 How to use sycophancy for bugs? (Hogwarts: Slytherin attacks, Ravenclaw checks)	Leading prompt to <b>attack</b> ("find a bug in billing"), then a <b>neutral</b> check ("is this report real?") to drop invented ones.	agentic-coding loops
 ⏹️ When to stop reviewing? (Hogwarts: Madam Hooch's whistle)	Max <b>3 rounds</b> or <b>no medium/high issues left</b> — whichever first. Verify likely flows, not the long tail.	agentic-coding loops
