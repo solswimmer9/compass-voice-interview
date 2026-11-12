@@ -140,3 +140,45 @@ describe("createWordLimiter (streaming)", () => {
     expect(out).toBe("## H\nOne two three four. Five six seven eight nine.");
   });
 });
+
+describe("verifier findings", () => {
+  it("does not treat an abbreviation's full stop as the end of a sentence", () => {
+    const text = "## H\nAlpha beta. See Dr. Smith and e.g. Jones now.";
+    expect(limitWords(text, 6).text).toBe("## H\nAlpha beta.");
+    expect(limitWords("## H\nAlpha beta. Ask J. Smith about it.", 5).text).toBe(
+      "## H\nAlpha beta.",
+    );
+    // A real sentence end is still found.
+    expect(limitWords("## H\nAlpha beta. Gamma delta. Epsilon zeta eta.", 5).text).toBe(
+      "## H\nAlpha beta. Gamma delta.",
+    );
+  });
+
+  it("treats a bold-only line as a heading and never ends on it", () => {
+    for (const bold of ["**Strengths**", "__Try this next:__", "  **Where it slipped** "]) {
+      const text = `## Overall\n${sentence(390)}\n\n${bold}\n${sentence(50)}`;
+      const out = limitWords(text).text;
+      expect(out.endsWith("word.")).toBe(true);
+      expect(out).not.toContain(bold.trim());
+    }
+    // A bold phrase inside a sentence is still text.
+    const inline = `## Overall\n${sentence(390)}\n\n**Key point:** you changed scale. ${sentence(50)}`;
+    expect(limitWords(inline).text).toContain("**Key point:** you changed scale.");
+  });
+
+  it("streams bold headings and abbreviations exactly as limitWords cuts them", () => {
+    const text = [
+      "## Overall",
+      `${sentence(150)} Ask Dr. River, e.g. Prof. Matt. ${sentence(100)}`,
+      "",
+      "**Strengths. Then more**",
+      `- ${sentence(120)}`,
+      "**Next**",
+      sentence(60),
+    ].join("\n");
+    for (const size of [1, 2, 5, 9, 40]) {
+      expect(streamThrough(text, undefined, size)).toBe(limitWords(text).text);
+      expect(streamThrough(text, 270, size)).toBe(limitWords(text, 270).text);
+    }
+  });
+});

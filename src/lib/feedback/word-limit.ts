@@ -8,6 +8,46 @@ export const FEEDBACK_WORD_LIMIT = 400;
 type Unit = { kind: "heading" | "text"; end: number; words: number };
 
 const HEADING = /^\s{0,3}#{1,6}\s/;
+// A line that is only bold text ("**Strengths**", "__Try this next:__") reads as a heading.
+const BOLD_HEADING = /^\s*(\*\*|__)[^*_\n]+\1\s*:?\s*$/;
+const STARTS_BOLD = /^\s*(\*\*|__)/;
+// Words whose full stop is not the end of a sentence. Lower-case, without the final stop.
+const ABBREVIATIONS = new Set([
+  "dr",
+  "mr",
+  "mrs",
+  "ms",
+  "prof",
+  "st",
+  "sr",
+  "jr",
+  "e.g",
+  "i.e",
+  "etc",
+  "vs",
+  "cf",
+  "no",
+  "fig",
+  "approx",
+  "ca",
+  "c",
+  "p",
+  "pp",
+  "vol",
+  "ch",
+  "ed",
+  "eds",
+  "op",
+  "al",
+]);
+
+function isAbbreviation(before: string): boolean {
+  const token = /([\p{L}.]+)$/u.exec(before)?.[1];
+  if (!token) return false;
+  // Single capital initial, as in "J. Smith".
+  if (/^\p{Lu}$/u.test(token)) return true;
+  return ABBREVIATIONS.has(token.toLowerCase().replace(/^\.+/, ""));
+}
 // End of a sentence: punctuation, optional closing quotes or brackets, then whitespace and
 // something that starts a new sentence. Only boundaries whose next character is already
 // present are found, so the split never changes as more streamed text arrives.
@@ -31,11 +71,16 @@ function segment(text: string, final: boolean): Unit[] {
     const lineEnd = nl === -1 ? text.length : nl;
     const line = text.slice(start, lineEnd);
     if (line.trim()) {
-      if (HEADING.test(line)) {
+      if (HEADING.test(line) || (complete && BOLD_HEADING.test(line))) {
         if (complete) units.push({ kind: "heading", end: lineEnd, words: countWords(line) });
+      } else if (!complete && STARTS_BOLD.test(line)) {
+        // May turn out to be a bold heading: wait for the whole line, so the split never changes.
       } else {
         let from = 0;
         for (const m of line.matchAll(SENTENCE_END)) {
+          // "Dr." and "e.g." do not end a sentence. Only the full stop itself is checked; "!" or
+          // "?" after an abbreviation still ends one.
+          if (m[0].startsWith(".") && isAbbreviation(line.slice(0, m.index ?? 0))) continue;
           const end = (m.index ?? 0) + m[0].length;
           units.push({ kind: "text", end: start + end, words: countWords(line.slice(from, end)) });
           from = end;

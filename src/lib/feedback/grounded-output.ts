@@ -4,6 +4,7 @@
 import {
   ANALYST_FAILED_CAVEAT,
   WRITER_FAILED_CAVEAT,
+  citedTurns,
   filterSentences,
   type GroundedFeedback,
 } from "./pipeline";
@@ -13,31 +14,83 @@ import { containsPhrase, normalise } from "./verify-quotes";
 /** Fewest verified quotations a report must still show after checking. */
 export const MIN_SHOWN_QUOTES = 2;
 
+// Quotation constructs, consumed in this order (German and guillemet marks before plain curly
+// ones, which share characters). Double marks may wrap onto the next line. Single marks stay
+// on one line, and the closing mark must not be followed by a letter, so "don’t" is not a quote.
 const QUOTE_PATTERNS: RegExp[] = [
-  /"([^"\n]+)"/g,
-  /“([^”\n]+)”/g,
-  // Single quotes: the closing mark must not be followed by a letter, so "don’t" is not a quote.
-  /(?<![\p{L}\p{N}])‘(.+?)’(?![\p{L}\p{N}])/gu,
-  /(?<![\p{L}\p{N}])'(.+?)'(?![\p{L}\p{N}])/gu,
+  /„([^“”„]+)[“”]/g,
+  /‚([^‘’‚\n]+)[‘’]/g,
+  /«([^«»]+)»/g,
+  /»([^«»]+)«/g,
+  /‹([^‹›\n]+)›/g,
+  /`+([^`]+)`+/g,
+  /"([^"]+)"/g,
+  /“([^“”]+)”/g,
+  /(?<![\p{L}\p{N}])‘([^‘\n]+?)’(?![\p{L}\p{N}])/gu,
+  /(?<![\p{L}\p{N}])'([^'\n]+?)'(?![\p{L}\p{N}])/gu,
 ];
 
-/** Every quotation in a piece of text, in double or single, straight or curly marks. */
-export function extractQuotes(text: string): string[] {
-  if (typeof text !== "string") return [];
-  const out: string[] = [];
-  for (const re of QUOTE_PATTERNS) for (const m of text.matchAll(re)) out.push(m[1] ?? "");
-  return out;
+// Any quotation mark left once every pair has been consumed means quoting the checker cannot
+// read. A straight single quote counts only where it opens a word ("'like"), so apostrophes in
+// "don't" and "students' views" do not.
+const STRAY_MARK = /["“”„«»‹›‘‚`]|(?<![\p{L}\p{N}])'(?=[\p{L}\p{N}])/u;
+
+/** Markdown blockquote: text presented as quoted that the checker does not attribute. */
+const BLOCKQUOTE = /^\s{0,3}>/m;
+
+/**
+ * Every quotation in a piece of text, and whether any quotation mark was left unpaired.
+ * Understands straight and curly double and single marks, „German“ and ‚German‘ marks,
+ * «guillemets» and `backticks`.
+ */
+export function scanQuotes(text: string): { quotes: string[]; unpaired: boolean } {
+  if (typeof text !== "string") return { quotes: [], unpaired: false };
+  const quotes: string[] = [];
+  let rest = text;
+  for (const re of QUOTE_PATTERNS) {
+    rest = rest.replace(re, (whole: string, inner: string) => {
+      quotes.push(inner ?? "");
+      return " ".repeat(whole.length);
+    });
+  }
+  return { quotes, unpaired: STRAY_MARK.test(rest) };
 }
 
-/** True when the quotation appears word for word (after normalising) in one of the student's turns. */
-export function isStudentQuote(quote: string, turns: Turn[]): boolean {
+export function extractQuotes(text: string): string[] {
+  return scanQuotes(text).quotes;
+}
+
+/**
+ * True when the quotation appears word for word (after normalising) in one of the student's
+ * turns. With `inTurns`, only those turns count.
+ */
+export function isStudentQuote(quote: string, turns: Turn[], inTurns?: number[]): boolean {
   const q = normalise(quote);
   if (!q) return true; // Only punctuation, e.g. "...": nothing to attribute.
-  return turns.some((t) => t.role === "user" && containsPhrase(normalise(t.text), q));
+  const allowed = inTurns?.length ? new Set(inTurns) : null;
+  return turns.some(
+    (t) =>
+      t.role === "user" &&
+      (!allowed || allowed.has(t.turn)) &&
+      containsPhrase(normalise(t.text), q),
+  );
 }
 
+/** Quotations in the text that are not the student's words (from any student turn). */
 export function unverifiedQuotes(text: string, turns: Turn[]): string[] {
   return extractQuotes(text).filter((q) => !isStudentQuote(q, turns));
+}
+
+/**
+ * True when a sentence must not be shown: it has a quotation mark the checker cannot pair, it
+ * quotes words the student did not say, or it cites turns ([T4]) and a quotation is not in any
+ * of them. A wrong turn reference drops the whole sentence rather than being silently removed.
+ */
+export function sentenceFailsCheck(sentence: string, turns: Turn[]): boolean {
+  const { quotes, unpaired } = scanQuotes(sentence);
+  if (unpaired) return true;
+  const cited = citedTurns(sentence);
+  return quotes.some((q) => !isStudentQuote(q, turns, cited));
 }
 
 /** Removes headings with no text under them. */
@@ -77,11 +130,19 @@ export function renderGroundedFeedback(result: GroundedFeedback, turns: Turn[]):
   if (report.observations.length < 2) return { failure: "too few verified observations" };
 
   const markdown = report.sections.map((s) => `## ${s.heading}\n${s.body}`).join("\n\n");
-  const filtered = filterSentences(markdown, (s) => unverifiedQuotes(s, turns).length > 0).text;
+  // Fail closed on quoting the checker does not attribute.
+  if (BLOCKQUOTE.test(markdown)) return { failure: "blockquote" };
+  const filtered = filterSentences(markdown, (s) => sentenceFailsCheck(s, turns)).text;
   const text = dropEmptySections(filtered);
 
-  if (unverifiedQuotes(text, turns).length) return { failure: "unverified quotation" };
-  const quotes = extractQuotes(text).filter((q) => normalise(q));
+  // Check again on the whole text, so a quotation wrapping onto a second line is still read.
+  const whole = scanQuotes(text);
+  if (whole.unpaired) return { failure: "unpaired quotation mark" };
+  if (whole.quotes.some((q) => !isStudentQuote(q, turns)))
+    return { failure: "unverified quotation" };
+  if (filterSentences(text, (s) => sentenceFailsCheck(s, turns)).removed)
+    return { failure: "unverified quotation" };
+  const quotes = whole.quotes.filter((q) => normalise(q));
   if (quotes.length < MIN_SHOWN_QUOTES) return { failure: "too few verified quotations" };
   if (!/^## /m.test(text)) return { failure: "no sections" };
   return { text: readableCitations(text) };

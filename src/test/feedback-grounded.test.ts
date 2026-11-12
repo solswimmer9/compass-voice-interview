@@ -3,6 +3,8 @@ import {
   extractQuotes,
   readableCitations,
   renderGroundedFeedback,
+  scanQuotes,
+  sentenceFailsCheck,
   unverifiedQuotes,
 } from "@/lib/feedback/grounded-output";
 import {
@@ -257,5 +259,80 @@ describe("parseModelJson", () => {
     expect(parseModelJson("Here you go: [1, 2] done")).toEqual([1, 2]);
     expect(parseModelJson("nothing here")).toBeNull();
     expect(parseModelJson(undefined)).toBeNull();
+  });
+});
+
+describe("quotation checking fails closed (verifier findings)", () => {
+  /** The tester sees nothing unsaid: either the run falls back, or the words are gone. */
+  async function shown(writer: string): Promise<string | null> {
+    const out = renderGroundedFeedback(await pipelineResult(writer), TURNS);
+    return "text" in out ? out.text : null;
+  }
+  const strengthLine = `- You said "${Q2}" [T4].`;
+
+  it("reads a double quotation that wraps onto the next line", () => {
+    expect(scanQuotes('You argued "rivers gave early towns\n  water and wealth" here.')).toEqual({
+      quotes: ["rivers gave early towns\n  water and wealth"],
+      unpaired: false,
+    });
+  });
+
+  it("never shows unsaid words in a quotation wrapped over two lines", async () => {
+    const writer = WRITER_REPORT.replace(
+      strengthLine,
+      `- You argued "the outer bank erodes faster\n  and invented much more wealth" here [T2].`,
+    );
+    const text = await shown(writer);
+    if (text !== null) {
+      expect(text).not.toContain("invented much more wealth");
+      expect(unverifiedQuotes(text, TURNS)).toEqual([]);
+    }
+  });
+
+  it("falls back when the feedback contains a blockquote", async () => {
+    const writer = WRITER_REPORT.replace(
+      strengthLine,
+      `${strengthLine}\n> rivers are conveyor belts`,
+    );
+    expect(renderGroundedFeedback(await pipelineResult(writer), TURNS)).toEqual({
+      failure: "blockquote",
+    });
+  });
+
+  it.each([
+    ["guillemets", "«rivers are conveyor belts of sediment»"],
+    ["reversed guillemets", "»rivers are conveyor belts of sediment«"],
+    ["German low-high marks", "„rivers are conveyor belts of sediment“"],
+    ["backticks", "`rivers are conveyor belts of sediment`"],
+    ["an unpaired double mark", '"rivers are conveyor belts of sediment'],
+    ["an unpaired opening single mark", "‘rivers are conveyor belts of sediment"],
+  ])("treats %s as a quotation to check", async (_, quoted) => {
+    expect(sentenceFailsCheck(`You said ${quoted} [T2].`, TURNS)).toBe(true);
+    const text = await shown(
+      WRITER_REPORT.replace(strengthLine, `${strengthLine}\n- You said ${quoted} [T2].`),
+    );
+    if (text !== null) expect(text).not.toContain("conveyor belts");
+  });
+
+  it("accepts the student's own words in any of those marks", () => {
+    for (const quoted of [`«${Q1}»`, `„${Q1}“`, `\`${Q1}\``, `‘${Q1}’`, `'${Q1}'`]) {
+      expect(sentenceFailsCheck(`You said ${quoted} [T2].`, TURNS)).toBe(false);
+    }
+    // Apostrophes are not quotation marks.
+    expect(sentenceFailsCheck("You don't weigh the students' views or the city’s.", TURNS)).toBe(
+      false,
+    );
+  });
+
+  it("drops a sentence whose quotation is not in the turn it cites", async () => {
+    expect(sentenceFailsCheck(`You said ‘${Q1}’ [T4].`, TURNS)).toBe(true);
+    expect(sentenceFailsCheck(`You said ‘${Q1}’ [T2].`, TURNS)).toBe(false);
+    expect(sentenceFailsCheck(`You said ‘${Q1}’ [T2, T4].`, TURNS)).toBe(false);
+    // With no turn cited, any student turn will do.
+    expect(sentenceFailsCheck(`You said ‘${Q1}’.`, TURNS)).toBe(false);
+    const text = await shown(WRITER_REPORT.replace(`"${Q1}" [T2]`, `"${Q1}" [T4]`));
+    expect(text).not.toBeNull();
+    expect(text).not.toContain(Q1);
+    expect(text).toContain(Q2);
   });
 });
