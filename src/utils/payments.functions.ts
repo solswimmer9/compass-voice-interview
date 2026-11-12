@@ -1,3 +1,4 @@
+import { PURCHASES_PAUSED } from "@/lib/offer";
 import { createServerFn } from "@tanstack/react-start";
 import type Stripe from "stripe";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -43,6 +44,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     return data;
   })
   .handler(async ({ data, context }): Promise<CheckoutSessionResult> => {
+    if (PURCHASES_PAUSED) throw new Error("Purchases are paused");
     try {
       const { createStripeClient } = await import("@/lib/stripe.server");
       const stripe = createStripeClient(data.environment);
