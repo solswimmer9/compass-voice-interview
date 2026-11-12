@@ -25,7 +25,9 @@ export function createStripeClient(env: StripeEnv): Stripe {
         ...init,
         headers: {
           ...Object.fromEntries(
-            new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined)).entries(),
+            new Headers(
+              init?.headers ?? (input instanceof Request ? input.headers : undefined),
+            ).entries(),
           ),
           "X-Connection-Api-Key": connectionApiKey,
           "Lovable-API-Key": lovableApiKey,
@@ -38,8 +40,20 @@ export function createStripeClient(env: StripeEnv): Stripe {
 export function getStripeErrorMessage(error: unknown): string {
   if (error && typeof error === "object") {
     const e = error as {
-      message?: string; type?: string; code?: string; decline_code?: string; param?: string; requestId?: string;
-      raw?: { message?: string; type?: string; code?: string; decline_code?: string; param?: string; requestId?: string };
+      message?: string;
+      type?: string;
+      code?: string;
+      decline_code?: string;
+      param?: string;
+      requestId?: string;
+      raw?: {
+        message?: string;
+        type?: string;
+        code?: string;
+        decline_code?: string;
+        param?: string;
+        requestId?: string;
+      };
     };
     const message = e.raw?.message ?? e.message;
     if (message) {
@@ -56,10 +70,17 @@ export function getStripeErrorMessage(error: unknown): string {
   return "Stripe request failed";
 }
 
-export async function verifyWebhook(req: Request, env: StripeEnv): Promise<{ type: string; data: { object: any } }> {
+export async function verifyWebhook(
+  req: Request,
+  env: StripeEnv,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Stripe event payload varies by event type
+): Promise<{ type: string; data: { object: any } }> {
   const signature = req.headers.get("stripe-signature");
   const body = await req.text();
-  const secret = env === "sandbox" ? getEnv("PAYMENTS_SANDBOX_WEBHOOK_SECRET") : getEnv("PAYMENTS_LIVE_WEBHOOK_SECRET");
+  const secret =
+    env === "sandbox"
+      ? getEnv("PAYMENTS_SANDBOX_WEBHOOK_SECRET")
+      : getEnv("PAYMENTS_LIVE_WEBHOOK_SECRET");
   if (!signature || !body) throw new Error("Missing signature or body");
   let timestamp: string | undefined;
   const v1Signatures: string[] = [];
@@ -69,10 +90,23 @@ export async function verifyWebhook(req: Request, env: StripeEnv): Promise<{ typ
     if (key === "v1" && value) v1Signatures.push(value);
   }
   if (!timestamp || v1Signatures.length === 0) throw new Error("Invalid signature format");
-  if (Math.abs(Date.now() / 1000 - Number(timestamp)) > 300) throw new Error("Webhook timestamp too old");
-  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-  const signed = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${timestamp}.${body}`));
-  const expected = Array.from(new Uint8Array(signed)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  if (Math.abs(Date.now() / 1000 - Number(timestamp)) > 300)
+    throw new Error("Webhook timestamp too old");
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const signed = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(`${timestamp}.${body}`),
+  );
+  const expected = Array.from(new Uint8Array(signed))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
   if (!v1Signatures.includes(expected)) throw new Error("Invalid webhook signature");
   return JSON.parse(body);
 }
