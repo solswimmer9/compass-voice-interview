@@ -10,9 +10,9 @@ const TONES = {
     ring: "oklch(0.78 0.09 200 / 0.5)",
   },
   matt: {
-    core: "radial-gradient(circle at 38% 32%, oklch(0.8 0.12 25), oklch(0.52 0.17 25) 58%, oklch(0.26 0.08 20))",
-    glow: "oklch(0.6 0.18 25 / 0.42)",
-    ring: "oklch(0.7 0.15 25 / 0.5)",
+    core: "radial-gradient(circle at 38% 32%, oklch(0.9 0.1 80), oklch(0.62 0.13 55) 58%, oklch(0.3 0.06 45))",
+    glow: "oklch(0.75 0.12 70 / 0.4)",
+    ring: "oklch(0.8 0.11 75 / 0.5)",
   },
 } as const;
 

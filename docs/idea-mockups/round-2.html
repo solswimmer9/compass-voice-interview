@@ -8,9 +8,9 @@
   :root {
     --bg: oklch(0.145 0.004 270); --fg: oklch(0.985 0 0); --card: oklch(0.185 0.004 270);
     --muted: oklch(0.27 0.004 270); --mfg: oklch(0.72 0.005 270); --border: oklch(0.29 0.004 270);
-    --matt: oklch(0.7 0.15 25); --matt-core: radial-gradient(circle at 38% 32%, oklch(0.8 0.12 25), oklch(0.52 0.17 25) 58%, oklch(0.26 0.08 20));
-    --matt-glow: oklch(0.6 0.18 25 / 0.42); --matt-ring: oklch(0.7 0.15 25 / 0.5);
-    --held: oklch(0.75 0.13 150); --slip: oklch(0.82 0.12 85);
+    --matt: oklch(0.8 0.11 75); --matt-core: radial-gradient(circle at 38% 32%, oklch(0.9 0.1 80), oklch(0.62 0.13 55) 58%, oklch(0.3 0.06 45));
+    --matt-glow: oklch(0.75 0.12 70 / 0.4); --matt-ring: oklch(0.8 0.11 75 / 0.5);
+    --held: oklch(0.75 0.13 150); --slip: oklch(0.68 0.18 25);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--fg); font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
@@ -52,7 +52,7 @@
   .fb .item + .item { padding-top: 12px; border-top: 1px solid var(--border); }
   .fb q { display: block; quotes: "\201C" "\201D"; margin-top: 6px; font-size: 13px; font-style: italic; color: var(--mfg); padding-left: 10px; border-left: 2px solid var(--border); }
   .fb.held q { border-left-color: oklch(0.75 0.13 150 / .6); }
-  .fb.slip q { border-left-color: oklch(0.82 0.12 85 / .6); }
+  .fb.slip q { border-left-color: oklch(0.68 0.18 25 / .6); }
   .fb.held h3 i { background: var(--held); } .fb.slip h3 i { background: var(--slip); }
   .fb ol { margin-top: 10px; padding-left: 18px; font-size: 14px; line-height: 1.5; }
   .fb ol li + li { margin-top: 6px; }
@@ -61,7 +61,7 @@
   /* B */
   .gridB { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 26px; }
   #b .fb { padding: 20px 22px; }
-  .next { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 24px; border-color: oklch(0.7 0.15 25 / .45); }
+  .next { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 24px; border-color: oklch(0.8 0.11 75 / .45); }
 
   /* C */
   .tl { position: relative; height: 150px; margin-top: 18px; border-bottom: 1px solid var(--border); }
@@ -82,7 +82,7 @@
   .letter .q { font-style: italic; }
   .letter .seal { position: absolute; right: 46px; bottom: 34px; width: 74px; height: 74px; }
   .letter .seal .core { box-shadow: 0 0 28px var(--matt-glow), 0 6px 14px #0005; }
-  .letter .seal .ring { border-color: oklch(0.52 0.17 25 / .55); inset: -10%; }
+  .letter .seal .ring { border-color: oklch(0.62 0.13 55 / .55); inset: -10%; }
   .letter .seal .ring.r2 { inset: -22%; border-style: dashed; }
   .letter .seal span { position: absolute; inset: 0; display: grid; place-items: center; color: oklch(0.95 0.03 30); font-weight: 700; font-size: 18px; letter-spacing: .04em; }
   .letter .ps { font-size: 13px; border-top: 1px solid oklch(0.24 0.02 60 / .18); padding-top: 12px; margin-top: 16px; }
@@ -155,9 +155,9 @@
     </div>
     <div class="tl">
       <svg viewBox="0 0 1000 150" preserveAspectRatio="none">
-        <defs><linearGradient id="gr" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="oklch(0.6 0.18 25)" stop-opacity=".55"/><stop offset="1" stop-color="oklch(0.6 0.18 25)" stop-opacity="0"/></linearGradient></defs>
+        <defs><linearGradient id="gr" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="oklch(0.8 0.11 75)" stop-opacity=".55"/><stop offset="1" stop-color="oklch(0.8 0.11 75)" stop-opacity="0"/></linearGradient></defs>
         <path d="M0 140 C80 135 140 120 200 100 S280 50 330 55 S420 120 480 110 S580 25 630 22 S720 100 780 92 S880 70 920 80 S980 130 1000 138 L1000 150 L0 150Z" fill="url(#gr)"/>
-        <path d="M0 140 C80 135 140 120 200 100 S280 50 330 55 S420 120 480 110 S580 25 630 22 S720 100 780 92 S880 70 920 80 S980 130 1000 138" fill="none" stroke="oklch(0.7 0.15 25)" stroke-width="2" vector-effect="non-scaling-stroke"/>
+        <path d="M0 140 C80 135 140 120 200 100 S280 50 330 55 S420 120 480 110 S580 25 630 22 S720 100 780 92 S880 70 920 80 S980 130 1000 138" fill="none" stroke="oklch(0.8 0.11 75)" stroke-width="2" vector-effect="non-scaling-stroke"/>
       </svg>
       <div class="playhead" style="left:63%"></div>
       <div class="pin" style="left:17%; top:44px"><b style="background:var(--held)">1</b>Split “rational”</div>
