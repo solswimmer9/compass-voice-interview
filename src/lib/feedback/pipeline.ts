@@ -223,7 +223,7 @@ export function citedTurns(text: string): number[] {
 const SENTENCE_BREAK = /(?<=[.!?]["”')\]]?)\s+(?=[A-Z[“"])/;
 
 /** Applies `drop` to each sentence of each non-heading line. Returns new text and the count removed. */
-function filterSentences(
+export function filterSentences(
   text: string,
   drop: (sentence: string) => boolean,
 ): { text: string; removed: number } {
@@ -304,6 +304,10 @@ function fallbackText(verified: VerifiedObservation[]): string {
 
 // ---------------------------------------------------------------- pipeline
 
+export const ANALYST_FAILED_CAVEAT = "The transcript analysis step failed.";
+export const WRITER_FAILED_CAVEAT =
+  "The written feedback could not be generated; the verified observations are listed instead.";
+
 export async function runGroundedFeedback(
   input: FeedbackInput,
   deps: FeedbackDeps,
@@ -336,7 +340,7 @@ export async function runGroundedFeedback(
       schemaName: ANALYST_SCHEMA_NAME,
     });
   } catch {
-    caveats.push("The transcript analysis step failed.");
+    caveats.push(ANALYST_FAILED_CAVEAT);
   }
   const { observations: candidates, proposed } = parseObservations(raw);
   stats.proposed = proposed;
@@ -377,9 +381,7 @@ export async function runGroundedFeedback(
   };
   let text = await safeWrite(buildWriterPrompt(input, verified, caveats));
   if (text === null) {
-    caveats.push(
-      "The written feedback could not be generated; the verified observations are listed instead.",
-    );
+    caveats.push(WRITER_FAILED_CAVEAT);
     text = fallbackText(verified);
   }
 
