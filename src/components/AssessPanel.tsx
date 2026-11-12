@@ -1,5 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ArgumentMap } from "@/components/ArgumentMap";
+import { FeedbackLetter } from "@/components/FeedbackLetter";
+import {
+  parseArgumentMap,
+  splitFeedbackStream,
+  tutorLetterInfo,
+  type ArgumentMap as ArgumentMapData,
+} from "@/lib/feedback/argument-map";
 
 function readDataURL(file: File) {
   return new Promise<string>((resolve, reject) => {
@@ -15,16 +23,21 @@ export function AssessPanel({
   interviewId,
   tutorId,
   cardIds,
+  studentName,
 }: {
   initialTranscript: string;
   interviewId: string | null;
   /** Set for the PPE trial so feedback uses the PPE tutor's notes. */
   tutorId?: "ppe";
   cardIds?: string[];
+  /** The signed-in profile's display name, for the letter's greeting. */
+  studentName?: string | null | undefined;
 }) {
+  const tutor = tutorLetterInfo(tutorId);
   const [transcript, setTranscript] = useState(initialTranscript);
   const [video, setVideo] = useState<File | null>(null);
   const [output, setOutput] = useState("");
+  const [argumentMap, setArgumentMap] = useState<ArgumentMapData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -36,6 +49,7 @@ export function AssessPanel({
   const submit = async () => {
     setError(null);
     setOutput("");
+    setArgumentMap(null);
     if (!interviewId) return setError("Start an interview before requesting feedback.");
     if (video && video.size > 20 * 1024 * 1024) return setError("Video must be under 20 MB.");
     setBusy(true);
@@ -74,10 +88,15 @@ export function AssessPanel({
         const { done, value } = await reader.read();
         if (done) break;
         text += decoder.decode(value, { stream: true });
-        const [main, streamError] = text.split("[[error]]");
-        setOutput(main ?? "");
+        // The argument map block (after the delimiter) never reaches the letter, even mid-stream.
+        const { letter, error: streamError } = splitFeedbackStream(text);
+        setOutput(letter);
         if (streamError) setError(streamError);
       }
+      text += decoder.decode();
+      const final = splitFeedbackStream(text);
+      setOutput(final.letter);
+      setArgumentMap(final.error ? null : parseArgumentMap(final.mapSource));
     } catch (cause) {
       if (!controller.signal.aborted)
         setError(cause instanceof Error ? cause.message : "Assessment failed");
@@ -87,7 +106,7 @@ export function AssessPanel({
   };
 
   return (
-    <section className="mt-12 rounded-md border bg-card p-6">
+    <section className="mt-12 rounded-md border bg-card p-4 sm:p-6">
       <h2 className="font-serif text-3xl font-semibold">Assess my reasoning</h2>
       <p className="mt-1 text-sm text-muted-foreground">
         Submit your replay, an optional video, or both. Each interview includes one AI feedback
@@ -97,7 +116,11 @@ export function AssessPanel({
         value={transcript}
         onChange={(event) => setTranscript(event.target.value)}
         rows={6}
-        placeholder="Dr River: Why do cities exist where they do?&#10;You: ..."
+        placeholder={
+          tutorId === "ppe"
+            ? "Prof Matt: Is it ever fair to punish someone before they act?\nYou: ..."
+            : "Dr River: Why do cities exist where they do?\nYou: ..."
+        }
         className="mt-4 w-full rounded-md border bg-background p-3 text-sm"
       />
       <label className="mt-3 block text-sm">
@@ -131,14 +154,10 @@ export function AssessPanel({
           {error}
         </p>
       )}
-      {busy && !output && (
-        <p className="mt-6 text-sm text-muted-foreground">Reading your answers…</p>
+      {(busy || output.trim()) && (
+        <FeedbackLetter tutor={tutor} studentName={studentName} body={output} writing={busy} />
       )}
-      {output && (
-        <div className="mt-6 whitespace-pre-wrap leading-relaxed">
-          {output.replace(/^#+\s?/gm, "").replace(/\*\*/g, "")}
-        </div>
-      )}
+      {!busy && argumentMap && <ArgumentMap map={argumentMap} tutorName={tutor.name} />}
     </section>
   );
 }

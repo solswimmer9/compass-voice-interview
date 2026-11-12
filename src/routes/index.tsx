@@ -404,6 +404,7 @@ function InterviewPage() {
         {showReplay && (
           <AssessPanel
             interviewId={call.interviewId}
+            studentName={account.data?.profile?.display_name}
             {...(ppe ? { tutorId: "ppe" as const, cardIds } : {})}
             initialTranscript={lines
               .map((l) => `${l.role === "assistant" ? tutorName : "You"}: ${l.text.trim()}`)

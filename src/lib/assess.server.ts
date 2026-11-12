@@ -8,6 +8,7 @@ import { limitMessage, takeFeedback, visitorKey } from "./rate-limit.server.ts";
 import { authenticateRequest } from "./request-auth.server.ts";
 import { isServerTester } from "./testers.ts";
 import { isPpeRequest, ppeFeedbackContext } from "./ppe.server.ts";
+import { ARGUMENT_MAP_INSTRUCTIONS } from "./feedback/argument-map.ts";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1";
 const TEXT_MODEL = "openai/gpt-6-astra";
@@ -27,7 +28,9 @@ Be honest, specific and encouraging. Under 400 words.
 ${REASONING_GUIDE}
 
 ${NOTES_CONTEXT}
-When judging the candidate, give most weight to how far they developed the ideas above in their own words.`;
+When judging the candidate, give most weight to how far they developed the ideas above in their own words.
+
+${ARGUMENT_MAP_INSTRUCTIONS}`;
 
 // PPE feedback. Same headings so the panel reads the same. Draft cards' notes only for testers.
 const ppeSystem = (
@@ -44,7 +47,9 @@ If a video is provided, also briefly comment on delivery: pace, thinking aloud, 
 Be honest, specific and encouraging. Under 400 words.
 
 ${ppeFeedbackContext(cardIds, { includeDrafts })}
-When judging the candidate, give most weight to how far they developed the ideas above in their own words.`;
+When judging the candidate, give most weight to how far they developed the ideas above in their own words.
+
+${ARGUMENT_MAP_INSTRUCTIONS}`;
 
 export async function handleAssess(request: Request) {
   const key = process.env["LOVABLE_API_KEY"];
