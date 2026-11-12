@@ -10,15 +10,15 @@ These are the points where a card says something a little beyond plain A-level k
 
 - **How can ice that melted thousands of years ago still affect a landscape today?** (`old-ice-landscape`): Land can still be rising after the ice has gone (crust rebound), and glacial landforms such as ice-carved valleys, boulders left in fields, stony clay and ridges of debris. Standard A-level material, but please read it once.
 - **How can we know the temperature of a year nobody recorded?** (`past-temperature`): The list of evidence: tree rings (vary with growing conditions, not only temperature), chemistry of ice layers (depends on temperature when the snow fell), pollen in lake and bog mud, and written records such as harvest dates and frozen rivers.
-- **Is weather getting worse, or are we getting more exposed?** (`weather-worse-or-exposed`): The claim that warmer air can hold more water vapour, so heavy rain and heatwaves may be affected while other weather may not follow the same pattern. Also the idea that risk depends on the hazard, what is exposed and how well people can cope. The card gives no figures; better warnings and buildings are put to the student as a question.
-- **What is a native species, and how long does it take to become one?** (`native-species`): That grey squirrels, Japanese knotweed and sycamore were brought to Britain by people, and that conservation practice has a convention that separates very old human introductions from recent ones (the card does not give the date).
+- **Is weather getting worse, or are we getting more exposed?** (`weather-worse-or-exposed`): The claim that warmer air can hold more water vapour, which is a reason to expect heavy rain to be affected in some places; heatwaves are treated separately as a matter of higher temperatures, and other weather may not follow the same pattern. Also the idea that risk depends on the hazard, what is exposed and how well people can cope. The card gives no figures; better warnings and buildings are put to the student as a question.
+- **What is a native species, and how long does it take to become one?** (`native-species`): That grey squirrels and Japanese knotweed were brought to Britain by people, and that conservation practice has a convention that separates very old human introductions from recent ones (the card does not give the date).
 - **Is planting trees a climate solution or a way of delaying one?** (`trees-climate-solution`): Carbon in a forest can return to the air through fire, drought or felling, whereas fossil carbon was locked underground for a very long time; and that dark trees can absorb more heat than snow-covered ground. The card gives no numbers.
-- **Why would anyone build a city next to a volcano?** (`hazards-city-volcano`): That millions of people live around Mount Vesuvius, and that Iceland heats many homes with geothermal energy.
+- **Why would anyone build a city next to a volcano?** (`hazards-city-volcano`): That millions of people live in and around Naples, close to Mount Vesuvius (the figure refers to greater Naples, not just the slopes), and that Iceland heats many homes with geothermal energy.
 - **Should we rewild Britain?** (`rewild-britain`): That beavers have been brought back to some British rivers.
 - **Are fair-trade bananas really fair?** (`fair-trade-bananas`): The description of fair trade as a certification with a minimum price and an extra premium for farmers or workers who meet agreed standards.
 - **Why can a country export food while people there go hungry?** (`food-export-hunger`): Nothing empirical beyond the well-known idea that hunger is often about access (money, roads, conflict) and not only supply. No countries are named.
 - **Who should govern the Arctic as the ice retreats?** (`geopolitics-arctic`): That a few states have coast on the Arctic Ocean, that the law of the sea gives coastal states rights over resources in a zone off their coast, and that Antarctica is governed by a treaty among states.
-- **Should maps be redrawn to remove colonial place names?** (`colonial-place-names`): The three examples: Bombay is now officially Mumbai; Rhodesia became Zimbabwe; Uluru carries a second, older name. Also that James C. Scott (on the approved reading list) is described as writing about states simplifying and standardising places, with permanent surnames as one example. Please confirm you are happy to use him this way.
+- **Should maps be redrawn to remove colonial place names?** (`colonial-place-names`): The three examples: Bombay is now officially Mumbai; Rhodesia became Zimbabwe; Ayers Rock in Australia is also called Uluru, the older name (the English name dates from the 1870s, so the card says Uluru was in use long before it). The Bombay renaming (1995) was driven partly by regional politics, so the card does not present it as simply decolonial; please check you are happy with it as an example. Also that James C. Scott (on the approved reading list) is described as writing about states simplifying and standardising places, with permanent surnames as one example. Please confirm you are happy to use him this way.
 - **Is a border a line or a process?** (`border-line-or-process`): That John Agnew (approved reading list) is described as arguing against treating the state as a fixed container with a clear edge. Please confirm this is how you use him. The idea of a border being made and remade by everyday checks is the card's own argument, not a named source's.
 - **Why do cities exist where they do?** (`cities-where`): Nothing empirical beyond the standard idea of site and situation; no city is named in the card, and the 'capital chosen by someone with power' point is general.
 - **Is a city ever finished?** (`city-ever-finished`): That David Harvey (approved reading list) is described as writing about visions of better places degenerating when imposed on others, as in your notes on utopias that degenerate.
@@ -28,8 +28,8 @@ These are the points where a card says something a little beyond plain A-level k
 - **Why did the same virus produce different pandemics in different places?** (`same-virus-different-pandemics`): The card never names a virus or a country, but the examples in the push-on lines (homes, jobs, hospitals, testing differences) assume the student will think of COVID-19. Please confirm you are happy with that and with the 'check they are comfortable' line.
 - **What can a statistic about a place never tell you?** (`statistic-limits`): Nothing empirical. The two-towns example is invented and no numbers are given.
 - **Should a court be allowed to look impressive?** (`court-impressive`): Only the court-design idea from your notes (Mulcahy, Rossner and others). The card goes beyond it into video hearings and court location as questions.
-- **Can you be hopeful about somewhere and angry about it at the same time?** (`hopeful-and-angry`): That Rebecca Solnit's Hope in the Dark (approved reading list) is described as separating hope from optimism, and that Anderson and Davoudi are used as in your notes. Please check how you want these used.
-- **Can one footballer change a war?** (`footballer-war`): That in 2005 Didier Drogba, as captain of Côte d'Ivoire's national team, made an appeal for peace in a country divided by conflict. Your briefing only says 'Drogba's 2005 appeal for peace in Côte d'Ivoire', so the words 'captain' and 'divided by conflict' are my additions. The card does not say what happened afterwards and tells Dr River not to take a side.
+- **Can you be hopeful about somewhere and angry about it at the same time?** (`hopeful-and-angry`): That Rebecca Solnit's Hope in the Dark (approved reading list) is described as separating hope from optimism, Anderson and Davoudi appear only as context from your notes (small action and the scale of hope), not as the source for the hope-and-anger idea. Please check how you want these used.
+- **Can one footballer change a war?** (`footballer-war`): That in 2005 Didier Drogba, playing for Côte d'Ivoire's national team, made an appeal for peace in a country divided by conflict. Your briefing only says 'Drogba's 2005 appeal for peace in Côte d'Ivoire', so 'playing for the national team' and 'divided by conflict' are my additions. The card does not say what happened afterwards and tells Dr River not to take a side.
 - **Why might a town vote against its own economic interests, and is that even the right way to describe it?** (`town-vote`): The summary of Rodríguez-Pose and McCann on places that don't matter (areas that feel passed over by economic change may vote accordingly). It follows your notes bullet only.
 - **Which place has most changed how you think about the world, and why?** (`place-changed-thinking`): Nothing empirical. This card is almost entirely student-led.
 
@@ -372,9 +372,9 @@ Weak moves to watch: assuming an empty place raises no questions of fairness; as
 
 `old-ice-landscape` · physical · draft · leads on to: past-temperature, volcano-eruption-styles, cities-where
 
-**Dr River sees** (141 words)
+**Dr River sees** (133 words)
 
-Hook: a valley with a flat floor and steep sides, huge boulders scattered across a field, a lake in a rocky hollow, farmland on stony clay. The ice that made them has been gone for thousands of years. The tension: the ice has gone, but the landscape still holds what it did, and some of it is still adjusting. Push on: what does moving ice do to rock, and what does it leave behind when it melts? How would you tell an ice-carved valley from a river-cut one? Why might land rise once an ice sheet has gone, and what would that do to a coastline? Which leftovers matter to people today, such as soils, lakes or harbours? How long should a landscape take to forget? Reason from first principles, and ask the student to start from a landscape they know.
+Hook: a valley with a flat floor and steep sides, huge boulders scattered across a field, a lake in a rocky hollow, farmland on stony clay. The ice that made them has been gone for thousands of years. The tension: the ice has gone, but the landscape still holds what it did, and some of it is still adjusting. Push on: what does moving ice do to rock, and what does it leave behind when it melts? How would you tell an ice-carved valley from a river-cut one? Why might land rise once an ice sheet has gone, and what would that do to a coastline? Which leftovers matter to people today, such as soils, lakes or harbours? Reason from first principles, and ask the student to start from a landscape they know.
 
 **Background** (274 words)
 
@@ -398,15 +398,15 @@ Weak moves to watch: naming landforms instead of explaining the process behind t
 
 `past-temperature` · physical · draft · leads on to: old-ice-landscape, weather-worse-or-exposed, statistic-limits
 
-**Dr River sees** (130 words)
+**Dr River sees** (137 words)
 
-Hook: nobody was reading a thermometer in most of the past, yet scientists talk about how warm or cold particular years and centuries were. The tension: we can only measure the present directly, so knowing the past means reading something else that responded to temperature. Push on: what could a tree, a layer of ice, mud at the bottom of a lake or an old harvest diary tell you? What exactly does each one measure, and what else besides temperature could have changed it? How would you check one source against another? How far back can each reach, and how finely? Is knowing the same as being certain? Ask the student to design the evidence themselves before naming anything. Stay on how evidence works rather than on current climate politics.
+Hook: nobody was reading a thermometer in most of the past, yet scientists talk about how warm or cold particular years and centuries were. The tension: we can only measure the present directly, so knowing the past means reading something else that responded to temperature. Push on: if you had no thermometer, what could have kept a record of temperature, and what would that record really be measuring? What else besides temperature could have changed it? How would you check one source against another? Is knowing the same as being certain? Let the student design the evidence before naming anything. Only if they are stuck, offer one example, such as a tree, a layer of ice or an old harvest diary, and hand the question back. Stay on how evidence works rather than on current climate politics.
 
-**Background** (289 words)
+**Background** (324 words)
 
 Underlying argument: temperature in the past is inferred from proxies, things that responded to conditions at the time and kept a record. Tree rings vary with growing conditions from year to year. Layers of ice trap snow and air, and the chemistry of the ice depends on the temperature when the snow fell. Sediments in lakes and bogs hold pollen, which shows which plants grew and so roughly what the climate allowed. Written records such as diaries, harvest dates and accounts of frozen rivers cover recent centuries in some places. None of these is a thermometer, so each has to be calibrated against the period when real readings exist.
 
-Positions to test: what each proxy actually measures, since a thin tree ring can mean cold, drought or damage; how scientists deal with that, mainly by comparing independent sources that fail in different ways; how dating works (counting layers or rings, and what happens when counting is hard); the difference between a precise record for one place and a picture of the whole planet; why a range with an uncertainty is more honest than a single number.
+Positions to test (let the student design the evidence first; offer a tree, a layer of ice or a harvest diary only if they are stuck, and also ask how far back each could reach and how finely): what each proxy actually measures, since a thin tree ring can mean cold, drought or damage; how scientists deal with that, mainly by comparing independent sources that fail in different ways; how dating works (counting layers or rings, and what happens when counting is hard); the difference between a precise record for one place and a picture of the whole planet; why a range with an uncertainty is more honest than a single number.
 
 Scale: a proxy that is excellent for a single year in one valley may say little about a thousand-year average for the globe, and the reverse.
 
@@ -424,15 +424,15 @@ Weak moves to watch: naming proxies without saying what they measure; treating a
 
 `weather-worse-or-exposed` · physical · draft · leads on to: disaster-natural, past-temperature, hazards-city-volcano
 
-**Dr River sees** (144 words)
+**Dr River sees** (133 words)
 
-Hook: a storm or flood hits a town and the news says the weather is getting worse. The tension: damage depends on the weather and also on what was standing in its way, so the same event can cost very different amounts in different decades. Push on: what would you measure to decide whether weather has got worse: how often, how strong, how much damage or how many deaths? If more people and more expensive buildings now sit on floodplains and coasts, what does that do to the damage figures? Could better warnings and stronger buildings mean the same storm now does less harm? Could weather itself also be changing, and how could you tell the two apart? Who is exposed and cannot easily move? Ask for a place they know. Keep to how the evidence works, and share no view on climate policy.
+Hook: a storm or flood hits a town and the news says the weather is getting worse. The tension: damage depends on the weather and also on what was standing in its way, so the same event can cost very different amounts in different decades. Push on: what would you measure to decide whether weather has got worse: how often, how strong, or how much damage? If more people and costlier buildings now sit on floodplains and coasts, what does that do to the damage figures? Could better warnings and stronger buildings mean the same storm now does less harm? Could weather itself also be changing, and how would you tell the two apart? Ask for a place they know. Keep to how the evidence works, and share no view on climate policy.
 
-**Background** (288 words)
+**Background** (301 words)
 
 Underlying argument: harm from weather is not the same thing as weather. A common way to think about hazard risk is that it grows with how dangerous the event is and how much is exposed to it, and shrinks with how well people are able to cope. So a rise in recorded damage can come from the weather changing, from more people and property in harm's way, from better recording and reporting, or from some mixture. A strong answer separates these and says what evidence would separate them, for example comparing the weather itself over time with the damage over time.
 
-Positions to test: that "worse" has several meanings (more frequent, stronger, more costly, more deadly) and they need not move together; that warmer air can hold more water vapour, which gives a physical reason to expect some extremes, such as heavy rain and heatwaves, to be affected, while other kinds of weather may not follow the same pattern; that exposure is not equal, because poorer households are often in more vulnerable housing or places and have fewer ways to leave or recover; that blaming the weather or blaming the people can both be ways of ignoring who made the choices.
+Positions to test: that "worse" has several meanings (more frequent, stronger, more costly, more deadly) and they need not move together; that warmer air can hold more water vapour, which gives a physical reason to expect heavy rain to be affected in some places, while heatwaves are more directly a matter of higher temperatures, so the two have different reasons and other kinds of weather may not follow the same pattern; that exposure is not equal, because poorer households are often in more vulnerable housing or places and have fewer ways to leave or recover; that blaming the weather or blaming the people can both be ways of ignoring who made the choices.
 
 Link to other cards: disasters as political as well as natural; knowing past temperature and weather from indirect evidence.
 
@@ -442,7 +442,7 @@ Weak moves to watch: treating "worse" as having one obvious meaning; treating "n
 
 **Sources:** Dr River wider course, Atmosphere: Is weather getting worse, or are we getting more exposed?
 
-**Please check:** The claim that warmer air can hold more water vapour, so heavy rain and heatwaves may be affected while other weather may not follow the same pattern. Also the idea that risk depends on the hazard, what is exposed and how well people can cope. The card gives no figures; better warnings and buildings are put to the student as a question.
+**Please check:** The claim that warmer air can hold more water vapour, which is a reason to expect heavy rain to be affected in some places; heatwaves are treated separately as a matter of higher temperatures, and other weather may not follow the same pattern. Also the idea that risk depends on the hazard, what is exposed and how well people can cope. The card gives no figures; better warnings and buildings are put to the student as a question.
 
 **Your decision:** approve / approve with changes / leave as draft
 
@@ -450,15 +450,17 @@ Weak moves to watch: treating "worse" as having one obvious meaning; treating "n
 
 `native-species` · physical · draft · leads on to: rewild-britain, trees-climate-solution, local-area
 
-**Dr River sees** (148 words)
+**Dr River sees** (116 words)
 
-Hook: grey squirrels, Japanese knotweed and sycamore trees, species that people carried to Britain, set beside the plants and animals that spread in on their own as the ice retreated. The tension: "native" sounds like a plain fact, but it depends on where you draw a line in time and in space. Push on: what counts as arriving naturally, and who decides? How long must a species be here before it counts as native: a hundred years, a thousand, since the ice? If a species moves north by itself because the climate has changed, is it native when it arrives? Does it matter whether it does harm? Who has the power to draw the line and act on it? Where else do we use words like native and incomer, and does that shape how we treat species? Ask for a plant or animal from the student's own area.
+Hook: grey squirrels and Japanese knotweed, species that people carried to Britain, set beside the plants and animals that spread in on their own as the ice retreated. The tension: "native" sounds like a plain fact, but it depends on where you draw a line in time and in space. Push on: what counts as arriving naturally, and who decides? How long must a species be here before it counts as native: a hundred years, a thousand, since the ice? If a species moves north by itself because the climate has changed, is it native when it arrives? Does it matter whether it does harm? Ask for a plant or animal from the student's own area.
 
-**Background** (275 words)
+**Background** (305 words)
 
 Underlying argument: "native" is a category people made. The usual definition is a species that arrived in a place by its own means, without human help, but that needs a start date and a boundary. Britain's wildlife has changed since the ice retreated: species spread in as the land warmed, and some never made it before the sea cut Britain off from the continent. People have also carried species in for thousands of years, so any cut-off date is a judgement. In conservation practice there is often a convention that distinguishes very old human introductions from recent ones, which shows how arbitrary a line can be.
 
-Positions to test: whether length of time should matter more than origin; whether harm should matter more than origin, since some introduced species cause problems and some native ones do too; whether a species that spreads on its own because the climate changes is native or not, and what that says about the definition; who decides, and what happens to the plant or animal once the decision is made; whether the language of belonging carries ideas about people that shape how species are treated, which the student may or may not want to explore.
+Positions to test: whether length of time should matter more than origin; whether harm should matter more than origin, since some introduced species cause problems and some native ones do too; whether a species that spreads on its own because the climate changes is native or not, and what that says about the definition; who decides, and what happens to the plant or animal once the decision is made; whether the word "native" carries ideas beyond biology. Do not raise any comparison with people yourself.
+
+Care: if the student draws a comparison between this language and how people are talked about, handle it neutrally: ask what the comparison does and does not carry over, test the reasoning on every side and share no view.
 
 Link to other cards: rewilding, because "return to what?" needs a baseline date; trees as a climate solution, because the species that is planted matters.
 
@@ -466,7 +468,7 @@ Weak moves to watch: treating "native" as a plain fact; treating "natural" as po
 
 **Sources:** Dr River wider course, Biogeography: What is a native species, and how long does it take to become one?
 
-**Please check:** That grey squirrels, Japanese knotweed and sycamore were brought to Britain by people, and that conservation practice has a convention that separates very old human introductions from recent ones (the card does not give the date).
+**Please check:** That grey squirrels and Japanese knotweed were brought to Britain by people, and that conservation practice has a convention that separates very old human introductions from recent ones (the card does not give the date).
 
 **Your decision:** approve / approve with changes / leave as draft
 
@@ -474,9 +476,9 @@ Weak moves to watch: treating "native" as a plain fact; treating "natural" as po
 
 `trees-climate-solution` · physical · draft · leads on to: ai-climate, native-species, trees-or-gold, rewild-britain
 
-**Dr River sees** (148 words)
+**Dr River sees** (133 words)
 
-Hook: a company pays for trees to be planted so that it can keep flying its planes. The tension: a growing tree really does take in carbon, but a tree is a slow and fragile store, and a promise to plant can postpone the harder job of cutting emissions. Push on: where does the carbon in a tree come from, and how is that different from carbon in oil? How long does a young tree take to pay back, and what if it burns, dies or is felled? Who owns the land, what else could it have been used for, and who decides? Does the answer differ in a snowy place compared with a tropical one? What would you need to see to judge a scheme honestly? Does planting help or delay? Ask the student to choose a position and defend it. Share no view on climate policy.
+Hook: a company pays for trees to be planted and counts that against its own emissions. The tension: a growing tree really does take in carbon, but a tree is a slow and fragile store, and a promise to plant can postpone the harder job of cutting emissions. Push on: where does the carbon in a tree come from, and how is that different from carbon in oil? How long does a young tree take to pay back, and what if it burns, dies or is felled? Who owns the land, and what else could it have been used for? What would you need to see to judge a scheme honestly? Ask the student to take a position on whether planting helps or delays, and defend it. Share no view on climate policy.
 
 **Background** (286 words)
 
@@ -498,9 +500,9 @@ Weak moves to watch: treating all carbon as the same; treating "planting" as "gr
 
 `hazards-city-volcano` · human · draft · leads on to: volcano-eruption-styles, disaster-natural, cities-where, weather-worse-or-exposed
 
-**Dr River sees** (142 words)
+**Dr River sees** (124 words)
 
-Hook: millions of people live around Mount Vesuvius, and Iceland heats many homes with energy from under the ground. The tension: the benefits of living near a volcano arrive every day, while the danger comes rarely, and the people who live there did not all choose it freely. Push on: what does a volcano give people: soil, heat, minerals, jobs, a view? Why might people stay when they know the risk? Who is making this choice: a city, a family, a landowner? Who can afford to leave and who cannot? What is an acceptable risk, and who decides? Does the answer change between one person and a whole city, or between this decade and the next century? Ask what a warning system and an evacuation plan do to the argument. Ask the student to start from a risk they live with themselves.
+Hook: millions of people live in and around Naples, close to Mount Vesuvius, and Iceland heats many homes with energy from under the ground. The tension: the benefits of living near a volcano arrive every day, while the danger comes rarely, and the people who live there did not all choose it freely. Push on: what does a volcano give people: soil, heat, minerals, jobs? Why might people stay when they know the risk? Who is making this choice, a city, a family, a landowner, and who can afford to leave? What is an acceptable risk, and who decides? If it fits, ask how warning systems and evacuation plans change the argument. Ask the student to start from a risk they live with themselves.
 
 **Background** (268 words)
 
@@ -514,7 +516,7 @@ Weak moves to watch: treating "natural" as politically neutral; treating a city 
 
 **Sources:** Dr River opening question and wider course, Hazards: Why would anyone build a city next to a volcano?
 
-**Please check:** That millions of people live around Mount Vesuvius, and that Iceland heats many homes with geothermal energy.
+**Please check:** That millions of people live in and around Naples, close to Mount Vesuvius (the figure refers to greater Naples, not just the slopes), and that Iceland heats many homes with geothermal energy.
 
 **Your decision:** approve / approve with changes / leave as draft
 
@@ -522,9 +524,9 @@ Weak moves to watch: treating "natural" as politically neutral; treating a city 
 
 `rewild-britain` · human · draft · leads on to: outdoors-ownership, native-species, trees-climate-solution, trees-or-gold
 
-**Dr River sees** (148 words)
+**Dr River sees** (123 words)
 
-Hook: beavers have been brought back to some British rivers, and some upland farms and estates are being left to grow wild. The tension: rewilding sounds like giving land back to nature, but Britain's land has been shaped by people for thousands of years, and people live and work on it. Push on: rewild to what: which time in the past, and who chooses it? Who owns the land and who earns a living from it now? If farming shrinks here, does the food come from somewhere else instead? Is a returning animal a gain for everyone, or a risk to some, such as farmers? Does rewilding have to happen on a hillside, or could it be a school field or a verge? Who gets to decide what is wild? Ask the student to start from a landscape they know. Test every side equally and share no view.
+Hook: beavers have been brought back to some British rivers, and some upland farms and estates are being left to grow wild. The tension: rewilding sounds like giving land back to nature, but Britain's land has been shaped by people for thousands of years, and people live and work on it. Push on: rewild to what: which time in the past, and who chooses it? Who owns the land and who earns a living from it now? Is a returning animal a gain for everyone, or a risk to some, such as farmers? If farming shrinks here, does the food come from somewhere else instead? Ask the student to start from a landscape they know. Test every side equally and share no view.
 
 **Background** (258 words)
 
@@ -548,9 +550,9 @@ Weak moves to watch: treating nature as politically neutral; treating rural comm
 
 `fair-trade-bananas` · human · draft · leads on to: food-export-hunger, developing-who-decides, trees-or-gold
 
-**Dr River sees** (154 words)
+**Dr River sees** (121 words)
 
-Hook: two bunches of bananas on a supermarket shelf, one with a fair-trade label and a slightly higher price. The tension: the label promises fairness to the growers, but the shelf only shows what happens at the very end of a long chain. Push on: fair to whom, and compared with what? Where does the extra money go, and who decides how it is spent? Who sits along the way, such as growers, plantation owners, shippers, supermarkets and shoppers, and who has the most power to set the price? Which growers can afford to join the scheme and which are left out? Does a label change who holds power, or does it let shoppers feel better without changing much? What would a fairer system look like, and at what scale would it have to work: a shop, a country or a trade rule? Ask the student to say what "fair" means to them first.
+Hook: two bunches of bananas on a supermarket shelf, one with a fair-trade label and a slightly higher price. The tension: the label promises fairness to the growers, but the shelf only shows what happens at the very end of a long chain. Push on: fair to whom, and compared with what? Where does the extra money go, and who decides how it is spent? Who along the chain has the most power to set the price, and which growers are left out of the scheme? What would a fairer system look like, and at what scale would it have to work: a shop, a country or a trade rule? Ask the student to say what "fair" means to them first.
 
 **Background** (275 words)
 
@@ -572,15 +574,15 @@ Weak moves to watch: treating "growers" or "consumers" as one uniform group; ass
 
 `food-export-hunger` · human · draft · leads on to: fair-trade-bananas, developing-who-decides, inequality-postcode, disaster-natural
 
-**Dr River sees** (141 words)
+**Dr River sees** (111 words)
 
-Hook: ships leave a port loaded with grain, fruit or coffee while, in the same country, families go short of food. The tension: hunger can look like a shortage of food, but food can be present and still out of reach. Push on: is hunger a shortage of food or a shortage of money? Who grows the exported crop, who owns the land and who gets paid? Could the income from exports help people at home, and when would it not? What might stop food reaching people: price, distance, roads, storage, conflict or a poor harvest? How would you find out which one applies in a particular place? Change the scale: what is true for one household, a region and a whole country? Ask the student to choose an example they know, or to work it out for an imagined country.
+Hook: ships leave a port loaded with grain, fruit or coffee while, in the same country, families go short of food. The tension: hunger can look like a shortage of food, but food can be present and still out of reach. Push on: is hunger a shortage of food or a shortage of money? Who grows the exported crop, who owns the land and who gets paid? Could the income from exports help people at home, and when would it not? What is true for one household, a region and a whole country? Ask the student to choose an example they know, or to work it out for an imagined country.
 
-**Background** (270 words)
+**Background** (273 words)
 
 Underlying argument: whether people eat depends on whether they can get food, and having it nearby is not the same as being able to obtain it. A country can sell food abroad while some of its people cannot afford it, cannot reach it, or have lost their means of earning. National figures, such as total food produced or total exports, hide who actually has access. Export crops can bring in income, but who receives it, who owns the land and what happens to prices at home all matter.
 
-Positions to test: whether hunger is mostly about supply or about access, and what evidence would settle it for one place; who benefits from exports and who does not, including smallholders and workers on larger farms; how prices, debts and trade rules shape what is grown; whether stopping exports would help hungry people or harm those who earn from them; how conflict, weather, transport and storage can interrupt supply; how the answer changes between one household, a region and the nation.
+Positions to test: whether hunger is mostly about supply or about access, and what evidence would settle it for one place; who benefits from exports and who does not, including smallholders and workers on larger farms; how prices, debts and trade rules shape what is grown; whether stopping exports would help hungry people or harm those who earn from them; how price, roads, storage, conflict, weather, transport and storage can interrupt supply; how the answer changes between one household, a region and the nation.
 
 Link to other cards: fair trade and who holds power along a supply chain; what a national statistic hides.
 
@@ -598,15 +600,15 @@ Weak moves to watch: treating a country as one uniform thing; treating hunger as
 
 `geopolitics-arctic` · human · draft · leads on to: border-line-or-process, climate-emergency, mining-the-moon, outdoors-ownership
 
-**Dr River sees** (139 words)
+**Dr River sees** (102 words)
 
-Hook: as sea ice retreats in the far north, shipping routes and seabed resources become easier to reach. The tension: a few states have coastline on the Arctic Ocean, but people live there already and the ice affects the whole planet. Push on: who has a claim to an ocean: those with the nearest coast, those who live there, or everyone? Does governing a place mean owning it? Who is already there, and are they asked? Who gains from the ice retreating and who loses? Is the Arctic like Antarctica, which is governed by treaty among states, or is it different, and how? Is it a good idea for the states with the most power to write the rules? Does the answer change between one fishing community and the whole planet? Test every side equally and share no view.
+Hook: as sea ice retreats in the far north, shipping routes and seabed resources become easier to reach. The tension: a few states have coastline on the Arctic Ocean, but people live there already and the ice affects the whole planet. Push on: who has a claim to an ocean: those with the nearest coast, those who live there, or everyone? Does governing a place mean owning it? Who is already there, and how should they have a say? How is the Arctic like or unlike Antarctica, which is governed by treaty among states? Test every side equally and share no view.
 
-**Background** (314 words)
+**Background** (318 words)
 
 Underlying argument: the Arctic is an ocean surrounded by land belonging to a small number of states, with indigenous peoples and other communities living around it. As sea ice retreats, fishing, shipping routes and seabed minerals and energy become more accessible, so questions about who may use them and who decides become practical. Under the international law of the sea, coastal states have rights over resources in a zone off their coast and can make claims about their seabed, and beyond that the ocean is treated as shared. That raises the question of who sets the rules for the shared part and whether coastline is a fair basis for power.
 
-Positions to test: whether governing and owning are the same; whether living there for generations should give a say, and in what form; whether the Arctic should be treated like Antarctica or is different because people live there and it is ocean rather than land; whether states with the most power and the biggest ships should write the rules; who gains and loses as ice retreats, including those far away, and how the physical change is itself shaped by human action; how far environmental protection can be reconciled with economic use.
+Positions to test: whether governing and owning are the same; whether living there for generations should give a say, and in what form; whether the Arctic should be treated like Antarctica or is different because people live there and it is ocean rather than land; whether states with the most power and the biggest ships should write the rules; who is asked, and who gains and loses as ice retreats, including those far away, and how the physical change is itself shaped by human action; how far environmental protection can be reconciled with economic use.
 
 Link to other cards: a border as a line or a process; mining the Moon, with its question of who owns what is taken from a shared place; calling climate change an emergency.
 
@@ -624,9 +626,9 @@ Weak moves to watch: treating a state or an indigenous community as one uniform 
 
 `colonial-place-names` · human · draft · leads on to: map-hides, developing-who-decides, legal-right-location, border-line-or-process
 
-**Dr River sees** (159 words)
+**Dr River sees** (146 words)
 
-Hook: Bombay is now officially Mumbai, Rhodesia became Zimbabwe, and Uluru also carries a second name that was in use long before. The tension: a name looks like a plain label on a map, but it records who had the power to name a place, and the people who live there may still use the old name or the new one. Push on: who gave the place its first name, and who gave it the later one? Does changing a name change anything for the people who live there? What would be lost, such as a record of history that some want remembered? What would it cost, in signs, documents and habits? Who should decide: a government, a local community or someone else? Is there something between keeping and removing? Does the answer change between a street, a city and a country? Ask for a name from the student's own area. Test every side equally and share no view.
+Hook: Bombay is now officially Mumbai, Rhodesia became Zimbabwe, and Ayers Rock in Australia is also called Uluru, a name in use long before the English one. The tension: a name looks like a plain label on a map, but it records who had the power to name a place, and the people who live there may still use the old name or the new one. Push on: who gave the place its first name, and who gave it the later one? Does changing a name change anything for the people who live there? What would be lost, such as a record of history that some want remembered, and what would it cost in signs, documents and habits? Who should decide: a government, a local community or someone else? Ask for a name from the student's own area. Test every side equally and share no view.
 
 **Background** (321 words)
 
@@ -642,7 +644,7 @@ Weak moves to watch: treating "natural" or "traditional" names as neutral; treat
 
 **Sources:** Dr River wider course, Colonial legacies: Should maps be redrawn to remove colonial place names?; James C. Scott, Seeing Like a State (1998), approved reading list
 
-**Please check:** The three examples: Bombay is now officially Mumbai; Rhodesia became Zimbabwe; Uluru carries a second, older name. Also that James C. Scott (on the approved reading list) is described as writing about states simplifying and standardising places, with permanent surnames as one example. Please confirm you are happy to use him this way.
+**Please check:** The three examples: Bombay is now officially Mumbai; Rhodesia became Zimbabwe; Ayers Rock in Australia is also called Uluru, the older name (the English name dates from the 1870s, so the card says Uluru was in use long before it). The Bombay renaming (1995) was driven partly by regional politics, so the card does not present it as simply decolonial; please check you are happy with it as an example. Also that James C. Scott (on the approved reading list) is described as writing about states simplifying and standardising places, with permanent surnames as one example. Please confirm you are happy to use him this way.
 
 **Your decision:** approve / approve with changes / leave as draft
 
@@ -650,15 +652,15 @@ Weak moves to watch: treating "natural" or "traditional" names as neutral; treat
 
 `border-line-or-process` · human · draft · leads on to: map-hides, legal-right-location, geopolitics-arctic, migrant-when, river-natural-or-human
 
-**Dr River sees** (156 words)
+**Dr River sees** (118 words)
 
-Hook: a border can be a thin line on a map, a fence, a river, or passport control at an airport a long way from the edge of the country. The tension: a line looks fixed, but a border only does anything when people check, record, allow or refuse. Push on: where is the border for someone applying for a visa from another continent? What does the line actually do on an ordinary Tuesday, and to whom? Who notices it every day and who never does? Who drew it, and who keeps it in place? Can a border move without anyone shifting a fence? Does a line divide places that felt like one, such as a town on both sides? Would the answer change between a person, a family and a whole country? Ask the student to start from a border they know about. Test every side equally and share no view on any particular dispute.
+Hook: a border can be a thin line on a map, a fence, a river, or passport control at an airport a long way from the edge of the country. The tension: a line looks fixed, but a border only does anything when people check, record, allow or refuse. Push on: where is the border for someone applying for a visa from another continent? What does the line actually do on an ordinary Tuesday, and to whom? Who drew it, and who keeps it in place? Can a border move without anyone shifting a fence? Ask the student to start from a border they know about. Test every side equally and share no view on any particular dispute.
 
-**Background** (304 words)
+**Background** (323 words)
 
 Underlying argument: a border on a map is a line, but the thing that matters in people's lives is what is done there and elsewhere: checks, forms, permission, enforcement and the daily crossings or refusals. These activities happen at the edge of a country and also far from it, at airports, in offices, in workplaces and online. So a border can be treated as a process that is repeatedly made and remade, as well as a line. A related idea from the approved reading list is that it is a mistake to treat the state as a fixed container with a clear edge; the student is not expected to know it.
 
-Positions to test: where a border is for different people, such as a tourist with a certain passport, someone seeking work or someone seeking safety; who draws and enforces borders and who is affected without being consulted; whether a line can be fixed on a map but unclear on the ground, as in a river that moves; how borders were drawn historically, sometimes by outsiders; what a border does to a right or a service, such as healthcare or a court; how the answer changes between person, community and state.
+Positions to test: who notices a border every day and who never does; whether a line divides places that felt like one; where a border is for different people, such as a tourist with a certain passport, someone seeking work or someone seeking safety; who draws and enforces borders and who is affected without being consulted; whether a line can be fixed on a map but unclear on the ground, as in a river that moves; how borders were drawn historically, sometimes by outsiders; what a border does to a right or a service, such as healthcare or a court; how the answer changes between person, community and state.
 
 Link to other cards: maps hiding differences; a legal right that depends on where you live; whether a river is natural or human.
 
@@ -676,9 +678,9 @@ Weak moves to watch: treating a country as uniform; treating a boundary as natur
 
 `cities-where` · human · draft · leads on to: city-ever-finished, hazards-city-volcano, old-ice-landscape, regeneration-who-for
 
-**Dr River sees** (150 words)
+**Dr River sees** (124 words)
 
-Hook: pick a city on a river, one on a coast and one far from either. The tension: cities often began for a physical reason such as water, a crossing or a harbour, but they usually outlive that reason, and some were put where they are by a decision. Push on: what was in that spot before the city, and why might people have stopped there? What do people need to settle: water, food, shelter, safety, a way to trade? What if that reason disappears: why does the city stay? Is it the spot itself that matters, or where the spot sits in relation to other places? Some capital cities were deliberately placed by someone with power: who chooses, and for whose benefit? Does the answer change between a village, a city and a country? Ask the student to start from a city they know and reason from first principles.
+Hook: pick a city on a river, one on a coast and one far from either. The tension: cities often began for a physical reason such as water, a crossing or a harbour, but they usually outlive that reason, and some were put where they are by a decision. Push on: what was in that spot before the city, and why might people have stopped there? What if that reason disappears: why does the city stay? Is it the spot itself that matters, or where the spot sits in relation to other places? Some capital cities were deliberately placed by someone with power: who chooses, and for whose benefit? Ask the student to start from a city they know and reason from first principles.
 
 **Background** (276 words)
 
@@ -700,9 +702,9 @@ Weak moves to watch: listing site factors without explaining why they mattered; 
 
 `city-ever-finished` · human · draft · leads on to: cities-where, regeneration-who-for, inequality-postcode, local-area
 
-**Dr River sees** (146 words)
+**Dr River sees** (113 words)
 
-Hook: a street the student knows, and what has been built, knocked down, repaired or left empty on it. The tension: we talk about cities as if they were finished objects, but they are always being added to, worn out and rebuilt, by many people with different aims. Push on: what would a finished city look like, and who would say so? What has changed on your street in your lifetime? Can a city shrink and still be a city? Who decides what gets built, and what happens to the parts nobody invests in? Do planned cities stay as planned once people live in them? Does a plan carry someone's idea of a good life, and whose? Does the answer change between a street, a district and a whole city? Ask the student to start from a place they know, and ask what they would change.
+Hook: a street the student knows, and what has been built, knocked down, repaired or left empty on it. The tension: we talk about cities as if they were finished objects, but they are always being added to, worn out and rebuilt, by many people with different aims. Push on: what would a finished city look like, and who would say so? What has changed on your street in your lifetime? Who decides what gets built, and what happens to the parts nobody invests in? Does a plan carry someone's idea of a good life, and whose? Ask the student to start from a place they know, and ask what they would change.
 
 **Background** (284 words)
 
@@ -726,9 +728,9 @@ Weak moves to watch: treating a city or its residents as one uniform group; trea
 
 `inequality-postcode` · human · draft · leads on to: regeneration-who-for, town-vote, statistic-limits, same-virus-different-pandemics, local-area
 
-**Dr River sees** (157 words)
+**Dr River sees** (122 words)
 
-Hook: two streets a few miles apart in the same city. The tension: where someone lives can tell you a lot about how things may go for them, but that does not mean the place is the cause, and it says nothing about their character. Push on: what sorts of things might a postcode tell you about, such as health, schools, work, housing or air quality? Is it the people who live there or what the place offers that makes the difference, and how would you tell? Who can move, and who cannot? Does someone who does well from a poor area disprove the pattern? Can a postcode become a label that harms people, for example when someone is judged because of where they live? Does the answer change between a street, a district and a region? Ask for a place they know, and tell them they need not describe their own home. Test every side equally.
+Hook: two streets a few miles apart in the same city. The tension: where someone lives can tell you a lot about how things may go for them, but that does not mean the place is the cause, and it says nothing about their character. Push on: what sorts of things might a postcode tell you about, such as health, schools, work, housing or air quality? Is it the people who live there or what the place offers that makes the difference, and how would you tell? Who can move, and who cannot? Can a postcode become a label that harms people? Ask for a place they know, and tell them they need not describe their own home. Test every side equally.
 
 **Background** (313 words)
 
@@ -752,9 +754,9 @@ Weak moves to watch: treating an area or a community as uniform; reading an aver
 
 `migrant-when` · human · draft · leads on to: border-line-or-process, developing-who-decides, colonial-place-names, statistic-limits
 
-**Dr River sees** (154 words)
+**Dr River sees** (120 words)
 
-Hook: the words migrant, expatriate, refugee, immigrant and visitor all describe someone who has moved. The tension: "migrant" sounds like a plain description, but there are different ways to draw the line, and the word is used differently for different people. Push on: what would you count: where someone was born, their passport, how long they have lived somewhere, or how they feel? Does a person ever stop being a migrant, and who decides? What is the difference between calling someone a migrant and calling them an expat, and who gets which word? Does a child of a migrant count? What do official figures count, and why might they differ from everyday talk? Who benefits from the category? Does the answer change between a village, a city and a country? Let the student choose the example, and do not ask about their own family or background. Test every side equally and share no view.
+Hook: the words migrant, expatriate, refugee, immigrant and visitor all describe someone who has moved. The tension: "migrant" sounds like a plain description, but there are different ways to draw the line, and the word is used differently for different people. Push on: what would you count: where someone was born, their passport, how long they have lived somewhere, or how they feel? What is the difference between calling someone a migrant and an expat, and who gets which word? Does a person ever stop being a migrant, and who decides? Who benefits from the category? Let the student choose the example, and do not ask about their own family or background. Test every side equally and share no view.
 
 **Background** (292 words)
 
@@ -778,15 +780,15 @@ Weak moves to watch: treating migrants or a host community as one uniform group;
 
 `developing-who-decides` · human · draft · leads on to: map-hides, fair-trade-bananas, food-export-hunger, migrant-when, statistic-limits
 
-**Dr River sees** (150 words)
+**Dr River sees** (113 words)
 
-Hook: international organisations and governments publish lists that put countries into groups such as developing and developed, or lower and higher income. The tension: the word sounds like a neutral description, but it implies a direction of travel and a destination, and someone chose both. Push on: what would you measure to say a country is developed: income, health, education, safety, freedom? Would a very rich country with poor health count? Who draws up these lists, and who is asked? What do countries gain or lose from the label, such as aid, loans or trade terms? What does a single label hide about differences within a country? Does "developing" assume everyone is heading to the same place? Who wrote that destination? Does the answer change between a village, a region and a nation? Ask the student to start from a country or region they know, or from an imagined one.
+Hook: international organisations and governments publish lists that put countries into groups such as developing and developed, or lower and higher income. The tension: the word sounds like a neutral description, but it implies a direction of travel and a destination, and someone chose both. Push on: what would you measure to say a country is developed: income, health, education, safety, freedom? Who draws up these lists, and who is asked? What does a single label hide about differences within a country? Does "developing" assume everyone is heading to the same place, and who chose it? Ask the student to start from a country or region they know, or from an imagined one.
 
-**Background** (305 words)
+**Background** (315 words)
 
 Underlying argument: "developing" is a category that someone made. Organisations such as international banks and the United Nations publish classifications, usually based on measures such as income per person, sometimes combined with health and education. Different measures give different groupings, and any cut-off draws a line across a continuous range. The word also carries an idea, that countries are on one path and some are further along. That idea has a history in how rich countries described others, and it assumes that the destination is shared and desirable. The label affects real things, such as what loans or aid a country can get and how it is seen by others.
 
-Positions to test: whether income alone is a good measure and what else could be counted; whether the same label covers very different countries and very different people within a country; who benefits from classification, including the countries themselves and the organisations that sort them; whether a country can choose its own goals or is judged against someone else's; whether "developing" is useful as a shorthand even if it misleads; how the answer changes between a region, a nation and the world.
+Positions to test: whether income alone is a good measure and what else could be counted; whether the same label covers very different countries and very different people within a country; what the label changes for aid, loans and trade terms; who benefits from classification, including the countries themselves and the organisations that sort them; whether a country can choose its own goals or is judged against someone else's; whether "developing" is useful as a shorthand even if it misleads; how the answer changes between a region, a nation and the world.
 
 Care: the question touches on colonial history and current inequality. Share no view; test the reasoning equally. Do not ask a student to speak for their country or community.
 
@@ -804,9 +806,9 @@ Weak moves to watch: treating a country as uniform; treating a ranking as fact r
 
 `same-virus-different-pandemics` · human · draft · leads on to: inequality-postcode, disaster-natural, statistic-limits, weather-worse-or-exposed
 
-**Dr River sees** (158 words)
+**Dr River sees** (149 words)
 
-Care: a pandemic may have touched the student's family, so check they are comfortable with it, and offer another disease or an imagined one if not. Hook: a single virus spreads across the world, yet it did not play out the same way in every country, city or even every neighbourhood. The tension: a virus is biology, but a pandemic is what happens when that biology meets particular places and people. Push on: what stays the same everywhere, and what differs: homes, jobs, hospitals, age, travel, trust? Who could stay at home and who could not? Did it land alike on every street of one city? Are the figures from different places comparable, if some tested far more than others? Is the difference in places or in what people and governments chose, and can you separate them? Share no view on any government's decisions. Ask the student to choose a place they know, or compare two imagined places.
+Care: a pandemic may have touched the student's family, so check they are comfortable with it, and offer another disease or an imagined one if not. Hook: a single virus spreads across the world, yet it did not play out the same way in every country, city or even every neighbourhood. The tension: a virus is biology, but a pandemic is what happens when that biology meets particular places and people. Push on: what stays the same everywhere, and what differs: homes, jobs, hospitals, age, travel, trust? Did it land alike on every street of one city? Are the figures from different places comparable, if some tested far more than others? Is the difference in places or in what people and governments chose, and can you separate them? Share no view on any government's decisions. Ask the student to choose a place they know, or compare two imagined places.
 
 **Background** (299 words)
 
@@ -830,9 +832,9 @@ Weak moves to watch: treating a country or community as one uniform thing; treat
 
 `statistic-limits` · human · draft · leads on to: map-hides, inequality-postcode, developing-who-decides, past-temperature, same-virus-different-pandemics
 
-**Dr River sees** (171 words)
+**Dr River sees** (136 words)
 
-Hook: two towns have exactly the same average income, but in one almost everyone earns near the middle and in the other a few are very rich and many are poor. The tension: a statistic makes a place easy to compare, but it can only count what someone chose to measure, inside boundaries someone chose. Push on: what could two places with the same figure still differ in? Who decided what counts and where the boundary falls, and would the figure change if the boundary moved? What would you want to add that a number cannot give, such as how people feel about where they live? What does a statistic make easy to see, and what does it make easy to ignore? Is a number more trustworthy than a person's account, or less, or does it depend? When is a statistic about an area not true of a person who lives there? Ask the student to start from a place they know. Aim for a position, not a list of limits.
+Hook: two towns have exactly the same average income, but in one almost everyone earns near the middle and in the other a few are very rich and many are poor. The tension: a statistic makes a place easy to compare, but it can only count what someone chose to measure, inside boundaries someone chose. Push on: what could two places with the same figure still differ in? Who decided what counts and where the boundary falls, and would the figure change if the boundary moved? What does a statistic make easy to see, and what does it make easy to ignore? Is a number more trustworthy than a person's account, or less, or does it depend? Ask the student to start from a place they know. Aim for a position, not a list of limits.
 
 **Background** (287 words)
 
@@ -854,9 +856,9 @@ Weak moves to watch: treating a country or community as uniform; treating a numb
 
 `court-impressive` · human · draft · leads on to: building-argument, organisational-responsibility, legal-right-location, regeneration-who-for
 
-**Dr River sees** (159 words)
+**Dr River sees** (122 words)
 
-Hook: a court with a high bench, wood panelling and a coat of arms, set beside a plain room with a table and some chairs. The tension: a grand court may make a verdict feel serious and fair, or it may make an ordinary person feel small. Push on: who is the room designed for: the judge, the public, the accused, a witness? Does looking impressive help someone tell the truth, or frighten them? Who feels at home in it and who does not? What would be lost if a court looked like an ordinary office, and what would be gained? What about a hearing by video link, or a court far from where people live? Who decides how justice should look, and who pays for it? Does the answer change between a serious trial and a small dispute? Ask the student to think of a room where they have felt small or at ease. Test every side equally.
+Hook: a court with a high bench, wood panelling and a coat of arms, set beside a plain room with a table and some chairs. The tension: a grand court may make a verdict feel serious and fair, or it may make an ordinary person feel small. Push on: who is the room designed for: the judge, the public, the accused, a witness? Does looking impressive help someone tell the truth, or frighten them? What would be lost if a court looked like an ordinary office, and what would be gained? Who decides how justice should look, and who pays for it? Ask the student to think of a room where they have felt small or at ease. Test every side equally.
 
 **Background** (294 words)
 
@@ -878,13 +880,13 @@ Weak moves to watch: treating "tradition" or "formality" as neutral; treating pe
 
 `hopeful-and-angry` · human · draft · leads on to: acting-locally, local-area, climate-emergency, regeneration-who-for, place-changed-thinking
 
-**Dr River sees** (144 words)
+**Dr River sees** (110 words)
 
-Hook: someone who loves their town and is furious at how it has been treated. The tension: hope and anger are often treated as opposites, but they can both come from caring about the same place. Push on: choose somewhere, and say what you are hopeful about and what makes you angry. Is it the same thing, or two different things? Does anger help people act, or wear them out? Does hope make people settle for too little, or keep going? Could two people in the same place feel only one of the two, and why? Who gets to be angry in public without being dismissed? Can you be hopeful without being optimistic? Does the answer change between a street, a town and a country? Let the student pick any place, a real or imagined one, and share no view on any political cause.
+Hook: someone who loves their town and is furious at how it has been treated. The tension: hope and anger are often treated as opposites, but they can both come from caring about the same place. Push on: choose somewhere, and say what you are hopeful about and what makes you angry. Is it the same thing, or two different things? Does anger help people act, or wear them out? Does hope make people settle for too little, or keep going? Who gets to be angry in public without being dismissed? Let the student pick any place, a real or imagined one, and share no view on any political cause.
 
-**Background** (309 words)
+**Background** (326 words)
 
-Underlying argument (Anderson, Davoudi on micropolitics and the scale of hope, and the approved reading list): hope and anger are not opposites. Caring about a place can produce both, since someone who sees what a place could be is often angry at what stands in the way. A related idea from the reading list is that hope is not the same as optimism: it is a willingness to act without knowing how things will turn out. The student is not expected to know this. The question asks them to think about how emotion relates to action and to place, and about whose feelings are taken seriously.
+Underlying argument: hope and anger are not opposites. Caring about a place can produce both, since someone who sees what a place could be is often angry at what stands in the way. A related idea from the reading list is that hope is not the same as optimism: it is a willingness to act without knowing how things will turn out. The student is not expected to know this. Anderson and Davoudi in the notes ask whether small action counts; that is context for what hope is for, not a source for the claim that hope and anger go together. The question asks them to think about how emotion relates to action and to place, and about whose feelings are taken seriously.
 
 Positions to test: whether anger and hope can attach to the same thing or have to attach to different things; whether anger helps action or leads to burnout, and whether hope helps action or excuses doing too little; whether the answer depends on who you are and what you stand to lose; whose anger is treated as legitimate and whose is dismissed; whether feelings about a place count as evidence in an argument about it; how emotion changes between a street, a town and a country.
 
@@ -896,7 +898,7 @@ Weak moves to watch: treating emotions as simply good or bad; treating a communi
 
 **Sources:** Dr River extra question line (original, from the notes): Can you be hopeful about somewhere and angry about it at the same time?; Hope in the Dark, on the approved reading list; Solomon's Part II geography notes: micropolitics and the scale of hope
 
-**Please check:** That Rebecca Solnit's Hope in the Dark (approved reading list) is described as separating hope from optimism, and that Anderson and Davoudi are used as in your notes. Please check how you want these used.
+**Please check:** That Rebecca Solnit's Hope in the Dark (approved reading list) is described as separating hope from optimism, Anderson and Davoudi appear only as context from your notes (small action and the scale of hope), not as the source for the hope-and-anger idea. Please check how you want these used.
 
 **Your decision:** approve / approve with changes / leave as draft
 
@@ -904,9 +906,9 @@ Weak moves to watch: treating emotions as simply good or bad; treating a communi
 
 `footballer-war` · human · draft · leads on to: acting-locally, geopolitics-arctic, hopeful-and-angry, map-hides
 
-**Dr River sees** (169 words)
+**Dr River sees** (142 words)
 
-Care: this is about a war. Keep it factual, give no graphic detail, and offer another example if the student prefers. Hook: in 2005 Didier Drogba, the captain of Côte d'Ivoire's national football team, made an appeal for peace in a country that was divided by conflict. The tension: a famous person can reach millions, but wars are fought by people with their own reasons, and one message cannot obviously change them. Push on: what has to be true for a war to stop? Why might people listen to a footballer when they ignore politicians, and who would not listen? Would the same appeal have worked from a teacher or a local leader, and why? How would you tell whether it made a difference or just came at a moment when change was already coming? Does a team that people share help people see beyond a divide? Does the answer change between one person, a community and a country? Share no view on who was right in the conflict.
+Care: this is about a war. Keep it factual, give no graphic detail, and offer another example if the student prefers. Hook: in 2005 the footballer Didier Drogba, playing for Côte d'Ivoire's national team, made an appeal for peace in a country that was divided by conflict. The tension: a famous person can reach millions, but wars are fought by people with their own reasons, and one message cannot obviously change them. Push on: what has to be true for a war to stop? Why might people listen to a footballer when they ignore politicians, and who would not listen? How would you tell whether it made a difference or just came at a moment when change was already coming? Does the answer change between one person, a community and a country? Share no view on who was right in the conflict.
 
 **Background** (333 words)
 
@@ -922,7 +924,7 @@ Weak moves to watch: treating a country or its people as one uniform thing; assu
 
 **Sources:** Dr River extra question line (original, from the notes): Can one footballer change a war?
 
-**Please check:** That in 2005 Didier Drogba, as captain of Côte d'Ivoire's national team, made an appeal for peace in a country divided by conflict. Your briefing only says 'Drogba's 2005 appeal for peace in Côte d'Ivoire', so the words 'captain' and 'divided by conflict' are my additions. The card does not say what happened afterwards and tells Dr River not to take a side.
+**Please check:** That in 2005 Didier Drogba, playing for Côte d'Ivoire's national team, made an appeal for peace in a country divided by conflict. Your briefing only says 'Drogba's 2005 appeal for peace in Côte d'Ivoire', so 'playing for the national team' and 'divided by conflict' are my additions. The card does not say what happened afterwards and tells Dr River not to take a side.
 
 **Your decision:** approve / approve with changes / leave as draft
 
@@ -930,9 +932,9 @@ Weak moves to watch: treating a country or its people as one uniform thing; assu
 
 `town-vote` · human · draft · leads on to: local-area, inequality-postcode, regeneration-who-for, statistic-limits, hopeful-and-angry
 
-**Dr River sees** (158 words)
+**Dr River sees** (131 words)
 
-Hook: a town that has lost its main employer votes for something that outside observers say will make it worse off. The tension: the phrase "against its own interests" sounds like a plain description, but it assumes we know what the town's interests are and that money is what people should vote on. Push on: whose interests, and measured how: wages, jobs, services, pride, being listened to? Is a vote a decision about a person, or about a place and how it has been treated? Might the voters know something the outsiders do not? Might they be wrong, and how would anyone know? Who has decided what counts as an interest, and who was asked? Who in the town voted and who did not? Does the answer change between one household, a town and a region? Start from the student's own town or an imagined one. Share no view on any particular vote, and test every side equally.
+Hook: a town that has lost its main employer votes for something that outside observers say will make it worse off. The tension: the phrase "against its own interests" sounds like a plain description, but it assumes we know what the town's interests are and that money is what people should vote on. Push on: whose interests, and measured how: wages, jobs, services, pride, being listened to? Is a vote a decision about a person, or about a place and how it has been treated? Might the voters know something the outsiders do not, and how would anyone find out? Who in the town voted and who did not? Start from the student's own town or an imagined one. Share no view on any particular vote, and test every side equally.
 
 **Background** (327 words)
 
@@ -956,9 +958,9 @@ Weak moves to watch: treating a town or its voters as one uniform thing; reading
 
 `place-changed-thinking` · human · draft · leads on to: local-area, regeneration-who-for, hopeful-and-angry, statistic-limits
 
-**Dr River sees** (160 words)
+**Dr River sees** (124 words)
 
-Hook: any place, near or far, that the student has lived in, been to, read about or seen through someone else's eyes. The tension: one place can change how you see the world, but one place cannot prove a general claim, and you only saw part of it. Push on: what did you expect before, and what did you find? What exactly in that place changed your mind: something you saw, someone you met, or a fact you learned? Would someone who lives there have noticed the same? How could you check whether it holds for other places? Whose view of that place are you missing? Does it change how you think about somewhere you know better, such as your own area? Does the answer change between a street, a city and a country? Let the student choose the place, and never assume they have travelled. If they mention something painful, do not press; offer to move to another place.
+Hook: any place, near or far, that the student has lived in, been to, read about or seen through someone else's eyes. The tension: one place can change how you see the world, but one place cannot prove a general claim, and you only saw part of it. Push on: what did you expect before, and what did you find? What exactly in that place changed your mind: something you saw, someone you met, or a fact you learned? Would someone who lives there have noticed the same? How could you check whether it holds for other places? Let the student choose the place, and never assume they have travelled. If they mention something painful, do not press; offer to move to another place.
 
 **Background** (339 words)
 
