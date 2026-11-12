@@ -8,8 +8,8 @@
 import { ARGUMENT_MAP_DELIMITER } from "./argument-map.ts";
 import { createWordLimiter, FEEDBACK_WORD_LIMIT } from "./word-limit.ts";
 
-/** The map's JSON is capped at 4 challenges x 3 short responses; this is generous headroom. */
-export const MAX_MAP_CHARS = 4000;
+/** A map at the instructed maximum (4 challenges x 3 responses) is about 4,500 characters. */
+export const MAX_MAP_CHARS = 8000;
 
 /** Length of the longest end of `text` that could be the start of the delimiter. */
 function partialDelimiterLength(text: string): number {

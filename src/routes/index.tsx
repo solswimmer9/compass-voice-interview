@@ -353,7 +353,10 @@ function InterviewPage() {
                 !account.user ? (
                   <Link
                     to="/auth"
-                    search={ppe ? { tutor: "ppe" } : {}}
+                    search={{
+                      ...(ppe ? { tutor: "ppe" as const } : {}),
+                      ...(objectMode ? { mode: "object" as const } : {}),
+                    }}
                     className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
                   >
                     Sign in to start

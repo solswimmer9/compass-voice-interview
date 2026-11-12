@@ -43,11 +43,11 @@ function TutorsPage() {
         </h1>
         <ul className="mt-12 grid gap-4 sm:grid-cols-2">
           {TUTORS.map((t) => (
-            <li key={t.subject}>
+            <li key={t.subject} className="flex flex-col">
               <Link
                 to="/"
                 search={t.search}
-                className="group flex h-full flex-col rounded-md border bg-card p-8 transition hover:border-accent"
+                className="group flex flex-1 flex-col rounded-md border bg-card p-8 transition hover:border-accent"
               >
                 <span className="text-4xl font-medium tracking-tight sm:text-5xl">{t.subject}</span>
                 <span className="mt-2 text-foreground/80">with {t.tutor}</span>
@@ -59,7 +59,7 @@ function TutorsPage() {
                 <Link
                   to="/"
                   search={{ ...t.search, mode: "object" as const }}
-                  className="mt-3 inline-block px-1 text-sm text-muted-foreground underline transition hover:text-foreground"
+                  className="mt-3 self-start px-1 text-sm text-muted-foreground underline transition hover:text-foreground"
                 >
                   Object interview
                 </Link>

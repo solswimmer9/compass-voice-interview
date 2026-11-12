@@ -7,8 +7,10 @@ import "@lovable.dev/cloud-auth-js/styles.css";
 
 export const Route = createFileRoute("/auth")({
   // Which tutor the student was on, so signing in returns them to the same interview.
-  validateSearch: (search: Record<string, unknown>): { tutor?: "ppe" } =>
-    search["tutor"] === "ppe" ? { tutor: "ppe" } : {},
+  validateSearch: (search: Record<string, unknown>): { tutor?: "ppe"; mode?: "object" } => ({
+    ...(search["tutor"] === "ppe" ? { tutor: "ppe" as const } : {}),
+    ...(search["mode"] === "object" ? { mode: "object" as const } : {}),
+  }),
   head: () => ({
     meta: [
       { title: "Sign in | Oxbridge Interview Practice" },
@@ -54,8 +56,12 @@ function GoogleIcon() {
 function AuthPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const { tutor } = Route.useSearch();
-  const backToInterview = () => navigate({ to: "/", search: tutor ? { tutor } : {} });
+  const { tutor, mode: interviewMode } = Route.useSearch();
+  const interviewSearch = {
+    ...(tutor ? { tutor } : {}),
+    ...(interviewMode ? { mode: interviewMode } : {}),
+  };
+  const backToInterview = () => navigate({ to: "/", search: interviewSearch });
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -121,7 +127,7 @@ function AuthPage() {
           <p className="text-sm">{user.email}</p>
           <Link
             to="/"
-            search={tutor ? { tutor } : {}}
+            search={interviewSearch}
             className="inline-flex rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
           >
             Continue to practice
