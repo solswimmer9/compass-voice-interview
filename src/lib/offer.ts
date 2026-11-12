@@ -51,4 +51,4 @@ export function offerForProductId(productId: unknown): Offer | undefined {
 }
 
 /** Temporary switch: when true, no new purchases can start (buttons disabled, server rejects checkout). */
-export const PURCHASES_PAUSED = true;
+export const PURCHASES_PAUSED = false;

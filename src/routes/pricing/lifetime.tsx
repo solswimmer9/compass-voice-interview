@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { BuyPackButton, StartFreeLink } from "@/components/pricing/BuyPackButton";
 import { Check, PRICING_FACTS, PricingShell, pricingHead } from "@/components/pricing/PricingShell";
 import { useAccountSnapshot } from "@/hooks/useAccountSnapshot";
-import { LIFETIME_ACCESS } from "@/lib/offer";
+import { Link } from "@tanstack/react-router";
+import { LIFETIME_ACCESS, SCHOOL_BUNDLE } from "@/lib/offer";
 
 export const Route = createFileRoute("/pricing/lifetime")({
   head: () => pricingHead("Lifetime access"),
@@ -100,6 +101,26 @@ function LifetimePricing() {
             )}
           </div>
         </article>
+      </section>
+
+      <section className="mx-auto mt-8 flex max-w-4xl flex-col items-start justify-between gap-4 rounded-xl border p-6 sm:flex-row sm:items-center">
+        <div>
+          <h2 className="text-sm text-muted-foreground">For schools</h2>
+          <p className="mt-1 font-serif text-2xl font-semibold">
+            {SCHOOL_BUNDLE.displayPrice}{" "}
+            <span className="text-base font-normal text-muted-foreground">per admissions cycle</span>
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {SCHOOL_BUNDLE.interviews} shared interviews for up to {SCHOOL_BUNDLE.maxStudents}{" "}
+            students, with one school code.
+          </p>
+        </div>
+        <Link
+          to="/schools"
+          className="rounded-full border px-6 py-3 text-sm font-medium hover:bg-muted"
+        >
+          See school bundle →
+        </Link>
       </section>
 
       <p className="mt-10 text-center text-sm text-muted-foreground">
