@@ -177,6 +177,9 @@ function InterviewPage() {
     <div className="relative min-h-[100svh] overflow-hidden">
       <DotPattern className="h-[100svh] [mask-image:radial-gradient(520px_circle_at_center,white,transparent)]" />
       <nav className="relative z-20 mx-auto flex max-w-2xl items-center justify-end gap-5 px-6 pt-6 text-sm">
+        <Link to="/tutors" className="text-muted-foreground transition hover:text-foreground">
+          Subjects
+        </Link>
         <Link to="/readings" className="text-muted-foreground transition hover:text-foreground">
           Readings
         </Link>
@@ -251,21 +254,10 @@ function InterviewPage() {
 
         {idle && (
           <p className="mt-6 text-center text-sm">
-            <span className="text-muted-foreground">Tutor: </span>
-            <Link
-              to="/"
-              search={{}}
-              className={ppe ? "text-muted-foreground underline" : "font-medium"}
-            >
-              Geography · Dr River
-            </Link>
-            <span className="text-muted-foreground"> | </span>
-            <Link
-              to="/"
-              search={{ tutor: "ppe" }}
-              className={ppe ? "font-medium" : "text-muted-foreground underline"}
-            >
-              PPE · Prof Matt
+            <span className="font-medium">{ppe ? "PPE · Prof Matt" : "Geography · Dr River"}</span>
+            <span className="text-muted-foreground"> · </span>
+            <Link to="/tutors" className="text-muted-foreground underline">
+              Change subject
             </Link>
           </p>
         )}
