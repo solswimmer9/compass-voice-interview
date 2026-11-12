@@ -109,7 +109,7 @@ function Home() {
                 <Link
                   to="/interview"
                   search={s.search}
-                  className="group flex h-full items-center gap-6 rounded-md border bg-card p-6 transition hover:border-accent"
+                  className="group flex h-full items-center gap-6 rounded-md border bg-card p-6 pl-8 transition hover:border-accent"
                 >
                   <TutorOrb tone={s.tone} state="idle" size={64} />
                   <span className="flex-1">
@@ -117,7 +117,7 @@ function Home() {
                     <span className="block text-sm text-foreground/80">with {s.tutor}</span>
                     <span className="mt-2 block text-sm text-muted-foreground">{s.line}</span>
                   </span>
-                  <span className="text-xl text-muted-foreground transition group-hover:translate-x-1 group-hover:text-foreground">
+                  <span className="hidden text-xl text-muted-foreground transition sm:block group-hover:translate-x-1 group-hover:text-foreground">
                     →
                   </span>
                 </Link>

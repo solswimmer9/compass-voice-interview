@@ -9,7 +9,11 @@ export type Line = {
   fragments: Fragment[];
 };
 
-export function appendTranscriptFragment(lines: Line[], role: Line["role"], fragment: Fragment): Line[] {
+export function appendTranscriptFragment(
+  lines: Line[],
+  role: Line["role"],
+  fragment: Fragment,
+): Line[] {
   const next = [...lines];
   let index = -1;
   for (let candidate = next.length - 1; candidate >= 0; candidate--) {
@@ -49,4 +53,3 @@ export function appendTranscriptFragment(lines: Line[], role: Line["role"], frag
   };
   return next;
 }
-

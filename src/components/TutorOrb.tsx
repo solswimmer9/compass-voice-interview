@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 export type OrbState = "idle" | "connecting" | "listening" | "speaking";
 
 // One colour per tutor so each voice has its own face.
@@ -27,15 +29,18 @@ export function TutorOrb({
   return (
     <div
       className={`orb orb-${state} relative grid place-items-center`}
-      style={{ width: size, height: size }}
+      style={{ width: size, height: size, "--glow": t.glow } as CSSProperties}
       aria-hidden="true"
     >
-      <span className="orb-ring absolute inset-[-14%] rounded-full border" style={{ borderColor: t.ring }} />
-      <span className="orb-ring orb-ring-2 absolute inset-[-30%] rounded-full border" style={{ borderColor: t.ring }} />
       <span
-        className="orb-core absolute inset-0 rounded-full"
-        style={{ background: t.core, boxShadow: `0 0 90px ${t.glow}` }}
+        className="orb-ring absolute inset-[-14%] rounded-full border"
+        style={{ borderColor: t.ring }}
       />
+      <span
+        className="orb-ring orb-ring-2 absolute inset-[-26%] rounded-full border"
+        style={{ borderColor: t.ring }}
+      />
+      <span className="orb-core absolute inset-0 rounded-full" style={{ background: t.core }} />
     </div>
   );
 }

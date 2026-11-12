@@ -147,20 +147,23 @@ function InterviewRoom() {
           : "listening"
         : "idle";
 
-  const allowance = !account.user ? null : preview ? (
-    "Tester mode · unlimited"
-  ) : account.data ? (
-    account.data.lifetime ? (
-      "Lifetime access"
-    ) : (
-      `${account.data.totalRemaining} ${account.data.totalRemaining === 1 ? "interview" : "interviews"} left`
-    )
-  ) : null;
+  const allowance = !account.user
+    ? null
+    : preview
+      ? "Tester mode · unlimited"
+      : account.data
+        ? account.data.lifetime
+          ? "Lifetime access"
+          : `${account.data.totalRemaining} ${account.data.totalRemaining === 1 ? "interview" : "interviews"} left`
+        : null;
 
   const transcriptList = (
     <ol className="space-y-5">
       {lines.map((line, i) => (
-        <li key={i} className={line.role === "assistant" ? "border-l-2 border-accent pl-4" : "pl-4"}>
+        <li
+          key={i}
+          className={line.role === "assistant" ? "border-l-2 border-accent pl-4" : "pl-4"}
+        >
           <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
             {line.role === "assistant" ? tutor.name : "You"}
           </p>
@@ -185,9 +188,11 @@ function InterviewRoom() {
         <audio ref={call.audioRef} controls className="hidden" playsInline />
 
         {!finished && (
-          <section className="flex min-h-[78svh] flex-col items-center justify-center py-16 text-center">
-            <TutorOrb tone={tutor.tone} state={orbState} size={200} />
-            <p className="mt-20 text-xs font-medium uppercase tracking-[0.25em] text-muted-foreground">
+          <section className="flex min-h-[70svh] flex-col items-center justify-center pt-24 pb-8 text-center">
+            <div className="scale-[0.8] sm:scale-100">
+              <TutorOrb tone={tutor.tone} state={orbState} size={200} />
+            </div>
+            <p className="mt-16 text-xs font-medium uppercase sm:mt-24 tracking-[0.25em] text-muted-foreground">
               {tutor.subject}
             </p>
             <h1 className="mt-2 text-3xl font-medium tracking-tight sm:text-4xl">{tutor.name}</h1>
@@ -281,7 +286,10 @@ function InterviewRoom() {
             )}
 
             {call.playbackBlocked && (
-              <button onClick={call.resumePlayback} className="mt-4 rounded-full border px-4 py-2 text-sm">
+              <button
+                onClick={call.resumePlayback}
+                className="mt-4 rounded-full border px-4 py-2 text-sm"
+              >
                 Play {tutor.name}’s voice
               </button>
             )}
@@ -302,12 +310,15 @@ function InterviewRoom() {
 
         {finished && (
           <div className="pt-12">
-            <p className="text-xs font-medium uppercase tracking-[0.25em] text-muted-foreground">
-              {tutor.subject} · {tutor.name}
-            </p>
-            <h1 className="mt-2 text-3xl font-medium tracking-tight sm:text-4xl">
-              Interview finished
-            </h1>
+            <div className="flex items-center gap-5">
+              <TutorOrb tone={tutor.tone} state="idle" size={44} />
+              <div>
+                <p className="text-xs font-medium uppercase tracking-[0.25em] text-muted-foreground">
+                  {tutor.subject} · {tutor.name}
+                </p>
+                <h1 className="mt-1 text-2xl font-medium tracking-tight">Interview finished</h1>
+              </div>
+            </div>
             {call.error && (
               <p role="alert" className="mt-3 text-sm text-destructive">
                 {call.error}
@@ -324,7 +335,7 @@ function InterviewRoom() {
               />
             </div>
 
-            <details className="mt-6 rounded-md border bg-card p-6">
+            <details className="mt-6 rounded-md border border-dashed p-6">
               <summary className="cursor-pointer font-medium">Read back the transcript</summary>
               <p className="mt-2 text-sm text-muted-foreground">
                 Where did {tutor.name} push hardest?
@@ -333,7 +344,10 @@ function InterviewRoom() {
             </details>
 
             <div className="mt-10 flex flex-wrap items-center gap-4">
-              {!preview && account.data && !account.data.lifetime && account.data.totalRemaining === 0 ? (
+              {!preview &&
+              account.data &&
+              !account.data.lifetime &&
+              account.data.totalRemaining === 0 ? (
                 <Link
                   to="/pricing"
                   className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
@@ -343,7 +357,8 @@ function InterviewRoom() {
               ) : (
                 <button
                   onClick={start}
-                  className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition hover:opacity-90"
+                  disabled={!preview && account.loading}
+                  className="rounded-full border px-6 py-3 font-medium transition hover:bg-secondary disabled:opacity-40"
                 >
                   Start a new interview
                 </button>

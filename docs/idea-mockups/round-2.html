@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Idea mockups, round 2</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,700;1,400&display=swap" />
+<style>
+  :root {
+    --bg: oklch(0.145 0.004 270); --fg: oklch(0.985 0 0); --card: oklch(0.185 0.004 270);
+    --muted: oklch(0.27 0.004 270); --mfg: oklch(0.72 0.005 270); --border: oklch(0.29 0.004 270);
+    --matt: oklch(0.7 0.15 25); --matt-core: radial-gradient(circle at 38% 32%, oklch(0.8 0.12 25), oklch(0.52 0.17 25) 58%, oklch(0.26 0.08 20));
+    --matt-glow: oklch(0.6 0.18 25 / 0.42); --matt-ring: oklch(0.7 0.15 25 / 0.5);
+    --held: oklch(0.75 0.13 150); --slip: oklch(0.82 0.12 85);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--fg); font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .s { position: relative; width: 1200px; height: 760px; overflow: hidden; border-bottom: 1px solid var(--border); padding: 56px 100px; }
+  .dots { position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(oklch(0.72 0.005 270 / .5) 1px, transparent 1px); background-size: 16px 16px; mask-image: radial-gradient(520px circle at 50% 45%, white, transparent); -webkit-mask-image: radial-gradient(520px circle at 50% 45%, white, transparent); }
+  .z { position: relative; z-index: 1; height: 100%; }
+  .tag { position: absolute; top: 18px; left: 22px; z-index: 3; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; background: var(--fg); color: var(--bg); padding: 4px 8px; border-radius: 4px; font-weight: 700; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; }
+  .btn { display: inline-block; background: var(--fg); color: var(--bg); border-radius: 999px; padding: 11px 22px; font-weight: 500; font-size: 14px; white-space: nowrap; }
+  .btn.ghost { background: transparent; color: var(--fg); border: 1px solid var(--border); }
+  .btn.sm { padding: 7px 16px; font-size: 13px; }
+  .eyebrow { font-size: 12px; letter-spacing: .25em; text-transform: uppercase; color: var(--mfg); }
+  h2 { font-weight: 500; letter-spacing: -0.03em; }
+  .muted { color: var(--mfg); }
+
+  /* orb, matching TutorOrb */
+  .orb { position: relative; border-radius: 50%; }
+  .orb .core { position: absolute; inset: 0; border-radius: 50%; background: var(--matt-core); box-shadow: 0 0 90px var(--matt-glow); }
+  .orb .ring { position: absolute; inset: -14%; border-radius: 50%; border: 1px solid var(--matt-ring); }
+  .orb .ring.r2 { inset: -30%; opacity: .55; }
+
+  /* A: live room */
+  .room { display: flex; flex-direction: column; align-items: center; height: 100%; }
+  .room .top { width: 100%; display: flex; justify-content: space-between; font-size: 13px; }
+  .caption { margin-top: 92px; max-width: 760px; text-align: center; font-size: 30px; line-height: 1.35; letter-spacing: -0.02em; font-weight: 400; }
+  .caption .ahead { color: oklch(0.985 0 0 / .32); }
+  .caption .now { color: oklch(0.985 0 0 / .65); }
+  .controls { margin-top: auto; display: flex; align-items: center; gap: 14px; font-size: 13px; }
+  .controls .timer { font-variant-numeric: tabular-nums; color: var(--mfg); margin-right: 8px; }
+  .pill { border: 1px solid var(--border); border-radius: 999px; padding: 7px 16px; }
+  .pill.end { border-color: oklch(0.65 0.18 25 / .6); color: oklch(0.8 0.1 25); }
+
+  /* feedback cards */
+  .fb { padding: 18px 20px; }
+  .fb h3 { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; font-weight: 700; color: var(--mfg); display: flex; align-items: center; gap: 8px; }
+  .fb h3 i { width: 7px; height: 7px; border-radius: 50%; background: var(--fg); display: inline-block; }
+  .fb p { font-size: 14px; line-height: 1.5; }
+  .fb .item { margin-top: 12px; }
+  .fb .item + .item { padding-top: 12px; border-top: 1px solid var(--border); }
+  .fb q { display: block; quotes: "\201C" "\201D"; margin-top: 6px; font-size: 13px; font-style: italic; color: var(--mfg); padding-left: 10px; border-left: 2px solid var(--border); }
+  .fb.held q { border-left-color: oklch(0.75 0.13 150 / .6); }
+  .fb.slip q { border-left-color: oklch(0.82 0.12 85 / .6); }
+  .fb.held h3 i { background: var(--held); } .fb.slip h3 i { background: var(--slip); }
+  .fb ol { margin-top: 10px; padding-left: 18px; font-size: 14px; line-height: 1.5; }
+  .fb ol li + li { margin-top: 6px; }
+  .ts { font-size: 11px; font-variant-numeric: tabular-nums; color: var(--mfg); border: 1px solid var(--border); border-radius: 999px; padding: 1px 7px; margin-left: 6px; font-style: normal; white-space: nowrap; }
+
+  /* B */
+  .gridB { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 26px; }
+  #b .fb { padding: 20px 22px; }
+  .next { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 24px; border-color: oklch(0.7 0.15 25 / .45); }
+
+  /* C */
+  .tl { position: relative; height: 150px; margin-top: 18px; border-bottom: 1px solid var(--border); }
+  .tl svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .tl .pin { position: absolute; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 12px; white-space: nowrap; }
+  .tl .pin b { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; color: var(--bg); background: var(--fg); }
+  .tl .pin.sel b { box-shadow: 0 0 0 5px oklch(0.985 0 0 / .18); }
+  .playhead { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--fg); }
+  .axis { display: flex; justify-content: space-between; font-size: 12px; margin-top: 6px; }
+  .gridC { display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: 14px; margin-top: 18px; }
+  .num { display: inline-grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; background: var(--fg); color: var(--bg); font-size: 10px; font-weight: 700; font-style: normal; margin-right: 6px; vertical-align: 1px; }
+  .num.g { background: var(--held); } .num.y { background: var(--slip); }
+
+  /* D: letter */
+  .letter { width: 720px; margin: 0 auto; background: oklch(0.95 0.02 85); color: oklch(0.24 0.02 60); padding: 38px 52px 40px; border-radius: 3px; box-shadow: 0 30px 80px #0008; position: relative; font-size: 14.5px; line-height: 1.62; transform: rotate(-0.8deg); }
+  .letter p + p { margin-top: 10px; }
+  .letter mark { background: none; color: inherit; font-style: italic; }
+  .letter .q { font-style: italic; }
+  .letter .seal { position: absolute; right: 46px; bottom: 34px; width: 74px; height: 74px; }
+  .letter .seal .core { box-shadow: 0 0 28px var(--matt-glow), 0 6px 14px #0005; }
+  .letter .seal .ring { border-color: oklch(0.52 0.17 25 / .55); inset: -10%; }
+  .letter .seal .ring.r2 { inset: -22%; border-style: dashed; }
+  .letter .seal span { position: absolute; inset: 0; display: grid; place-items: center; color: oklch(0.95 0.03 30); font-weight: 700; font-size: 18px; letter-spacing: .04em; }
+  .letter .ps { font-size: 13px; border-top: 1px solid oklch(0.24 0.02 60 / .18); padding-top: 12px; margin-top: 16px; }
+</style>
+</head>
+<body>
+
+<!-- A -->
+<section class="s" id="a"><div class="dots"></div><span class="tag">A · Live room, captions</span>
+  <div class="z room">
+    <div class="top"><span class="muted">PPE · Prof Matt</span><span class="muted">Is it rational to vote?</span></div>
+    <div class="orb" style="width:230px; height:230px; margin-top:96px"><span class="ring"></span><span class="ring r2"></span><span class="core"></span></div>
+    <p class="caption">So if one vote almost never decides an election, <span class="now">why should anyone</span> <span class="ahead">bother turning up?</span></p>
+    <div class="controls">
+      <span class="timer">11:24 / 20:00</span>
+      <span class="pill">Mute</span>
+      <span class="pill end">End</span>
+    </div>
+  </div>
+</section>
+
+<!-- B -->
+<section class="s" id="b" style="padding:52px 90px"><div class="dots"></div><span class="tag">B · Feedback as a report page</span>
+  <div class="z">
+    <p class="eyebrow">PPE · Prof Matt · Is it rational to vote?</p>
+    <h2 style="font-size:32px; margin-top:10px; line-height:1.2">Sharp on expected value, but you never priced the cost of voting.</h2>
+    <div class="gridB">
+      <div class="card fb">
+        <h3><i></i>Overall impression</h3>
+        <p style="margin-top:12px">A confident, well-structured start. You defined your terms early and kept coming back to them. Under pressure you tended to restate rather than refine, which cost you in the last five minutes.</p>
+      </div>
+      <div class="card fb held" style="grid-row: span 2">
+        <h3><i></i>Strengths in reasoning</h3>
+        <div class="item"><p>You split rational into rational for the voter and rational for society.</p><q>Rational for me might be different from rational for all of us together.</q></div>
+        <div class="item"><p>You treated a tiny chance of a huge payoff as a real argument.</p><q>Even a one in a million shot matters if the stakes are a whole government.</q></div>
+        <div class="item"><p>You asked what “rational” meant before answering.</p><q>Do you mean rational as in worth it, or as in consistent?</q></div>
+      </div>
+      <div class="card fb">
+        <h3><i></i>Targeted improvements</h3>
+        <ol>
+          <li>Put a rough number on each side before you compare them.</li>
+          <li>When pushed, change the claim, do not just repeat it louder.</li>
+        </ol>
+      </div>
+      <div class="card fb slip" style="grid-column: 1 / -1; display:grid; grid-template-columns: 1fr 1fr; column-gap: 34px">
+        <h3 style="grid-column: 1 / -1"><i></i>Where the reasoning slipped</h3>
+        <div class="item"><p>The cost of voting stayed at zero in your model.</p><q>It only takes ten minutes, so the cost is basically nothing.</q></div>
+        <div class="item" style="border-top:0; padding-top:0"><p>You conceded the duty argument without testing it.</p><q>Fine, maybe it is just a habit people have.</q></div>
+      </div>
+      <div class="card fb next">
+        <div>
+          <h3><i style="background:var(--matt)"></i>Try this next</h3>
+          <p style="margin-top:8px; font-size:16px">“Should voting be compulsory?” Same ground, but now you have to defend the cost side.</p>
+        </div>
+        <span class="btn">Practise this question</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- C -->
+<section class="s" id="c" style="padding:52px 90px"><div class="dots"></div><span class="tag">C · Pressure replay + feedback</span>
+  <div class="z">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end">
+      <div>
+        <p class="eyebrow">Your interview, minute by minute · click a pin to jump there</p>
+        <h2 style="font-size:32px; margin-top:10px">Where Prof Matt pushed hardest</h2>
+      </div>
+      <span class="btn ghost sm">▶ Play from 12:40</span>
+    </div>
+    <div class="tl">
+      <svg viewBox="0 0 1000 150" preserveAspectRatio="none">
+        <defs><linearGradient id="gr" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="oklch(0.6 0.18 25)" stop-opacity=".55"/><stop offset="1" stop-color="oklch(0.6 0.18 25)" stop-opacity="0"/></linearGradient></defs>
+        <path d="M0 140 C80 135 140 120 200 100 S280 50 330 55 S420 120 480 110 S580 25 630 22 S720 100 780 92 S880 70 920 80 S980 130 1000 138 L1000 150 L0 150Z" fill="url(#gr)"/>
+        <path d="M0 140 C80 135 140 120 200 100 S280 50 330 55 S420 120 480 110 S580 25 630 22 S720 100 780 92 S880 70 920 80 S980 130 1000 138" fill="none" stroke="oklch(0.7 0.15 25)" stroke-width="2" vector-effect="non-scaling-stroke"/>
+      </svg>
+      <div class="playhead" style="left:63%"></div>
+      <div class="pin" style="left:17%; top:44px"><b style="background:var(--held)">1</b>Split “rational”</div>
+      <div class="pin" style="left:33%; top:2px"><b style="background:var(--slip)">2</b>Cost set to zero</div>
+      <div class="pin sel" style="left:63%; top:-26px"><b>3</b><span style="background:var(--bg); padding:0 4px">12:40 · Hardest push</span></div>
+      <div class="pin" style="left:90%; top:30px"><b style="background:var(--slip)">4</b>Conceded duty</div>
+    </div>
+    <div class="axis muted"><span>0:00</span><span>5:00</span><span>10:00</span><span>15:00</span><span>20:00</span></div>
+    <div class="gridC">
+      <div class="card fb" style="border-color:oklch(0.985 0 0 / .5)">
+        <h3><span class="num">3</span>At 12:40 · jumped from pin</h3>
+        <p style="margin-top:10px; font-style:italic; color:var(--mfg)">Prof Matt: “So your argument assumes people know what they are voting for. Do they?”</p>
+        <p style="margin-top:8px; font-style:italic">You: “Not always, but the cost of getting it wrong is shared by everyone.”</p>
+        <p style="margin-top:10px; font-size:13px" class="muted">Good instinct, but say why shared cost makes your vote matter more, not less.</p>
+      </div>
+      <div class="card fb held">
+        <h3><i></i>Strengths in reasoning</h3>
+        <div class="item"><p><i class="num g">1</i>You split rational for you from rational for society.</p><q>Rational for me might be different from rational for all of us.</q></div>
+        <div class="item"><p>Tiny chance times huge stakes, made clearly.</p><q>A one in a million shot still matters.</q></div>
+      </div>
+      <div class="card fb slip">
+        <h3><i></i>Where the reasoning slipped</h3>
+        <div class="item"><p><i class="num y">2</i>The cost of voting stayed at zero.</p><q>It only takes ten minutes, so it is nothing.</q></div>
+        <div class="item"><p><i class="num y">4</i>Duty conceded without a test.</p><q>Fine, maybe it is just a habit.</q></div>
+      </div>
+    </div>
+    <div class="card fb" style="margin-top:14px; display:grid; grid-template-columns: 1fr 1fr auto; gap: 28px; align-items:center">
+      <div><h3><i></i>Overall impression</h3><p style="margin-top:6px; font-size:13px">Clear definitions early; under pressure you restated rather than refined.</p></div>
+      <div><h3><i></i>Targeted improvements</h3><p style="margin-top:6px; font-size:13px">Price both sides before comparing. When pushed, change the claim.</p></div>
+      <div style="text-align:right"><h3 style="justify-content:flex-end"><i style="background:var(--matt)"></i>Try this next</h3><span class="btn sm" style="margin-top:8px">Practise this question</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- D -->
+<section class="s" id="d" style="padding:40px 100px"><div class="dots"></div><span class="tag">D · Letter from your tutor</span>
+  <div class="z" style="display:flex; align-items:center; justify-content:center">
+    <div class="letter">
+      <p style="font-size:11px; letter-spacing:.18em; text-transform:uppercase; opacity:.6">From the desk of Prof Matt · 12 November · Is it rational to vote?</p>
+      <p style="margin-top:18px">Dear Alex,</p>
+      <p>Thank you for coming in. My overall impression is of a candidate who thinks clearly and likes a definition, which is a good start in PPE.</p>
+      <p>You were at your best when you split the question in two: <span class="q">“rational for me might be different from rational for all of us.”</span> That is exactly the move we look for. You also took the tiny chance of a decisive vote seriously rather than waving it away.</p>
+      <p>Where you slipped was the other side of the sum. <span class="q">“It only takes ten minutes, so the cost is basically nothing”</span> let the hardest part of the problem go. Later you gave up the duty argument with <span class="q">“maybe it is just a habit”</span> when it deserved a defence.</p>
+      <p>Two things to work on. Put a rough number on each side before comparing them. And when I push, change your claim rather than repeating it.</p>
+      <p>For next time, try this: <span class="q">should voting be compulsory?</span> It will make you defend the cost side properly.</p>
+      <p style="margin-top:16px">With best wishes,<br/><span style="font-size:22px; font-style:italic">Prof Matt</span></p>
+      <p class="ps" style="margin-right:110px"><b>P.S.</b> I have saved the question for you. <u>Practise it now</u> when you are ready.</p>
+      <div class="seal orb"><span class="ring r2"></span><span class="ring"></span><span class="core"></span><span>PM</span></div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
