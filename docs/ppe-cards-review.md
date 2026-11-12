@@ -1,6 +1,6 @@
 # PPE cards for review
 
-For Solomon. Last updated 12 November 2026. Generated from the card files in `src/content/tutors/ppe/cards/`, so the text below is exactly what Prof Matt and the feedback model would get.
+For Solomon. Last updated 12 November 2026. This sheet was produced once from the card files in `src/content/tutors/ppe/cards/` by a one-off script that is not kept in the repo, so on that day the text below matched what Prof Matt and the feedback model get. It can be edited by hand; if a card file changes, update its section here too.
 
 Nine cards are approved and already reach students (listed at the end). The other 31 are drafts. Students never hear a draft and never get feedback from one; only tester accounts do. On 12 November every draft was brought up to the depth of the nine approved cards. They are all still drafts and none is marked as reviewed: nothing reaches students until you approve it.
 
@@ -18,6 +18,8 @@ For each card, reply with its number and one of:
 - **Approve**: it goes to students as written.
 - **Change**: say what to change; it stays a draft until you have seen the new text.
 - **Drop**: it is removed.
+
+**Whoever records an approval in a card file must also reset its `recheckBy` date to twelve months after the approval date.** The drafts carry a provisional date of 2027-11-12.
 
 Approving a card makes it available to students straight away. When a card is approved, its "recheck by" date (set on cards that rely on current affairs or recent research) will be moved to twelve months after the day you approve it.
 
@@ -573,9 +575,9 @@ Weak moves: assuming the more recent vote always wins; treating legitimacy as si
 
 **What changed on 12 November:** Hook no longer states current UK voting law, which has been changing; Prof Matt treats any such fact as the student's premise. Recheck date added. Related cards replaced.
 
-**Prof Matt sees** (106 words)
+**Prof Matt sees** (108 words)
 
-Hook: any voting age is a line drawn through the gradual business of growing up, and different places draw it in different places. The tension: wherever the line goes, some people just below it are more ready than some above it. Push on: what is the vote for, and does the answer tell you who should have it? If the argument is "they are affected by the decisions", so are ten-year-olds; why stop at sixteen? If it is "they are not mature enough", should adults who are badly informed lose the vote? Ask the student to make the best case for the side they disagree with.
+Hook: any voting age is a line drawn through the gradual business of growing up, and not every country draws it at the same age. The tension: wherever the line goes, some people just below it are more ready than some above it. Push on: what is the vote for, and does the answer tell you who should have it? If the argument is "they are affected by the decisions", so are ten-year-olds; why stop at sixteen? If it is "they are not mature enough", should adults who are badly informed lose the vote? Ask the student to make the best case for the side they disagree with.
 
 **Background** (254 words)
 
@@ -625,19 +627,19 @@ Weak moves: treating a survey answer as proof; naming one cause; not saying what
 
 `bag-charge` · economics · draft · leads on to: museum-entry-free, rent-cap-day-after, climate-collective-action
 
-**What changed on 12 November:** Clearer hook; added how to tell the explanations apart, a scaffold for a stuck student, and a note that no figures are expected. Third related card added.
+**What changed on 12 November:** Clearer hook; the spoken text no longer lists the explanations (the student finds them; they stay in Background as hints). Added how to tell the explanations apart, a scaffold for a stuck student, and a note that no figures are expected. Third related card added.
 
-**Prof Matt sees** (101 words)
+**Prof Matt sees** (99 words)
 
-Hook: when shops began charging a few pence for single-use plastic bags, far fewer were taken, which seems out of proportion to so small a cost. The tension: a few pence is nothing to most shoppers, yet people changed what they did. Push on: what else changed apart from the price: the moment of choice at the till, what counts as normal, the feeling of being watched? How could you tell those explanations apart? Would a larger charge work better, or would a ban be simpler? Change a condition: what if the charge were hidden in the price of the shopping?
+Hook: when shops began charging a few pence for single-use plastic bags, far fewer were taken, which seems out of proportion to so small a cost. The tension: a few pence is nothing to most shoppers, yet people changed what they did. Push on: ask the student what else changed apart from the price, and let them find the explanations themselves. Once they have two, ask how you could tell them apart. Would a larger charge work better, or would a ban be simpler? Change a condition: what if the charge were hidden in the price of the shopping?
 
-**Background** (268 words)
+**Background** (295 words)
 
 An incentives card that tests whether the student can separate competing explanations and think about evidence. Candidate mechanisms: price (even a small cost matters when the alternative is free and easy); salience (being asked at the till makes the choice conscious); default change (the default switched from "take a bag" to "bring one"); social norm (the charge signals that taking bags is frowned upon); habit (once people carry a bag, the charge stops mattering).
 
 A strong student proposes a way to distinguish them. The hidden-charge push-on is the cleanest: a charge folded into the bill keeps the price incentive but removes the moment of choice and the signal, so if behaviour barely changed under a hidden charge, salience or norms were doing the work. Other tests: whether behaviour drifts back over time (habit fades or holds), or differs between shops where others can see you and self-service tills.
 
-If the student is stuck, scaffold with their own experience: what do they do at a till, and would a 1p charge on something they already pay for change it? The idea of the margin can be put plainly as "the last bag someone would have taken".
+These mechanisms are rescue hints for the tutor, not a list to read out; offer one only if the student is stuck after a real attempt. If the student is stuck, first scaffold with their own experience: what do they do at a till, and would a 1p charge on something they already pay for change it? The idea of the margin can be put plainly as "the last bag someone would have taken".
 
 Weak moves: "people care about the environment" as the only explanation without testing it; assuming people are perfectly rational or entirely irrational; ignoring side effects such as buying more bin bags or thicker reusable bags used only a few times.
 
@@ -657,13 +659,13 @@ Good push-ons: whether the same trick would work for something people want more,
 
 Hook: a Budget is criticised for changing almost nothing. The tension: inaction can be prudent when the future is uncertain and stability helps planning, or it can be drift that lets problems grow. Push on: what observable evidence would tell prudence apart from drift? Should a Budget be judged by growth, by equality, or by whether voters consented to it, and how would the student settle a clash between those? Would they accept slower growth if the poorest households gained? Does it matter how well a Budget is presented if it changes little?
 
-**Background** (244 words)
+**Background** (249 words)
 
 From the pack's notes on Political Currency episodes 334 and 335, whose descriptions contrast a chancellor's presentation with limited substance and debate whether a limited Budget reflects preparation for an early election or real constraints. The pack stresses this is not an independent evaluation of any actual Budget's effects, and neither is this card: assess the reasoning, never a view of a real chancellor.
 
 The case for doing little: uncertainty about the economy, the value of predictable policy for investment, and the costs of reversing changes. The case against: delay can raise later costs (infrastructure, public services), and "stability" can be a cover for avoiding hard choices. A strong student names evidence that would distinguish them, such as whether forecasts were unusually uncertain, or whether known problems were deferred.
 
-Simple numbers if useful: a repair that costs £1 now or £3 in five years. Doing nothing looks cheap this year and expensive later; ask how uncertainty about the later figure changes the choice, and who will be in office when the bill arrives.
+Simple numbers if useful, said aloud as made-up numbers: a repair that costs £1 now or £3 in five years. Doing nothing looks cheap this year and expensive later; ask how uncertainty about the later figure changes the choice, and who will be in office when the bill arrives.
 
 Criteria clash: growth, equality and democratic consent can point different ways; the student should rank them or propose how to trade off, not just list them. On presentation, confidence and expectations can have real effects, which is different from manipulation.
 
@@ -683,13 +685,13 @@ Weak moves: assuming action is always better; judging a Budget only by headlines
 
 Hook: every country gains if global emissions fall, yet each is tempted to let the others do the cutting. The tension: choices that look sensible for each country can add up to an outcome that is bad for all. Push on: ask the student to set up a simple two-country game with costs and benefits, then test a proposed treaty: what must it change about incentives? Should rich countries pay for cuts in poorer countries, and is that an efficiency argument or a fairness argument? Why might elected leaders underinvest in climate protection at all?
 
-**Background** (248 words)
+**Background** (253 words)
 
 From the What? Why? When? episode What can be done for Climate Change?, whose description identifies denial, economic costs, collective-action problems and obligations between generations; and pack questions MWQ12, MWQ15 and MWQ16. The pack's exercise: make a two-country emissions game, explain why individually attractive decisions produce a collectively damaging outcome, then test a treaty.
 
 Structure: each country bears the full cost of its own cuts but gets only a share of the benefit, so free-riding is tempting (a prisoner's dilemma). A treaty must change payoffs: monitoring, penalties, side payments, or linking climate to trade.
 
-Simple numbers the tutor can offer if the student wants them: cutting costs a country 3; each country's cut gives 2 to every country. If I cut, I pay 3 and get 2 back, so I lose 1 whatever you do. If we both cut, each of us pays 3 and gets 4, a gain of 1. So each does better by not cutting, yet both do better if both cut. Ask the student what a treaty must change in those numbers.
+Simple numbers the tutor can offer if the student wants them, saying they are made up: cutting costs a country 3; each country's cut gives 2 to every country. If I cut, I pay 3 and get 2 back, so I lose 1 whatever you do. If we both cut, each of us pays 3 and gets 4, a gain of 1. So each does better by not cutting, yet both do better if both cut. Ask the student what a treaty must change in those numbers.
 
 Rich countries financing cuts in poorer ones: efficiency (cuts may be cheaper there) differs from fairness (historical emissions, ability to pay). The pack links this to the climate-justice and politicisation papers.
 
@@ -735,11 +737,11 @@ Weak moves: assuming lower prices are good for everyone; one-cause explanations;
 
 Hook: many national museums in Britain are free to enter, while plenty of other museums charge. The tension: if entry is free, everyone pays through taxes, including people who never visit. Push on: what does one extra visitor actually cost the museum, compared with the cost of running it? Who do you think visits free museums most, and does that matter to the argument? If a museum starts charging, who stops coming? Ask the student to separate what is efficient from what is fair, and say which one they are answering.
 
-**Background** (276 words)
+**Background** (281 words)
 
 A card on average versus marginal cost and on who pays. The average cost per visitor (total running cost divided by visitors) can be high, but the marginal cost of one extra visitor when the museum is not crowded is close to zero. That is the efficiency case for free entry: charging turns away people who would gain something at almost no cost to anyone. Once crowded, the marginal cost rises, and timed tickets or charges start to make sense.
 
-Simple numbers if the student needs them: a museum costs £10 million a year to run and has a million visitors, so the average cost is £10 a visit; an extra visitor on a quiet Tuesday costs almost nothing. Ask which number should set the price.
+Simple numbers if the student needs them, said aloud as made-up numbers: a museum costs £10 million a year to run and has a million visitors, so the average cost is £10 a visit; an extra visitor on a quiet Tuesday costs almost nothing. Ask which number should set the price.
 
 The fairness question is separate. Free entry funded by taxes means non-visitors pay; if visitors are mostly better-off or live nearby, that may be a transfer from poorer to richer or from the regions to big cities. But charging may deter exactly the visitors the museum most wants to reach. A strong student holds both and reaches a position, perhaps a targeted design (free for some, a charge for exhibitions, a charge for overseas visitors) and says what it gives up.
 
@@ -757,17 +759,17 @@ Good push-ons: should swimming pools or buses be free by the same logic; what ev
 
 `rent-cap-day-after` · economics · draft · leads on to: ticket-prices-fair, lower-house-prices, rough-sleeping
 
-**What changed on 12 November:** Spoken text shortened. Added simple numbers and the insiders-versus-newcomers point; removed a vague claim that real-world evidence is "mixed".
+**What changed on 12 November:** Spoken text shortened. Added simple numbers and the insiders-versus-newcomers point; removed a vague claim that real-world evidence is "mixed". The spoken text no longer gives away the shortage, and Background now prepares for a student who says a cap at today's level changes nothing on day one.
 
-**Prof Matt sees** (106 words)
+**Prof Matt sees** (90 words)
 
-Hook: rents in a city have risen fast, so the council freezes them at today's prices. The tension: the cap helps tenants who already have a home, but it also changes what landlords and future tenants will do. Push on: start with the people living in the flats today; then ask what a landlord does when deciding whether to rent out, sell or repair a flat. What about someone moving to the city next year? Who gains and who loses, and are they the same people? If more people want flats at the capped price than there are flats, how does anyone decide who gets one?
+Hook: rents in a city have risen fast, so the council freezes them at today's prices. The tension: the cap helps tenants who already have a home, but it also changes what landlords and future tenants will do. Push on: start with the people living in the flats today; then ask what a landlord does when deciding whether to rent out, sell or repair a flat. Who gains and who loses, and are they the same people? A year on, how does someone new to the city find a flat?
 
-**Background** (288 words)
+**Background** (351 words)
 
-A change-the-condition incentives card for students with or without economics. The first-round effect is clear: sitting tenants pay less. Second-round effects the student should reach by reasoning: if the capped rent is below what people would pay, more people want flats than are available (a shortage); something other than price decides who gets them, such as queues, connections or side payments; landlords may spend less on repairs, convert to short lets or sell; fewer new flats may be built, unless new builds are exempt.
+A change-the-condition incentives card for students with or without economics. A strong student may say that on the day after, nothing has changed yet: a cap at today's level does not bind until market rents would have risen. Credit that, then ask what happens as rents elsewhere rise, and whether landlords and tenants change what they do sooner because they expect the cap to bite. The first-round effect, once it binds, is that sitting tenants pay less. Second-round effects the student should reach by reasoning: if the capped rent is below what people would pay, more people want flats than are available (a shortage); something other than price decides who gets them, such as queues, connections or side payments; landlords may spend less on repairs, convert to short lets or sell; fewer new flats may be built, unless new builds are exempt.
 
-Simple numbers if useful: 100 flats, 150 households who would pay the capped rent. Fifty miss out. Ask how they are chosen and who is likely to win that contest.
+Simple numbers if useful, said aloud as made-up numbers: 100 flats, 150 households who would pay the capped rent. Fifty miss out. Ask how they are chosen and who is likely to win that contest.
 
 A strong student also weighs the other side: rent rises can force people out of their communities; tenants have little bargaining power; moving is costly, which gives a landlord power over a sitting tenant. A cap can be designed (limits on yearly increases rather than a freeze, exemptions for new builds) to reduce the side effects. The student is not expected to know evidence from any real city; if they cite some, ask what comparison it rests on.
 
@@ -865,13 +867,13 @@ Weak moves: judging parents' motives harshly without understanding constraints; 
 
 Hook: imagine a band sells tickets at a low fixed price, they sell out in minutes, and resellers sell them on for five times as much. The tension: the band chose a low price to be fair to fans, but the tickets went to whoever paid most anyway. Push on: what does "fair" mean here: equal chances, rewarding the biggest fans, or letting people pay what it is worth to them? Is a queue or a lottery fairer than a price, and fairer for whom? Who gets the extra money in each version? Ask the student to defend their fairest method against its best objection.
 
-**Background** (246 words)
+**Background** (251 words)
 
 A fairness-and-allocation card. When demand exceeds supply at the set price, something must ration: price, queueing time, luck or connections. Each has winners and losers. Price favours those with more money or who value it more; queues favour those with free time; lotteries give equal chances but ignore how much people care. The low face price does not stop high prices; it moves the extra money from the band to resellers.
 
 A strong student separates the efficiency question (who values the ticket most) from the fairness question (whether willingness to pay reflects how much someone values it or just how rich they are), and notices that "fair" is doing different jobs in different arguments.
 
-Simple numbers if useful: 1,000 seats, 5,000 fans who would pay the face price. Four in five miss out whatever the method; the question is only which four.
+Simple numbers if useful, said aloud as made-up numbers: 1,000 seats, 5,000 fans who would pay the face price. Four in five miss out whatever the method; the question is only which ones.
 
 The "who gets the money" push-on often surprises students: under a fixed low price with resale, the reseller keeps the gain; under a high price, the band does; under a lottery with non-transferable tickets, the lucky fan does. A strong student says which of these they mind and why.
 
