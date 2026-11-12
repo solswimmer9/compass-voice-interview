@@ -48,3 +48,6 @@ export function offerForPriceId(priceId: unknown): Offer | undefined {
 export function offerForProductId(productId: unknown): Offer | undefined {
   return OFFERS.find((offer) => offer.productId === productId);
 }
+
+/** Temporary switch: when true, no new purchases can start (buttons disabled, server rejects checkout). */
+export const PURCHASES_PAUSED = true;

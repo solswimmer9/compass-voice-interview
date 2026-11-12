@@ -3,7 +3,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
-import { INTERVIEW_PACK, type Offer } from "@/lib/offer";
+import { INTERVIEW_PACK, PURCHASES_PAUSED, type Offer } from "@/lib/offer";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -21,6 +21,14 @@ export function BuyPackButton({
   const [open, setOpen] = useState(false);
   const base =
     "inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-40";
+
+  if (PURCHASES_PAUSED) {
+    return (
+      <Button type="button" disabled className={cn(base, className)}>
+        Purchases paused
+      </Button>
+    );
+  }
 
   if (!loading && !user) {
     return (
