@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { getPaymentsEnvironment } from "@/lib/stripe";
 import { AssessPanel } from "@/components/AssessPanel";
 import { FlippingWord } from "@/components/FlippingWord";
+import { TutorOrb } from "@/components/TutorOrb";
+import { tutorKey } from "@/lib/tutor-theme";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import { INTERVIEW_MINUTES } from "@/lib/limits";
 import { useAccountSnapshot } from "@/hooks/useAccountSnapshot";
@@ -339,6 +341,13 @@ function InterviewPage() {
           {tableObject && <ObjectCard object={tableObject} />}
           <section className={`${tableObject ? "" : "mt-6 "}rounded-md border bg-card p-6`}>
             <audio ref={call.audioRef} controls className="hidden" playsInline />
+            {call.status !== "idle" && call.status !== "closed" && (
+              <TutorOrb
+                tutor={tutorKey(ppe ? "ppe" : undefined)}
+                status={call.status}
+                audioRef={call.audioRef}
+              />
+            )}
             <div className="flex flex-wrap items-center justify-center gap-3">
               {idle ? (
                 !account.user ? (
