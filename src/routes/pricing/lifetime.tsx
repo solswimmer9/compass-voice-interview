@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { BuyPackButton, StartFreeLink } from "@/components/pricing/BuyPackButton";
 import { Check, PRICING_FACTS, PricingShell, pricingHead } from "@/components/pricing/PricingShell";
 import { useAccountSnapshot } from "@/hooks/useAccountSnapshot";
-import { Link } from "@tanstack/react-router";
 import { LIFETIME_ACCESS, SCHOOL_BUNDLE } from "@/lib/offer";
 
 export const Route = createFileRoute("/pricing/lifetime")({
@@ -36,7 +35,7 @@ function LifetimePricing() {
         </p>
       </section>
 
-      <section className="mx-auto mt-12 grid max-w-4xl items-stretch gap-6 md:grid-cols-[1fr_1.15fr]">
+      <section className="mx-auto mt-12 grid max-w-4xl items-stretch gap-6 lg:grid-cols-3">
         <article className="flex flex-col rounded-xl border p-8">
           <h2 className="text-sm text-muted-foreground">{pack.name}</h2>
           <p className="mt-2 font-serif text-5xl font-semibold">{pack.displayPrice}</p>
@@ -101,26 +100,28 @@ function LifetimePricing() {
             )}
           </div>
         </article>
-      </section>
-
-      <section className="mx-auto mt-8 flex max-w-4xl flex-col items-start justify-between gap-4 rounded-xl border p-6 sm:flex-row sm:items-center">
-        <div>
+        <article className="flex flex-col rounded-xl border p-8">
           <h2 className="text-sm text-muted-foreground">For schools</h2>
-          <p className="mt-1 font-serif text-2xl font-semibold">
-            {SCHOOL_BUNDLE.displayPrice}{" "}
-            <span className="text-base font-normal text-muted-foreground">per admissions cycle</span>
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {SCHOOL_BUNDLE.interviews} shared interviews for up to {SCHOOL_BUNDLE.maxStudents}{" "}
-            students, with one school code.
-          </p>
-        </div>
-        <Link
-          to="/schools"
-          className="rounded-full border px-6 py-3 text-sm font-medium hover:bg-muted"
-        >
-          See school bundle →
-        </Link>
+          <p className="mt-2 font-serif text-5xl font-semibold">{SCHOOL_BUNDLE.displayPrice}</p>
+          <p className="mt-2 text-sm text-muted-foreground">Per admissions cycle.</p>
+          <ul className="mt-6 flex-1 space-y-3 text-sm">
+            <li className="flex gap-3">
+              <Check />
+              {SCHOOL_BUNDLE.interviews} shared voice interviews with Dr River or Prof Matt
+            </li>
+            <li className="flex gap-3">
+              <Check />
+              Up to {SCHOOL_BUNDLE.maxStudents} students, with one school code
+            </li>
+            <li className="flex gap-3">
+              <Check />
+              AI feedback after each interview
+            </li>
+          </ul>
+          <div className="mt-8">
+            <BuyPackButton className="w-full" offer={SCHOOL_BUNDLE} />
+          </div>
+        </article>
       </section>
 
       <p className="mt-10 text-center text-sm text-muted-foreground">
