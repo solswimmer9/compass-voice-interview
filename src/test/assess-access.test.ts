@@ -3,6 +3,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const authenticateRequest = vi.fn();
 const streamText = vi.fn();
 
+// The real charts are approved. These tests keep checking the draft rule (students never get a
+// draft object; testers do) by treating both charts as drafts in this file only.
+vi.mock("@/content/objects/uk-turnout", async (importOriginal) => {
+  const real = (await importOriginal()) as { default: Record<string, unknown> };
+  return { default: { ...real.default, status: "draft", reviewedBy: "", reviewedAt: "" } };
+});
+vi.mock("@/content/objects/urban-rural-share", async (importOriginal) => {
+  const real = (await importOriginal()) as { default: Record<string, unknown> };
+  return { default: { ...real.default, status: "draft", reviewedBy: "", reviewedAt: "" } };
+});
+
 vi.mock("@/lib/request-auth.server", () => ({ authenticateRequest }));
 vi.mock("../lib/request-auth.server.ts", () => ({ authenticateRequest }));
 vi.mock("ai", () => ({ streamText }));

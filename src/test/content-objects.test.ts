@@ -43,11 +43,20 @@ describe("object lint", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("has one object per tutor so far, both drafts awaiting review", () => {
+  it("has one object per tutor so far, both approved by a named reviewer", () => {
     expect(OBJECTS.map((o) => [o.tutor, o.status]).sort()).toEqual([
-      ["geography", "draft"],
-      ["ppe", "draft"],
+      ["geography", "approved"],
+      ["ppe", "approved"],
     ]);
+    for (const object of OBJECTS) {
+      expect(object.reviewedBy.trim()).not.toBe("");
+      expect(object.reviewedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    }
+  });
+
+  it("offers students the approved charts", () => {
+    expect(selectObject("geography")?.id).toBe("geo-chart-a");
+    expect(selectObject("ppe")?.id).toBe("ppe-chart-a");
   });
 
   for (const object of OBJECTS) {

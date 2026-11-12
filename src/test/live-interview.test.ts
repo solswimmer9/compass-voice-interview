@@ -11,6 +11,17 @@ const mocks = vi.hoisted(() => ({
   connect: vi.fn(),
 }));
 
+// The real charts are approved. These tests keep checking the draft rule (students never get a
+// draft object; testers do) by treating both charts as drafts in this file only.
+vi.mock("@/content/objects/uk-turnout", async (importOriginal) => {
+  const real = (await importOriginal()) as { default: Record<string, unknown> };
+  return { default: { ...real.default, status: "draft", reviewedBy: "", reviewedAt: "" } };
+});
+vi.mock("@/content/objects/urban-rural-share", async (importOriginal) => {
+  const real = (await importOriginal()) as { default: Record<string, unknown> };
+  return { default: { ...real.default, status: "draft", reviewedBy: "", reviewedAt: "" } };
+});
+
 vi.mock("@/lib/request-auth.server", () => ({
   authenticateAccessToken: mocks.authenticate,
 }));

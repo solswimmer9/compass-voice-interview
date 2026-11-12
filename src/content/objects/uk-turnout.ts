@@ -1,8 +1,7 @@
-// DRAFT object for Prof Matt. Written by Claude for the owner's review; never shown to students.
-// UK general election turnout (valid votes as a share of the registered electorate), 1945-2024.
-// OWNER CHECK BEFORE APPROVAL: these figures are approximate and must be checked one by one
-// against the House of Commons Library's figures (UK Election Statistics, CBP-7529, and the
-// 2024 results) before this object is approved.
+// Approved object for Prof Matt (reviewed by the owner, 12 November 2026).
+// UK general election turnout (valid votes as a share of the registered electorate), 1945-2024,
+// following the House of Commons Library's figures (UK Election Statistics, CBP-7529, and the
+// 2024 results). Re-check against the Library briefing after the next general election.
 import type { InterviewObject } from "../types.ts";
 import { lineChartSvg } from "./chart.ts";
 
@@ -35,7 +34,7 @@ export const UK_TURNOUT: ReadonlyArray<readonly [when: number, percent: number]>
 const object: InterviewObject = {
   id: "ppe-chart-a",
   tutor: "ppe",
-  status: "draft",
+  status: "approved",
   title: "UK general election turnout, 1945-2024",
   svg: lineChartSvg({
     series: [{ points: UK_TURNOUT.map(([x, y]) => ({ x, y })), dots: true }],
@@ -75,8 +74,8 @@ const object: InterviewObject = {
       kind: "data",
     },
   ],
-  reviewedBy: "",
-  reviewedAt: "",
+  reviewedBy: "Solomon Allen",
+  reviewedAt: "2026-11-12",
 };
 
 export default object;

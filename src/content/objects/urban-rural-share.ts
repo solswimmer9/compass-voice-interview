@@ -1,7 +1,6 @@
-// DRAFT object for Dr River. Written by Claude for the owner's review; never shown to students.
+// Approved object for Dr River (reviewed by the owner, 12 November 2026).
 // Figures are from UN DESA, World Urbanization Prospects: The 2018 Revision (percentage of the
-// world's population at mid-year living in urban areas; 2020 and 2025 are projections). Check
-// every figure against the WUP 2018 data file before approval.
+// world's population at mid-year living in urban areas; 2020 and 2025 are projections).
 import type { InterviewObject } from "../types.ts";
 import { lineChartSvg } from "./chart.ts";
 
@@ -22,7 +21,7 @@ export const URBAN_SHARE: ReadonlyArray<readonly [year: number, percent: number]
 const object: InterviewObject = {
   id: "geo-chart-a",
   tutor: "geography",
-  status: "draft",
+  status: "approved",
   title: "World urban and rural population share, 1950-2025",
   svg: lineChartSvg({
     series: [
@@ -69,8 +68,8 @@ const object: InterviewObject = {
       kind: "data",
     },
   ],
-  reviewedBy: "",
-  reviewedAt: "",
+  reviewedBy: "Solomon Allen",
+  reviewedAt: "2026-11-12",
 };
 
 export default object;
