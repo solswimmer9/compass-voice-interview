@@ -80,6 +80,9 @@ describe("payment webhook", () => {
   it("records school purchases without granting the teacher personal interviews", async () => {
     const { handlePaymentWebhook } = await import("@/lib/payment-webhook.server");
     await handlePaymentWebhook(completedPayment(SCHOOL_BUNDLE.priceId));
-    expect(upsert).toHaveBeenCalledWith(expect.objectContaining({ product_id: "school_interview_bundle", interviews_remaining: 0 }), expect.anything());
+    expect(upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ product_id: "school_interview_bundle", interviews_remaining: 0 }),
+      expect.anything(),
+    );
   });
 });

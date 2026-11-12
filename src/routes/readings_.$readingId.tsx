@@ -104,7 +104,8 @@ function ReadingSessionPage() {
             </span>
           </a>
           <p className="mt-2 text-xs text-muted-foreground">
-            {reading.searchLink ? "Searching" : "Opening it"} starts your {READING_MINUTES}-minute reading timer.
+            {reading.searchLink ? "Searching" : "Opening it"} starts your {READING_MINUTES}-minute
+            reading timer.
           </p>
         </Step>
 

@@ -32,7 +32,11 @@ export const getAccountSnapshot = createServerFn({ method: "GET" })
     if (profile.error || purchases.error || freeSessions.error)
       throw new Error("Could not load your account");
     const paidRemaining = (purchases.data ?? []).reduce(
-      (sum, purchase) => sum + (!purchase.expires_at || new Date(purchase.expires_at).getTime() > Date.now() ? purchase.interviews_remaining : 0),
+      (sum, purchase) =>
+        sum +
+        (!purchase.expires_at || new Date(purchase.expires_at).getTime() > Date.now()
+          ? purchase.interviews_remaining
+          : 0),
       0,
     );
     const lifetime = (purchases.data ?? []).some(

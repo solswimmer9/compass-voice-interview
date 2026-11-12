@@ -9,9 +9,15 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Sign in | Oxbridge Interview Practice" },
-      { name: "description", content: "Sign in to practise interviews, save purchases, and receive AI feedback." },
+      {
+        name: "description",
+        content: "Sign in to practise interviews, save purchases, and receive AI feedback.",
+      },
       { property: "og:title", content: "Sign in to Oxbridge Interview Practice" },
-      { property: "og:description", content: "Access your free interview and purchased interview packs." },
+      {
+        property: "og:description",
+        content: "Access your free interview and purchased interview packs.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -22,10 +28,22 @@ export const Route = createFileRoute("/auth")({
 function GoogleIcon() {
   return (
     <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24">
-      <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z" />
-      <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09C3.26 21.3 7.31 24 12 24z" />
-      <path fill="#FBBC05" d="M5.27 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.98-3.09z" />
-      <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z" />
+      <path
+        fill="#4285F4"
+        d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09C3.26 21.3 7.31 24 12 24z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.27 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.98-3.09z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z"
+      />
     </svg>
   );
 }
@@ -43,7 +61,9 @@ function AuthPage() {
   const socialSignIn = async (provider: "google" | "lovable") => {
     setBusy(true);
     setMessage(null);
-    const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri: window.location.origin });
+    const result = await lovable.auth.signInWithOAuth(provider, {
+      redirect_uri: window.location.origin,
+    });
     if (result.error) setMessage(result.error.message);
     else if (!result.redirected) await navigate({ to: "/" });
     setBusy(false);
@@ -82,48 +102,113 @@ function AuthPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-16">
-      <Link to="/" className="mb-8 text-sm text-muted-foreground">← Back to interview practice</Link>
-      <h1 className="font-serif text-4xl font-semibold">{user ? "You’re signed in" : mode === "signin" ? "Welcome back" : "Create your account"}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Your purchases and interview allowance stay with your account.</p>
+      <Link to="/" className="mb-8 text-sm text-muted-foreground">
+        ← Back to interview practice
+      </Link>
+      <h1 className="font-serif text-4xl font-semibold">
+        {user ? "You’re signed in" : mode === "signin" ? "Welcome back" : "Create your account"}
+      </h1>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Your purchases and interview allowance stay with your account.
+      </p>
       {loading ? null : user ? (
         <div className="mt-8 space-y-4">
           <p className="text-sm">{user.email}</p>
-          <Link to="/" className="inline-flex rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground">Continue to practice</Link>
+          <Link
+            to="/"
+            className="inline-flex rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
+          >
+            Continue to practice
+          </Link>
         </div>
       ) : (
         <>
           <div className="mt-8 grid gap-3">
-            <button type="button" disabled={busy} onClick={() => void socialSignIn("google")} className="flex items-center justify-center gap-3 rounded-md border px-4 py-3 text-sm font-medium" style={{ backgroundColor: "#131314", borderColor: "#8E918F", color: "#E3E3E3" }}>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void socialSignIn("google")}
+              className="flex items-center justify-center gap-3 rounded-md border px-4 py-3 text-sm font-medium"
+              style={{ backgroundColor: "#131314", borderColor: "#8E918F", color: "#E3E3E3" }}
+            >
               <GoogleIcon /> Continue with Google
             </button>
-            <button type="button" disabled={busy} onClick={() => void socialSignIn("lovable")} className="lovable-auth-button">Continue with Lovable</button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void socialSignIn("lovable")}
+              className="lovable-auth-button"
+            >
+              Continue with Lovable
+            </button>
           </div>
-          <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground"><span className="h-px flex-1 bg-border" />or use email<span className="h-px flex-1 bg-border" /></div>
+          <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="h-px flex-1 bg-border" />
+            or use email
+            <span className="h-px flex-1 bg-border" />
+          </div>
           <form onSubmit={submit} className="space-y-4">
             {mode === "signup" && (
-              <label className="block text-sm">Display name
-                <input required maxLength={80} value={displayName} onChange={(event) => setDisplayName(event.target.value)} className="mt-1 w-full rounded-md border bg-background px-3 py-2" />
+              <label className="block text-sm">
+                Display name
+                <input
+                  required
+                  maxLength={80}
+                  value={displayName}
+                  onChange={(event) => setDisplayName(event.target.value)}
+                  className="mt-1 w-full rounded-md border bg-background px-3 py-2"
+                />
               </label>
             )}
-            <label className="block text-sm">Email
-              <input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-1 w-full rounded-md border bg-background px-3 py-2" />
+            <label className="block text-sm">
+              Email
+              <input
+                required
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                className="mt-1 w-full rounded-md border bg-background px-3 py-2"
+              />
             </label>
-            <label className="block text-sm">Password
-              <input required minLength={6} type="password" autoComplete={mode === "signin" ? "current-password" : "new-password"} value={password} onChange={(event) => setPassword(event.target.value)} className="mt-1 w-full rounded-md border bg-background px-3 py-2" />
+            <label className="block text-sm">
+              Password
+              <input
+                required
+                minLength={6}
+                type="password"
+                autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                className="mt-1 w-full rounded-md border bg-background px-3 py-2"
+              />
             </label>
-            <button disabled={busy} className="w-full rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground disabled:opacity-40">
+            <button
+              disabled={busy}
+              className="w-full rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground disabled:opacity-40"
+            >
               {mode === "signin" ? "Sign in" : "Sign up"}
             </button>
           </form>
           <div className="mt-4 flex justify-between text-sm">
-            <button type="button" className="underline" onClick={() => setMode(mode === "signin" ? "signup" : "signin")}>
+            <button
+              type="button"
+              className="underline"
+              onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+            >
               {mode === "signin" ? "Create an account" : "I already have an account"}
             </button>
-            <button type="button" className="underline" onClick={() => void forgotPassword()}>Forgot password?</button>
+            <button type="button" className="underline" onClick={() => void forgotPassword()}>
+              Forgot password?
+            </button>
           </div>
         </>
       )}
-      {message && <p role="status" className="mt-5 text-sm text-muted-foreground">{message}</p>}
+      {message && (
+        <p role="status" className="mt-5 text-sm text-muted-foreground">
+          {message}
+        </p>
+      )}
     </main>
   );
 }

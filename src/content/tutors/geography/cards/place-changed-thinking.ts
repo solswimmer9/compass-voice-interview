@@ -13,7 +13,8 @@ const card: TopicCard = {
   related: ["local-area", "regeneration-who-for", "hopeful-and-angry", "statistic-limits"],
   sources: [
     {
-      title: "Dr River opening question: Which place has most changed how you think about the world, and why?",
+      title:
+        "Dr River opening question: Which place has most changed how you think about the world, and why?",
       kind: "question",
     },
   ],

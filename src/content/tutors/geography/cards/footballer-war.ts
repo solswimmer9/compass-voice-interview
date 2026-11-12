@@ -13,7 +13,8 @@ const card: TopicCard = {
   related: ["acting-locally", "geopolitics-arctic", "hopeful-and-angry", "map-hides"],
   sources: [
     {
-      title: "Dr River extra question line (original, from the notes): Can one footballer change a war?",
+      title:
+        "Dr River extra question line (original, from the notes): Can one footballer change a war?",
       kind: "question",
     },
   ],
