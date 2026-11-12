@@ -5,9 +5,15 @@ export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
       { title: "Privacy Notice | Oxbridge Interview Practice" },
-      { name: "description", content: "How Oxbridge interview practice collects, uses and protects your personal data." },
+      {
+        name: "description",
+        content: "How Oxbridge interview practice collects, uses and protects your personal data.",
+      },
       { property: "og:title", content: "Privacy Notice | Oxbridge Interview Practice" },
-      { property: "og:description", content: "How Oxbridge interview practice collects, uses and protects your personal data." },
+      {
+        property: "og:description",
+        content: "How Oxbridge interview practice collects, uses and protects your personal data.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -33,8 +39,8 @@ function PrivacyPage() {
           run interviews and produce feedback. Basis: contract.
         </li>
         <li>
-          <strong>Purchase records</strong> (what you bought, interviews remaining) — to provide what
-          you paid for. Basis: contract and legal obligation.
+          <strong>Purchase records</strong> (what you bought, interviews remaining) — to provide
+          what you paid for. Basis: contract and legal obligation.
         </li>
         <li>
           <strong>Technical data</strong> (IP address, device and browser info, usage logs) — for
@@ -47,13 +53,20 @@ function PrivacyPage() {
       <p>Card and payment details are collected by Stripe, our payment processor, not by us.</p>
       <h2>Who we share it with</h2>
       <ul>
-        <li>Service providers: hosting, database and authentication, and AI model providers that power the voice tutor and feedback.</li>
+        <li>
+          Service providers: hosting, database and authentication, and AI model providers that power
+          the voice tutor and feedback.
+        </li>
         <li>Stripe, our payment processor, for payments, fraud prevention, tax and receipts.</li>
         <li>Professional advisers (legal, accounting).</li>
         <li>Authorities where required by law.</li>
       </ul>
       <h2>International transfers</h2>
-      <p>School purchases store the teacher's account, a shared school code, student claims and remaining interviews. Teachers can see their bundle balance, not students' transcripts, videos or individual feedback.</p>
+      <p>
+        School purchases store the teacher's account, a shared school code, student claims and
+        remaining interviews. Teachers can see their bundle balance, not students' transcripts,
+        videos or individual feedback.
+      </p>
       <p>
         Some providers process data outside the UK. Where they do, we rely on adequacy decisions or
         standard contractual clauses (including the UK addendum).
@@ -66,8 +79,8 @@ function PrivacyPage() {
       </p>
       <h2>Security</h2>
       <p>
-        We use appropriate technical and organisational measures, including encryption in transit and
-        access controls that restrict your data to your own account.
+        We use appropriate technical and organisational measures, including encryption in transit
+        and access controls that restrict your data to your own account.
       </p>
       <h2>Cookies</h2>
       <p>

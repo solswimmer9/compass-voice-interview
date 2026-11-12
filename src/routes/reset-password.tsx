@@ -6,7 +6,10 @@ export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
       { title: "Reset password | Oxbridge Interview Practice" },
-      { name: "description", content: "Choose a new password for your interview practice account." },
+      {
+        name: "description",
+        content: "Choose a new password for your interview practice account.",
+      },
       { property: "og:title", content: "Reset your interview practice password" },
       { property: "og:description", content: "Securely choose a new account password." },
       { property: "og:type", content: "website" },
@@ -42,12 +45,30 @@ function ResetPasswordPage() {
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-16">
       <h1 className="font-serif text-4xl font-semibold">Choose a new password</h1>
       <form onSubmit={submit} className="mt-8 space-y-4">
-        <label className="block text-sm">New password
-          <input required minLength={6} type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} className="mt-1 w-full rounded-md border bg-background px-3 py-2" />
+        <label className="block text-sm">
+          New password
+          <input
+            required
+            minLength={6}
+            type="password"
+            autoComplete="new-password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            className="mt-1 w-full rounded-md border bg-background px-3 py-2"
+          />
         </label>
-        <button disabled={!validRecovery || busy} className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground disabled:opacity-40">Update password</button>
+        <button
+          disabled={!validRecovery || busy}
+          className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground disabled:opacity-40"
+        >
+          Update password
+        </button>
       </form>
-      {message && <p role="status" className="mt-5 text-sm text-muted-foreground">{message}</p>}
+      {message && (
+        <p role="status" className="mt-5 text-sm text-muted-foreground">
+          {message}
+        </p>
+      )}
     </main>
   );
 }

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { BuyPackButton, StartFreeLink } from "@/components/pricing/BuyPackButton";
 import { Check, PRICING_FACTS, PricingShell, pricingHead } from "@/components/pricing/PricingShell";
 import { useAccountSnapshot } from "@/hooks/useAccountSnapshot";
-import { LIFETIME_ACCESS } from "@/lib/offer";
+import { LIFETIME_ACCESS, SCHOOL_BUNDLE } from "@/lib/offer";
 
 export const Route = createFileRoute("/pricing/lifetime")({
   head: () => pricingHead("Lifetime access"),
@@ -35,7 +35,7 @@ function LifetimePricing() {
         </p>
       </section>
 
-      <section className="mx-auto mt-12 grid max-w-4xl items-stretch gap-6 md:grid-cols-[1fr_1.15fr]">
+      <section className="mx-auto mt-12 grid max-w-4xl items-stretch gap-6 lg:grid-cols-3">
         <article className="flex flex-col rounded-xl border p-8">
           <h2 className="text-sm text-muted-foreground">{pack.name}</h2>
           <p className="mt-2 font-serif text-5xl font-semibold">{pack.displayPrice}</p>
@@ -98,6 +98,28 @@ function LifetimePricing() {
                 label={`Get lifetime access · ${LIFETIME_ACCESS.displayPrice}`}
               />
             )}
+          </div>
+        </article>
+        <article className="flex flex-col rounded-xl border p-8">
+          <h2 className="text-sm text-muted-foreground">For schools</h2>
+          <p className="mt-2 font-serif text-5xl font-semibold">{SCHOOL_BUNDLE.displayPrice}</p>
+          <p className="mt-2 text-sm text-muted-foreground">Per admissions cycle.</p>
+          <ul className="mt-6 flex-1 space-y-3 text-sm">
+            <li className="flex gap-3">
+              <Check />
+              {SCHOOL_BUNDLE.interviews} shared voice interviews with Dr River or Prof Matt
+            </li>
+            <li className="flex gap-3">
+              <Check />
+              Up to {SCHOOL_BUNDLE.maxStudents} students, with one school code
+            </li>
+            <li className="flex gap-3">
+              <Check />
+              AI feedback after each interview
+            </li>
+          </ul>
+          <div className="mt-8">
+            <BuyPackButton className="w-full" offer={SCHOOL_BUNDLE} />
           </div>
         </article>
       </section>

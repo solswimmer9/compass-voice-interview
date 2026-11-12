@@ -15,7 +15,12 @@ import { readingById, READINGS } from "./readings.ts";
 import { INTERVIEW_MINUTES } from "./limits.ts";
 import { authenticateAccessToken } from "./request-auth.server.ts";
 import { isServerTester } from "./testers.ts";
-import { buildPpeSession, isPpeRequest, ppeTutor, PPE_TUTOR_ID } from "./ppe.server.ts";
+import { buildPpeSession, isPpeRequest, PPE_TUTOR_ID } from "./ppe.server.ts";
+import {
+  buildGeographySession,
+  GEOGRAPHY_SUBJECT,
+  GEOGRAPHY_TUTOR_ID,
+} from "./geography.server.ts";
 import {
   objectFeedbackContext,
   objectForBrowser,
@@ -158,9 +163,9 @@ ${NOTES_CONTEXT}
 ${readingsContext}
 
 Voice: calm, unhurried and soothing, like a gentle documentary narrator; speak slowly with natural pauses.
-Mannerisms: Sound like a real British academic in a supervision, not a presenter. Keep most turns to one or two short sentences. Open replies with varied natural bridges, for example "Right, but consider...", "Fair enough, though...", "Let's pause there for a second...", "Mm, interesting. So...", "Hang on, go back to...", "I wonder whether...". Never use the same bridge twice in a row, and sometimes use none.
+Mannerisms: Sound like a real British academic in a supervision, not a presenter. Keep most turns to one or two short sentences. Open replies with varied natural bridges, for example "Right, but consider...", "Fair enough, though...", "Let's pause there for a second...", "Hang on, go back to...", "I wonder whether...". Never use the same bridge twice in a row, and sometimes use none.
 Pause policy: Students think aloud and often pause mid-thought. Treat a short silence, a trailing "um", "so..." or an unfinished sentence as thinking, not the end of their turn: wait and stay quiet. Respond only once they have clearly finished a point. If they go quiet for a long while, gently say something brief like "Take your time" or "Think aloud if it helps", then wait again. Never fill silence with a new question or an answer.
-Backchannel policy: Use moderate listening sounds such as "mm" while the candidate thinks, without taking over.
+No-filler rule: Never use vocalised fillers or stall phrases such as "hmmm", "let me think", "let me see", "give me a second", "um", "er" or "so...". Never narrate that you are thinking or deciding what to say. If you need a moment, stay silent rather than filling it with a sound.
 Interruption policy: Stop speaking and listen when the candidate interrupts.
 Delegation policy:
 Backend tools: A careful reasoning assistant that analyses the candidate's argument and suggests the sharpest follow-up challenge.
@@ -193,7 +198,7 @@ function isListeningSound(text: string) {
 
 /** What the backend model is told about the interview. Geography keeps today's fixed wording. */
 type BackendBrief = { subject: string; guide: string };
-const GEOGRAPHY_BRIEF: BackendBrief = { subject: "Cambridge geography", guide: REASONING_GUIDE };
+const GEOGRAPHY_BRIEF: BackendBrief = { subject: GEOGRAPHY_SUBJECT, guide: REASONING_GUIDE };
 
 async function answerQuestion(
   messages: ModelMessage[],
@@ -344,8 +349,7 @@ export function bindLiveConnection(
   let greetingTimer: ReturnType<typeof setTimeout> | undefined;
   let brief = GEOGRAPHY_BRIEF;
   let instructions = conversationInstructions;
-  // Dr River's voice. Other tutors can set their own in their persona (audioVoice).
-  let audioVoice = "vesper";
+  let voice = "vesper";
   const startTimer = setTimeout(() => {
     emit({ type: "app.error", error: { message: "Voice startup message timed out" } });
     stop();
@@ -769,7 +773,7 @@ export function bindLiveConnection(
         session: {
           model: config.liveModel,
           instructions,
-          audio: { output: { voice: audioVoice } },
+          audio: { output: { voice } },
           delegation: { type: "client" },
         },
         transport: { type: "webrtc", sdp },
@@ -815,7 +819,7 @@ export function bindLiveConnection(
               if (closing || !session) return;
               config.openingInstructions = session.opening;
               instructions = session.liveInstructions;
-              audioVoice = ppeTutor().persona.audioVoice ?? audioVoice;
+              voice = "stone";
               brief = { subject: "Oxford-style PPE", guide: session.backendContext };
               const { tutorVersion, pedagogyVersion, cardIds, promptHash } = session;
               // Versions only; never transcript text or user identifiers.
@@ -859,21 +863,40 @@ export function bindLiveConnection(
         execution.waitUntil(
           (async () => {
             let object: InterviewObject | undefined;
-            const interviewId = await authorizeStart(
-              event,
-              objectMode
-                ? async (tester) => {
-                    object = pickObject("geography", tester, event.openingTurn);
-                  }
-                : undefined,
-            );
+            let cardSession: Awaited<ReturnType<typeof buildGeographySession>> | undefined;
+            // Decided after sign-in, by tester account only (never hostname or environment).
+            // Testers hear Dr River on approved topic cards so it can be voice-tested; everyone
+            // else keeps the fixed prompt above. Built before any credit, like PPE. An object
+            // interview's object is chosen here too, so a refusal never costs a credit.
+            const interviewId = await authorizeStart(event, async (tester) => {
+              if (objectMode) object = pickObject("geography", tester, event.openingTurn);
+              if (tester) cardSession = await buildGeographySession(event);
+            });
             if (closing) return;
+            if (cardSession) {
+              config.openingInstructions = cardSession.opening;
+              instructions = cardSession.liveInstructions;
+              brief = { subject: GEOGRAPHY_SUBJECT, guide: cardSession.backendContext };
+              const { tutorVersion, pedagogyVersion, cardIds, promptHash } = cardSession;
+              // Versions only; never transcript text or user identifiers.
+              console.log(
+                JSON.stringify({
+                  event: "interview.session",
+                  tutorId: GEOGRAPHY_TUTOR_ID,
+                  tutorVersion,
+                  pedagogyVersion,
+                  cardIds,
+                  promptHash,
+                  readingId: cardSession.readingId ?? null,
+                }),
+              );
+            }
             emit({
               type: "app.interview.started",
               interviewId,
               ...(object ? { objectId: object.id } : {}),
             });
-            if (object) applyObject(object, conversationInstructions);
+            if (object) applyObject(object, instructions);
             await startSession(event.sdp);
           })().catch((error) => {
             if (!closing)

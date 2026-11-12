@@ -7,7 +7,10 @@ export const confirmCheckoutSession = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .validator(
     z.object({
-      sessionId: z.string().regex(/^cs_[a-zA-Z0-9_]+$/).max(255),
+      sessionId: z
+        .string()
+        .regex(/^cs_[a-zA-Z0-9_]+$/)
+        .max(255),
       environment: z.enum(["sandbox", "live"]),
     }),
   )
@@ -21,5 +24,8 @@ export const confirmCheckoutSession = createServerFn({ method: "GET" })
       .eq("status", "completed")
       .maybeSingle();
     if (error) throw new Error("Could not confirm your payment");
-    return { confirmed: Boolean(purchase), schoolBundle: purchase?.product_id === "school_interview_bundle" };
+    return {
+      confirmed: Boolean(purchase),
+      schoolBundle: purchase?.product_id === "school_interview_bundle",
+    };
   });

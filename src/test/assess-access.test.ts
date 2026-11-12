@@ -175,4 +175,31 @@ describe("feedback access", () => {
     const { system: geography } = streamText.mock.calls[1]![0] as { system: string };
     expect(geography).not.toContain("OBJECT INTERVIEW NOTES");
   });
+
+  it("gives a student's multi-turn transcript today's single feedback call after the allowance check", async () => {
+    const { handleAssess } = await import("@/lib/assess.server");
+    const rpc = vi.fn().mockResolvedValue({ data: true, error: null });
+    authenticateRequest.mockResolvedValue({
+      user: { email: "student-multi@example.com" },
+      supabase: { rpc },
+    });
+    const transcript = [
+      "Dr River: Why do cities exist where they do?",
+      "You: I think rivers gave early towns water and a way to trade.",
+      "Dr River: Does that still matter?",
+      "You: Less now, because railways and roads changed which places were easy to reach.",
+    ].join("\n\n");
+    const request = post(
+      PUBLISHED_URL,
+      { transcript, interviewId: "00000000-0000-0000-0000-000000000000" },
+      "a.b.c",
+    );
+    request.headers.set("x-forwarded-for", "203.0.113.78");
+    const response = await handleAssess(request);
+    expect(response.status).toBe(200);
+    expect(rpc).toHaveBeenCalledTimes(1);
+    expect(streamText).toHaveBeenCalledTimes(1);
+    const { system } = streamText.mock.calls[0]![0] as { system: string };
+    expect(system).toContain("Cambridge geography admissions tutor");
+  });
 });

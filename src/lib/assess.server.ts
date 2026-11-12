@@ -1,5 +1,5 @@
 import { createOpenAI } from "@ai-sdk/openai";
-import { streamText, type ModelMessage } from "ai";
+import { generateText, streamText, type ModelMessage } from "ai";
 import process from "node:process";
 import { createLovableAiGatewayProvider } from "./ai/gateway-helpers.ts";
 import { createLovableAiGatewayRunIdFetch } from "./ai/run-id.ts";
@@ -10,6 +10,13 @@ import { isServerTester } from "./testers.ts";
 import { isPpeRequest, ppeFeedbackContext } from "./ppe.server.ts";
 import { objectFeedbackContext, usableObjectById } from "../content/objects/index.ts";
 import { ARGUMENT_MAP_INSTRUCTIONS } from "./feedback/argument-map.ts";
+import {
+  canUseGroundedFeedback,
+  parseModelJson,
+  runTesterFeedback,
+} from "./feedback/grounded.server.ts";
+import type { FeedbackDeps } from "./feedback/pipeline.ts";
+import { createMapAwareLimiter } from "./feedback/map-aware-limit.ts";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1";
 const TEXT_MODEL = "openai/gpt-6-astra";
@@ -128,79 +135,179 @@ export async function handleAssess(request: Request) {
       );
   }
 
-  const intro = transcript
-    ? `Interview transcript:\n\n${transcript}`
-    : "No transcript was provided; assess from the video.";
-  const messages: ModelMessage[] = [
-    {
-      role: "user",
-      content: video
-        ? [
-            { type: "text", text: intro },
-            { type: "file", data: video, mediaType: videoType },
-          ]
-        : intro,
-    },
-  ];
+  // Today's feedback: one streamed model call with the prompts above. Called lazily on the
+  // tester path, only if the evidence-checked feedback falls back.
+  const startTodayFeedback = () => {
+    const intro = transcript
+      ? `Interview transcript:\n\n${transcript}`
+      : "No transcript was provided; assess from the video.";
+    const messages: ModelMessage[] = [
+      {
+        role: "user",
+        content: video
+          ? [
+              { type: "text", text: intro },
+              { type: "file", data: video, mediaType: videoType },
+            ]
+          : intro,
+      },
+    ];
+    return video
+      ? streamText({
+          model: createLovableAiGatewayProvider(key, undefined, { baseURL: GATEWAY })(VIDEO_MODEL),
+          system,
+          messages,
+          maxRetries: 0,
+          abortSignal: request.signal,
+        })
+      : streamText({
+          model: textModel(key),
+          system,
+          messages,
+          maxRetries: 0,
+          abortSignal: request.signal,
+          providerOptions: reasoning("medium"),
+        });
+  };
 
-  const result = video
-    ? streamText({
-        model: createLovableAiGatewayProvider(key, undefined, { baseURL: GATEWAY })(VIDEO_MODEL),
-        system,
-        messages,
-        maxRetries: 0,
-        abortSignal: request.signal,
-      })
-    : streamText({
-        model: createOpenAI({
-          baseURL: GATEWAY,
-          apiKey: key,
-          headers: { "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
-          fetch: createLovableAiGatewayRunIdFetch().fetch,
-        }).responses(TEXT_MODEL),
-        system,
-        messages,
-        maxRetries: 0,
-        abortSignal: request.signal,
-        providerOptions: {
-          openai: {
-            forceReasoning: true,
-            reasoningEffort: "medium",
-            reasoningSummary: "auto",
-            store: false,
-            include: ["reasoning.encrypted_content"],
-          },
-        },
-      });
+  const headers = {
+    "content-type": "text/plain; charset=utf-8",
+    "cache-control": "no-cache, no-transform",
+  };
 
-  const encoder = new TextEncoder();
+  // Tester accounts only: evidence-checked feedback, every quotation verified against the
+  // transcript. All access rules above have already run; testers use no feedback allowance,
+  // so nothing here can charge twice. Any failure falls back silently to today's feedback.
+  if (preview && canUseGroundedFeedback({ transcript, video, ppe })) {
+    const stream = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        const pipelineAbort = new AbortController();
+        const signal = AbortSignal.any([request.signal, pipelineAbort.signal]);
+        const outcome = await runTesterFeedback(
+          { transcript, ppe, cardIds: body.cardIds, interviewId },
+          gatewayFeedbackDeps(key, signal),
+          { abort: () => pipelineAbort.abort() },
+        );
+        console.info(
+          "[assess] tester feedback",
+          outcome.ok
+            ? { grounded: true, truncated: outcome.truncated }
+            : { grounded: false, reason: outcome.reason },
+        );
+        if (request.signal.aborted) return controller.close();
+        if (outcome.ok) {
+          controller.enqueue(encoder.encode(outcome.text));
+          return controller.close();
+        }
+        let result: ReturnType<typeof startTodayFeedback>;
+        try {
+          result = startTodayFeedback();
+        } catch {
+          controller.enqueue(encoder.encode("\n\n[[error]]The assessment could not be completed."));
+          return controller.close();
+        }
+        await pipeFeedback(result, controller, request.signal);
+        controller.close();
+      },
+    });
+    return new Response(stream, { headers });
+  }
+
+  const result = startTodayFeedback();
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
-      try {
-        for await (const part of result.fullStream) {
-          if (part.type === "text-delta") controller.enqueue(encoder.encode(part.text));
-          if (part.type === "error") {
-            const err = part.error as { statusCode?: number; message?: string };
-            const message =
-              err?.statusCode === 402
-                ? "AI credits have run out. Add credits to your workspace to continue."
-                : err?.statusCode === 429
-                  ? "Too many requests right now. Please try again in a minute."
-                  : "The assessment could not be completed.";
-            controller.enqueue(encoder.encode(`\n\n[[error]]${message}`));
-          }
-        }
-      } catch {
-        if (!request.signal.aborted)
-          controller.enqueue(encoder.encode("\n\n[[error]]The assessment could not be completed."));
-      }
+      await pipeFeedback(result, controller, request.signal);
       controller.close();
     },
   });
-  return new Response(stream, {
-    headers: {
-      "content-type": "text/plain; charset=utf-8",
-      "cache-control": "no-cache, no-transform",
+  return new Response(stream, { headers });
+}
+
+const encoder = new TextEncoder();
+
+/** Streams a model reply to the browser within the word limit, with today's error messages. */
+async function pipeFeedback(
+  result: { fullStream: AsyncIterable<{ type: string; text?: string; error?: unknown }> },
+  controller: ReadableStreamDefaultController<Uint8Array>,
+  signal: AbortSignal,
+) {
+  // The word limit covers the letter; a trailing argument-map block passes through intact.
+  const limiter = createMapAwareLimiter();
+  const send = (text: string) => {
+    if (text) controller.enqueue(encoder.encode(text));
+  };
+  try {
+    for await (const part of result.fullStream) {
+      if (part.type === "text-delta") {
+        send(limiter.push(part.text ?? ""));
+        if (limiter.done) break; // Nothing more will be sent.
+      }
+      if (part.type === "error") {
+        send(limiter.end());
+        const err = part.error as { statusCode?: number; message?: string };
+        const message =
+          err?.statusCode === 402
+            ? "AI credits have run out. Add credits to your workspace to continue."
+            : err?.statusCode === 429
+              ? "Too many requests right now. Please try again in a minute."
+              : "The assessment could not be completed.";
+        controller.enqueue(encoder.encode(`\n\n[[error]]${message}`));
+      }
+    }
+    send(limiter.end());
+  } catch {
+    if (!signal.aborted) {
+      send(limiter.end());
+      controller.enqueue(encoder.encode("\n\n[[error]]The assessment could not be completed."));
+    }
+  }
+}
+
+function textModel(key: string) {
+  return createOpenAI({
+    baseURL: GATEWAY,
+    apiKey: key,
+    headers: { "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
+    fetch: createLovableAiGatewayRunIdFetch().fetch,
+  }).responses(TEXT_MODEL);
+}
+
+function reasoning(reasoningEffort: "low" | "medium") {
+  return {
+    openai: {
+      forceReasoning: true,
+      reasoningEffort,
+      reasoningSummary: "auto",
+      store: false,
+      include: ["reasoning.encrypted_content"],
     },
-  });
+  };
+}
+
+/** The pipeline's two model calls, on the same gateway, model and server-only key as today. */
+function gatewayFeedbackDeps(key: string, abortSignal: AbortSignal): FeedbackDeps {
+  return {
+    async generateJSON({ system, prompt }) {
+      const { text } = await generateText({
+        model: textModel(key),
+        system,
+        prompt,
+        maxRetries: 0,
+        abortSignal,
+        providerOptions: reasoning("medium"),
+      });
+      return parseModelJson(text);
+    },
+    async generateText({ system, prompt }) {
+      const { text } = await generateText({
+        model: textModel(key),
+        system,
+        prompt,
+        maxRetries: 0,
+        abortSignal,
+        providerOptions: reasoning("low"),
+      });
+      return text;
+    },
+  };
 }
