@@ -135,7 +135,7 @@ function ReadingSessionPage() {
             He'll ask you to sum up the argument, then test it and share his own take.
           </p>
           <Link
-            to="/"
+            to="/interview"
             search={{ reading: reading.id }}
             className={`mt-4 inline-flex rounded-full px-6 py-3 font-medium transition ${
               done

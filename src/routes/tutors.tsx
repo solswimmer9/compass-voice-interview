@@ -37,7 +37,7 @@ function TutorsPage() {
           {TUTORS.map((t) => (
             <li key={t.subject}>
               <Link
-                to="/"
+                to="/interview"
                 search={t.search}
                 className="group flex h-full flex-col rounded-md border bg-card p-8 transition hover:border-accent"
               >

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 function readDataURL(file: File) {
@@ -10,28 +10,42 @@ function readDataURL(file: File) {
   });
 }
 
+type Section = { title: string; lines: string[] };
+
+/** Splits the streamed markdown into its "## Heading" sections so each reads as its own card. */
+export function splitFeedback(text: string): Section[] {
+  const sections: Section[] = [];
+  for (const raw of text.split("\n")) {
+    const line = raw.replace(/\*\*/g, "").trimEnd();
+    const heading = /^#+\s*(.+)$/.exec(line);
+    if (heading) {
+      sections.push({ title: heading[1]!.replace(/\s*\(.*\)\s*$/, ""), lines: [] });
+      continue;
+    }
+    if (!line.trim()) continue;
+    if (sections.length === 0) sections.push({ title: "", lines: [] });
+    sections.at(-1)!.lines.push(line.trim());
+  }
+  return sections;
+}
+
 export function AssessPanel({
-  initialTranscript,
+  transcript,
   interviewId,
   tutorId,
   cardIds,
 }: {
-  initialTranscript: string;
+  transcript: string;
   interviewId: string | null;
-  /** Set for the PPE trial so feedback uses the PPE tutor's notes. */
+  /** Set for PPE so feedback uses Prof Matt's notes. */
   tutorId?: "ppe";
   cardIds?: string[];
 }) {
-  const [transcript, setTranscript] = useState(initialTranscript);
   const [video, setVideo] = useState<File | null>(null);
   const [output, setOutput] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
-
-  useEffect(() => {
-    if (initialTranscript) setTranscript(initialTranscript);
-  }, [initialTranscript]);
 
   const submit = async () => {
     setError(null);
@@ -56,16 +70,13 @@ export function AssessPanel({
       }
       const response = await fetch("/api/assess", {
         method: "POST",
-        headers: {
-          "content-type": "application/json",
-          ...(token ? { authorization: `Bearer ${token}` } : {}),
-        },
+        headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
         signal: controller.signal,
       });
       if (!response.ok || !response.body) {
         const result = (await response.json().catch(() => ({}))) as { error?: string };
-        throw new Error(result.error ?? "Assessment failed");
+        throw new Error(result.error ?? "Feedback failed. Please try again.");
       }
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -80,64 +91,88 @@ export function AssessPanel({
       }
     } catch (cause) {
       if (!controller.signal.aborted)
-        setError(cause instanceof Error ? cause.message : "Assessment failed");
+        setError(cause instanceof Error ? cause.message : "Feedback failed. Please try again.");
     } finally {
       setBusy(false);
     }
   };
 
+  const sections = splitFeedback(output);
+  const started = busy || output.length > 0;
+
   return (
-    <section className="mt-12 rounded-md border bg-card p-6">
-      <h2 className="font-serif text-3xl font-semibold">Assess my reasoning</h2>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Submit your replay, an optional video, or both. Each interview includes one AI feedback
-        assessment.
-      </p>
-      <textarea
-        value={transcript}
-        onChange={(event) => setTranscript(event.target.value)}
-        rows={6}
-        placeholder="Dr River: Why do cities exist where they do?&#10;You: ..."
-        className="mt-4 w-full rounded-md border bg-background p-3 text-sm"
-      />
-      <label className="mt-3 block text-sm">
-        <span className="text-muted-foreground">Optional video (under 20 MB)</span>
-        <input
-          type="file"
-          accept="video/*"
-          onChange={(event) => setVideo(event.target.files?.[0] ?? null)}
-          className="mt-1 block w-full text-sm file:mr-3 file:rounded-full file:border-0 file:bg-secondary file:px-4 file:py-2"
-        />
-      </label>
-      <div className="mt-4 flex gap-3">
-        <button
-          onClick={submit}
-          disabled={busy || !interviewId || (!transcript.trim() && !video)}
-          className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground disabled:opacity-40"
-        >
-          {busy ? "Assessing…" : "Get feedback"}
-        </button>
-        {busy && (
+    <section className="rounded-md border bg-card p-6 sm:p-8">
+      <h2 className="text-2xl font-medium tracking-tight">Your feedback</h2>
+      {!started && (
+        <>
+          <p className="mt-2 text-muted-foreground">
+            We read your answers and show where your reasoning held and where it slipped. One
+            feedback report per interview.
+          </p>
+          <details className="mt-4 text-sm">
+            <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+              Add a video of yourself (optional)
+            </summary>
+            <p className="mt-2 text-muted-foreground">
+              Under 20 MB. Lets the feedback comment on delivery as well as content.
+            </p>
+            <input
+              type="file"
+              accept="video/*"
+              onChange={(event) => setVideo(event.target.files?.[0] ?? null)}
+              className="mt-2 block w-full text-sm file:mr-3 file:rounded-full file:border-0 file:bg-secondary file:px-4 file:py-2"
+            />
+          </details>
           <button
-            onClick={() => abortRef.current?.abort()}
-            className="rounded-full border px-4 py-2 text-sm"
+            onClick={submit}
+            disabled={!interviewId || !transcript.trim()}
+            className="mt-6 rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
           >
-            Stop
+            Get my feedback
           </button>
-        )}
-      </div>
+        </>
+      )}
+      {busy && !output && (
+        <p className="mt-4 text-muted-foreground" aria-live="polite">
+          Reading your answers…
+        </p>
+      )}
+      {sections.length > 0 && (
+        <div className="mt-6 space-y-6" aria-live="polite">
+          {sections.map((section, i) => (
+            <div key={i}>
+              {section.title && (
+                <h3 className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                  {section.title}
+                </h3>
+              )}
+              <div className="mt-2 space-y-2 leading-relaxed">
+                {section.lines.map((line, j) =>
+                  /^[-*•]\s|^\d+\.\s/.test(line) ? (
+                    <p key={j} className="border-l-2 border-accent/50 pl-3">
+                      {line.replace(/^[-*•]\s|^\d+\.\s/, "")}
+                    </p>
+                  ) : (
+                    <p key={j}>{line}</p>
+                  ),
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {busy && (
+        <button
+          onClick={() => abortRef.current?.abort()}
+          className="mt-6 rounded-full border px-4 py-2 text-sm"
+        >
+          Stop
+        </button>
+      )}
       {error && (
         <p role="alert" className="mt-4 text-sm text-destructive">
           {error}
         </p>
-      )}
-      {busy && !output && (
-        <p className="mt-6 text-sm text-muted-foreground">Reading your answers…</p>
-      )}
-      {output && (
-        <div className="mt-6 whitespace-pre-wrap leading-relaxed">
-          {output.replace(/^#+\s?/gm, "").replace(/\*\*/g, "")}
-        </div>
       )}
     </section>
   );

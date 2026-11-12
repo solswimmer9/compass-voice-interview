@@ -37,7 +37,7 @@ function AuthPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { tutor } = Route.useSearch();
-  const backToInterview = () => navigate({ to: "/", search: tutor ? { tutor } : {} });
+  const backToInterview = () => navigate({ to: "/interview", search: tutor ? { tutor } : {} });
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -93,7 +93,7 @@ function AuthPage() {
       {loading ? null : user ? (
         <div className="mt-8 space-y-4">
           <p className="text-sm">{user.email}</p>
-          <Link to="/" search={tutor ? { tutor } : {}} className="inline-flex rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground">Continue to practice</Link>
+          <Link to="/interview" search={tutor ? { tutor } : {}} className="inline-flex rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground">Continue to practice</Link>
         </div>
       ) : (
         <>
