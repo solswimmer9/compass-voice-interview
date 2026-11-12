@@ -33,6 +33,8 @@ use the editor.
 
 ## Voice architecture
 
+- Select each tutor's output voice in the server-owned Live startup payload, keeping it scoped to the connection so changing one tutor cannot change another.
+
 - Live interviews use Lovable AI Gateway Live through the persistent server relay and browser WebRTC hook; keep `LOVABLE_API_KEY` server-only. Post-interview assessments continue to use Lovable AI Gateway. This preserves natural two-way speech without depending on a separate voice-provider account.
 
 ## Accounts and payments

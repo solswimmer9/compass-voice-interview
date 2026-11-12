@@ -340,6 +340,7 @@ export function bindLiveConnection(
   let greetingTimer: ReturnType<typeof setTimeout> | undefined;
   let brief = GEOGRAPHY_BRIEF;
   let instructions = conversationInstructions;
+  let voice = "vesper";
   const startTimer = setTimeout(() => {
     emit({ type: "app.error", error: { message: "Voice startup message timed out" } });
     stop();
@@ -734,7 +735,7 @@ export function bindLiveConnection(
         session: {
           model: config.liveModel,
           instructions,
-          audio: { output: { voice: "vesper" } },
+          audio: { output: { voice } },
           delegation: { type: "client" },
         },
         transport: { type: "webrtc", sdp },
@@ -774,6 +775,7 @@ export function bindLiveConnection(
               if (closing || !session) return;
               config.openingInstructions = session.opening;
               instructions = session.liveInstructions;
+              voice = "stone";
               brief = { subject: "Oxford-style PPE", guide: session.backendContext };
               const { tutorVersion, pedagogyVersion, cardIds, promptHash } = session;
               // Versions only; never transcript text or user identifiers.

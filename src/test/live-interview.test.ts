@@ -231,6 +231,7 @@ describe("PPE interviews", () => {
       for (const id of started?.["cardIds"] as string[]) expect(approved.has(id), id).toBe(true);
       const session = sent[0]?.["session"] as { instructions: string };
       expect(session.instructions).toContain("You are Prof Matt");
+      expect(session).toMatchObject({ audio: { output: { voice: "stone" } } });
     }
   });
 
@@ -296,6 +297,7 @@ describe("PPE interviews", () => {
     const session = sent[0]?.["session"] as { instructions: string };
     expect(session.instructions).toContain("You are Prof Matt");
     expect(session.instructions).not.toContain("Dr River");
+    expect(session).toMatchObject({ audio: { output: { voice: "stone" } } });
   });
 
   it("keeps geography on the original Dr River prompt", async () => {
@@ -310,6 +312,7 @@ describe("PPE interviews", () => {
     const session = sent[0]?.["session"] as { instructions: string };
     expect(session.instructions).toContain("Dr River");
     expect(session.instructions).not.toContain("Prof Matt");
+    expect(session).toMatchObject({ audio: { output: { voice: "vesper" } } });
   });
 });
 
