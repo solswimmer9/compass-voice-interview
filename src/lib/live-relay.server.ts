@@ -16,6 +16,11 @@ import { INTERVIEW_MINUTES } from "./limits.ts";
 import { authenticateAccessToken } from "./request-auth.server.ts";
 import { isServerTester } from "./testers.ts";
 import { buildPpeSession, isPpeRequest, PPE_TUTOR_ID } from "./ppe.server.ts";
+import {
+  buildGeographySession,
+  GEOGRAPHY_SUBJECT,
+  GEOGRAPHY_TUTOR_ID,
+} from "./geography.server.ts";
 
 export type LiveConfig = {
   baseURL: string;
@@ -184,7 +189,7 @@ function isListeningSound(text: string) {
 
 /** What the backend model is told about the interview. Geography keeps today's fixed wording. */
 type BackendBrief = { subject: string; guide: string };
-const GEOGRAPHY_BRIEF: BackendBrief = { subject: "Cambridge geography", guide: REASONING_GUIDE };
+const GEOGRAPHY_BRIEF: BackendBrief = { subject: GEOGRAPHY_SUBJECT, guide: REASONING_GUIDE };
 
 async function answerQuestion(
   messages: ModelMessage[],
@@ -808,8 +813,33 @@ export function bindLiveConnection(
           : openingInstructions(event.openingTurn);
         execution.waitUntil(
           (async () => {
-            const interviewId = await authorizeStart(event);
+            let cardSession: Awaited<ReturnType<typeof buildGeographySession>> | undefined;
+            // Decided after sign-in, by tester account only (never hostname or environment).
+            // Testers hear Dr River on approved topic cards so it can be voice-tested; everyone
+            // else keeps the fixed prompt above. Built before any credit, like PPE.
+            const interviewId = await authorizeStart(event, async (tester) => {
+              if (tester) cardSession = await buildGeographySession(event);
+            });
             if (closing) return;
+            if (cardSession) {
+              config.openingInstructions = cardSession.opening;
+              instructions = cardSession.liveInstructions;
+              brief = { subject: GEOGRAPHY_SUBJECT, guide: cardSession.backendContext };
+              const { tutorVersion, pedagogyVersion, cardIds, promptHash } = cardSession;
+              // Versions only; never transcript text or user identifiers.
+              console.log(
+                JSON.stringify({
+                  event: "interview.session",
+                  tutorId: GEOGRAPHY_TUTOR_ID,
+                  tutorVersion,
+                  pedagogyVersion,
+                  cardIds,
+                  promptHash,
+                  readingId: cardSession.readingId ?? null,
+                }),
+              );
+            }
+            // Unchanged shape for everyone, testers included.
             emit({ type: "app.interview.started", interviewId });
             await startSession(event.sdp);
           })().catch((error) => {

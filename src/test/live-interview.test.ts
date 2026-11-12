@@ -312,3 +312,53 @@ describe("PPE interviews", () => {
     expect(session.instructions).not.toContain("Prof Matt");
   });
 });
+
+describe("Dr River on topic cards (testers only)", () => {
+  afterEach(() => vi.unstubAllEnvs());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    mocks.authenticate.mockResolvedValue({
+      user: { email: "owner@example.com" },
+      supabase: { rpc: mocks.rpc },
+    });
+    mocks.rpc.mockResolvedValue({ data: { allowed: true, interviewId }, error: null });
+  });
+
+  async function instructionsFor(testers: string) {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", testers);
+    const sent: Array<Record<string, unknown>> = [];
+    mocks.connect.mockResolvedValue({
+      readyState: 1,
+      send: (data: string) => void sent.push(JSON.parse(data) as Record<string, unknown>),
+      close: vi.fn(),
+      onMessage: vi.fn(),
+      onClose: vi.fn(),
+      onError: vi.fn(),
+    } satisfies LiveSocket);
+    const browser = browserSocket();
+    bindLiveConnection(browser.socket, config, executionContext(), mocks.connect);
+    browser.start();
+    await vi.waitFor(() => expect(sent).toHaveLength(1));
+    return (sent[0]?.["session"] as { instructions: string }).instructions;
+  }
+
+  it("gives a tester approved geography cards and a student the fixed prompt", async () => {
+    const { buildGeographySession } = await import("@/lib/geography.server");
+    const { NOTES_CONTEXT } = await import("@/lib/interview-briefing");
+    const expected = await buildGeographySession({ openingTurn: 1 });
+
+    const tester = await instructionsFor("owner@example.com");
+    expect(tester).toBe(expected.liveInstructions);
+    expect(tester).toContain("YOUR THEMES FOR THIS INTERVIEW");
+    expect(tester).not.toContain(NOTES_CONTEXT);
+    expect(mocks.rpc).not.toHaveBeenCalled();
+
+    vi.clearAllMocks();
+    mocks.rpc.mockResolvedValue({ data: { allowed: true, interviewId }, error: null });
+    const student = await instructionsFor("someone-else@example.com");
+    expect(student).toContain(NOTES_CONTEXT);
+    expect(student).not.toContain("YOUR THEMES FOR THIS INTERVIEW");
+    expect(mocks.rpc).toHaveBeenCalledWith("consume_interview_credit", { p_environment: "live" });
+  });
+});
