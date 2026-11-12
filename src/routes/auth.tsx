@@ -6,6 +6,9 @@ import { useAuth } from "@/components/AuthProvider";
 import "@lovable.dev/cloud-auth-js/styles.css";
 
 export const Route = createFileRoute("/auth")({
+  // Which tutor the student was on, so signing in returns them to the same interview.
+  validateSearch: (search: Record<string, unknown>): { tutor?: "ppe" } =>
+    search["tutor"] === "ppe" ? { tutor: "ppe" } : {},
   head: () => ({
     meta: [
       { title: "Sign in | Oxbridge Interview Practice" },
@@ -33,6 +36,8 @@ function GoogleIcon() {
 function AuthPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const { tutor } = Route.useSearch();
+  const backToInterview = () => navigate({ to: "/", search: tutor ? { tutor } : {} });
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,7 +50,7 @@ function AuthPage() {
     setMessage(null);
     const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri: window.location.origin });
     if (result.error) setMessage(result.error.message);
-    else if (!result.redirected) await navigate({ to: "/" });
+    else if (!result.redirected) await backToInterview();
     setBusy(false);
   };
 
@@ -61,11 +66,11 @@ function AuthPage() {
       });
       if (error) setMessage(error.message);
       else if (!data.session) setMessage("Check your email to confirm your account, then sign in.");
-      else await navigate({ to: "/" });
+      else await backToInterview();
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setMessage(error.message);
-      else await navigate({ to: "/" });
+      else await backToInterview();
     }
     setBusy(false);
   };
@@ -88,7 +93,7 @@ function AuthPage() {
       {loading ? null : user ? (
         <div className="mt-8 space-y-4">
           <p className="text-sm">{user.email}</p>
-          <Link to="/" className="inline-flex rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground">Continue to practice</Link>
+          <Link to="/" search={tutor ? { tutor } : {}} className="inline-flex rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground">Continue to practice</Link>
         </div>
       ) : (
         <>

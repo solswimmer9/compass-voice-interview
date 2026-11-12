@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Idea mockups</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,700;1,400&display=swap" />
+<style>
+  :root {
+    --bg: oklch(0.145 0.004 270); --fg: oklch(0.985 0 0); --card: oklch(0.185 0.004 270);
+    --muted: oklch(0.27 0.004 270); --mfg: oklch(0.72 0.005 270); --accent: oklch(0.86 0.005 270);
+    --border: oklch(0.29 0.004 270);
+    --river: oklch(0.78 0.09 200); --matt: oklch(0.8 0.11 75);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--fg); font-family: Inter, system-ui, sans-serif; }
+  .s { position: relative; width: 1200px; height: 760px; overflow: hidden; border-bottom: 1px solid var(--border); padding: 56px 100px; }
+  .dots { position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(oklch(0.72 0.005 270 / .5) 1px, transparent 1px); background-size: 16px 16px; mask-image: radial-gradient(520px circle at 50% 45%, white, transparent); }
+  .z { position: relative; z-index: 1; height: 100%; }
+  .tag { position: absolute; top: 18px; left: 22px; z-index: 3; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; background: var(--fg); color: var(--bg); padding: 4px 8px; border-radius: 4px; font-weight: 700; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; }
+  .btn { display: inline-block; background: var(--fg); color: var(--bg); border-radius: 999px; padding: 12px 24px; font-weight: 500; font-size: 15px; }
+  .btn.ghost { background: transparent; color: var(--fg); border: 1px solid var(--border); }
+  .eyebrow { font-size: 12px; letter-spacing: .25em; text-transform: uppercase; color: var(--mfg); }
+  .center { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; height: 100%; }
+  h2 { font-weight: 500; letter-spacing: -0.03em; }
+  .muted { color: var(--mfg); }
+
+  /* 1 waiting room */
+  .wave { display: flex; gap: 5px; align-items: center; height: 80px; margin-top: 36px; }
+  .wave i { display: block; width: 6px; border-radius: 3px; background: var(--fg); }
+  .check { display: flex; gap: 28px; margin-top: 30px; font-size: 15px; }
+  .check span::before { content: "✓ "; color: var(--river); }
+
+  /* 2 orbs */
+  .orbs { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; height: 100%; align-items: center; }
+  .orbwrap { display: flex; flex-direction: column; align-items: center; gap: 26px; }
+  .orb { width: 280px; height: 280px; border-radius: 50%; position: relative; display: grid; place-items: center; }
+  .orb.river { background: radial-gradient(circle at 40% 35%, oklch(0.85 0.08 200), oklch(0.45 0.08 220) 60%, oklch(0.25 0.04 240)); box-shadow: 0 0 80px oklch(0.7 0.1 210 / .45); }
+  .orb.river::before, .orb.river::after { content: ""; position: absolute; inset: -22px; border-radius: 50%; border: 1px solid oklch(0.78 0.09 200 / .45); }
+  .orb.river::after { inset: -48px; border-color: oklch(0.78 0.09 200 / .2); }
+  .orb.matt { border-radius: 50%; background: conic-gradient(from 20deg, oklch(0.82 0.12 75), oklch(0.55 0.12 50), oklch(0.82 0.12 75), oklch(0.55 0.12 50), oklch(0.82 0.12 75)); box-shadow: 0 0 80px oklch(0.75 0.12 70 / .35); }
+  .orb.matt::before { content: ""; position: absolute; inset: 30px; border-radius: 50%; background: var(--bg); }
+  .orb.matt::after { content: ""; position: absolute; inset: -26px; border-radius: 50%; border: 2px dashed oklch(0.8 0.11 75 / .5); }
+  .orb .lbl { position: relative; z-index: 1; font-size: 13px; letter-spacing: .2em; text-transform: uppercase; }
+
+  /* 3 pressure replay */
+  .timeline { position: relative; height: 220px; margin-top: 40px; border-bottom: 1px solid var(--border); }
+  .timeline svg { position: absolute; inset: 0; }
+  .pin { position: absolute; transform: translateX(-50%); font-size: 12px; text-align: center; }
+  .pin b { display: block; width: 10px; height: 10px; border-radius: 50%; margin: 0 auto 6px; background: var(--fg); }
+  .quote { margin-top: 34px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .quote .card { padding: 18px; font-size: 15px; line-height: 1.5; }
+
+  /* 4 argument map */
+  .map { position: relative; height: 520px; margin-top: 20px; }
+  .node { position: absolute; padding: 12px 16px; font-size: 14px; max-width: 250px; line-height: 1.4; }
+  .node .k { display: block; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; margin-bottom: 4px; }
+  .claim { border-color: var(--fg); }
+  .push { border-color: var(--matt); } .push .k { color: var(--matt); }
+  .held { border-color: oklch(0.75 0.13 150); } .held .k { color: oklch(0.75 0.13 150); }
+  .gap { border-color: oklch(0.65 0.18 25); border-style: dashed; } .gap .k { color: oklch(0.7 0.18 25); }
+
+  /* 5 object */
+  .obj { display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; height: 100%; align-items: center; }
+  .chart { height: 380px; padding: 24px; }
+
+  /* 6 letter */
+  .letter { width: 620px; margin: 0 auto; background: oklch(0.95 0.02 85); color: oklch(0.22 0.02 60); padding: 46px 54px; border-radius: 3px; box-shadow: 0 30px 80px #0008; position: relative; font-size: 16px; line-height: 1.65; transform: rotate(-1.2deg); }
+  .seal { position: absolute; right: 40px; bottom: -28px; width: 84px; height: 84px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, oklch(0.55 0.17 25), oklch(0.38 0.14 25)); display: grid; place-items: center; color: oklch(0.85 0.08 30); font-weight: 700; font-size: 22px; box-shadow: 0 6px 16px #0006; }
+
+  /* 7 dial */
+  .dial { display: flex; border: 1px solid var(--border); border-radius: 999px; padding: 5px; gap: 4px; margin-top: 24px; }
+  .dial span { padding: 10px 22px; border-radius: 999px; font-size: 14px; color: var(--mfg); }
+  .dial span.on { background: var(--fg); color: var(--bg); font-weight: 500; }
+
+  /* 8 daily */
+  .phone { width: 360px; height: 640px; border-radius: 40px; border: 1px solid var(--border); background: var(--card); padding: 34px 26px; display: flex; flex-direction: column; margin: 0 auto; }
+  .streak { display: flex; gap: 6px; margin-top: 14px; }
+  .streak i { width: 30px; height: 30px; border-radius: 6px; background: var(--muted); display: grid; place-items: center; font-style: normal; font-size: 11px; }
+  .streak i.d { background: var(--fg); color: var(--bg); }
+</style>
+</head>
+<body>
+
+<!-- 1 -->
+<section class="s" id="i1"><div class="dots"></div><span class="tag">1 · The Waiting Room</span>
+  <div class="z center">
+    <p class="eyebrow">PPE · Prof Matt</p>
+    <h2 style="font-size:52px; margin-top:14px">Prof Matt will see you shortly.</h2>
+    <p style="font-size:84px; font-weight:500; letter-spacing:-0.04em; margin-top:18px; font-variant-numeric: tabular-nums">0:42</p>
+    <div class="wave">
+      <i style="height:14px"></i><i style="height:30px"></i><i style="height:52px"></i><i style="height:70px"></i><i style="height:44px"></i><i style="height:22px"></i><i style="height:60px"></i><i style="height:78px"></i><i style="height:40px"></i><i style="height:18px"></i><i style="height:34px"></i><i style="height:56px"></i><i style="height:26px"></i><i style="height:12px"></i><i style="height:20px"></i>
+    </div>
+    <div class="check"><span>Microphone working</span><span>You sound clear</span><span>Quiet room</span></div>
+    <p style="margin-top:34px; font-size:18px; font-style:italic">“Thinking out loud is the whole point. Silence is fine.”</p>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="s" id="i2"><div class="dots"></div><span class="tag">2 · A face for each voice</span>
+  <div class="z orbs">
+    <div class="orbwrap"><div class="orb river"><span class="lbl">Listening</span></div><div style="text-align:center"><p style="font-size:30px; font-weight:500">Dr River</p><p style="margin-top:4px">Calm, slow, rippling</p></div></div>
+    <div class="orbwrap"><div class="orb matt"><span class="lbl">Speaking</span></div><div style="text-align:center"><p style="font-size:30px; font-weight:500">Prof Matt</p><p style="margin-top:4px">Crisp, precise, ticking</p></div></div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="s" id="i3"><div class="dots"></div><span class="tag">3 · Pressure Replay</span>
+  <div class="z">
+    <p class="eyebrow">Your interview, minute by minute</p>
+    <h2 style="font-size:44px; margin-top:12px">Where Prof Matt pushed hardest</h2>
+    <div class="timeline">
+      <svg viewBox="0 0 1000 220" preserveAspectRatio="none">
+        <defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="oklch(0.8 0.11 75)" stop-opacity=".55"/><stop offset="1" stop-color="oklch(0.8 0.11 75)" stop-opacity="0"/></linearGradient></defs>
+        <path d="M0 200 C80 190 120 170 180 150 S260 60 320 70 S400 170 460 160 S560 30 620 25 S700 140 760 130 S880 90 920 110 S980 180 1000 190 L1000 220 L0 220Z" fill="url(#g)"/>
+        <path d="M0 200 C80 190 120 170 180 150 S260 60 320 70 S400 170 460 160 S560 30 620 25 S700 140 760 130 S880 90 920 110 S980 180 1000 190" fill="none" stroke="oklch(0.8 0.11 75)" stroke-width="2"/>
+      </svg>
+      <div class="pin" style="left:32%; top:-6px"><b></b>“Define fair”</div>
+      <div class="pin" style="left:62%; top:-30px"><b style="background:oklch(0.75 0.13 150)"></b>Great recovery</div>
+      <div class="pin" style="left:92%; top:58px"><b style="background:oklch(0.65 0.18 25)"></b>Conceded</div>
+    </div>
+    <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:8px" class="muted"><span>0:00</span><span>5:00</span><span>10:00</span><span>15:00</span><span>20:00</span></div>
+    <div class="quote">
+      <div class="card"><p class="eyebrow" style="font-size:10px">12:40 · Prof Matt</p><p style="margin-top:8px; font-style:italic">“So step two assumes people know what they'd vote for. Do they?”</p></div>
+      <div class="card"><p class="eyebrow" style="font-size:10px">12:58 · You</p><p style="margin-top:8px">“Not always, but the cost of being wrong is spread across everyone…”</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="s" id="i4"><div class="dots"></div><span class="tag">4 · Argument Map</span>
+  <div class="z">
+    <p class="eyebrow">After the interview</p>
+    <h2 style="font-size:44px; margin-top:12px">How your argument held up</h2>
+    <div class="map">
+      <svg style="position:absolute; inset:0" width="1000" height="520"><g stroke="oklch(0.45 0.004 270)" stroke-width="1.5" fill="none">
+        <path d="M500 70 C500 120 200 110 200 170"/><path d="M500 70 C500 120 500 120 500 170"/><path d="M500 70 C500 120 800 110 800 170"/>
+        <path d="M200 250 C200 300 120 300 120 340"/><path d="M200 250 C200 300 400 300 400 340"/><path d="M800 250 C800 300 800 300 800 340"/></g></svg>
+      <div class="card node claim" style="left:370px; top:0"><span class="k">Your claim</span>Voting is rational because the stakes are huge</div>
+      <div class="card node push" style="left:80px; top:170px"><span class="k">Prof Matt pushed</span>“But your vote almost never changes the result.”</div>
+      <div class="card node push" style="left:380px; top:170px"><span class="k">Prof Matt pushed</span>“Rational for whom: you, or society?”</div>
+      <div class="card node gap" style="left:680px; top:170px"><span class="k">Unanswered</span>What about the cost of your time?</div>
+      <div class="card node held" style="left:0px; top:340px"><span class="k">Held</span>Tiny chance × huge stakes can still be worth it</div>
+      <div class="card node held" style="left:300px; top:340px"><span class="k">Held</span>Voting as a duty, not a bet</div>
+      <div class="card node gap" style="left:690px; top:340px"><span class="k">Try next time</span>Bring in a real turnout figure</div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="s" id="i5"><div class="dots"></div><span class="tag">5 · The Object Interview</span>
+  <div class="z obj">
+    <div class="card chart">
+      <p class="eyebrow" style="font-size:10px">Dr River has put this on the table</p>
+      <svg width="100%" height="300" viewBox="0 0 500 300" style="margin-top:16px">
+        <g stroke="oklch(0.35 0.004 270)"><line x1="40" y1="260" x2="490" y2="260"/><line x1="40" y1="20" x2="40" y2="260"/></g>
+        <polyline fill="none" stroke="oklch(0.78 0.09 200)" stroke-width="3" points="40,240 90,236 140,230 190,226 240,210 290,180 340,150 390,100 440,70 490,30"/>
+        <polyline fill="none" stroke="oklch(0.985 0 0)" stroke-width="3" stroke-dasharray="6 6" points="40,90 90,100 140,120 190,140 240,150 290,170 340,185 390,200 440,215 490,225"/>
+        <text x="44" y="285" fill="oklch(0.72 0.005 270)" font-size="13">1950</text><text x="450" y="285" fill="oklch(0.72 0.005 270)" font-size="13">2025</text>
+        <text x="400" y="60" fill="oklch(0.78 0.09 200)" font-size="13">Line A</text><text x="400" y="240" fill="oklch(0.985 0 0)" font-size="13">Line B</text>
+      </svg>
+    </div>
+    <div>
+      <p class="eyebrow">Dr River</p>
+      <p style="font-size:34px; font-style:italic; line-height:1.3; margin-top:14px; letter-spacing:-0.02em">“No labels, I'm afraid. What do you think these two lines could be?”</p>
+      <div style="display:flex; align-items:center; gap:12px; margin-top:34px"><span style="width:12px; height:12px; border-radius:50%; background:var(--river); box-shadow:0 0 0 8px oklch(0.78 0.09 200 / .2)"></span><span>Listening… 4:12</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="s" id="i6"><div class="dots"></div><span class="tag">6 · The Letter</span>
+  <div class="z" style="display:flex; align-items:center">
+    <div class="letter">
+      <p style="font-size:13px; letter-spacing:.15em; text-transform:uppercase; opacity:.6">From the desk of Prof Matt · 12 November</p>
+      <p style="margin-top:22px">Dear Alex,</p>
+      <p style="margin-top:12px">Thank you for coming in. You were at your best when you split “rational” into rational <i>for you</i> and rational <i>for society</i>. That is exactly the move we look for.</p>
+      <p style="margin-top:12px">Where you slipped: you never put a number on the cost of voting. Next time, try that first.</p>
+      <p style="margin-top:22px">With best wishes,<br/><span style="font-size:24px; font-style:italic">Prof Matt</span></p>
+      <div class="seal">PM</div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 -->
+<section class="s" id="i7"><div class="dots"></div><span class="tag">7 · How hard?</span>
+  <div class="z center">
+    <h2 style="font-size:30px">Choose your interview</h2>
+    <div class="card" style="width:460px; padding:34px; margin-top:34px; text-align:left">
+      <p style="font-size:48px; font-weight:500; letter-spacing:-0.03em">PPE</p>
+      <p style="margin-top:4px; opacity:.8">with Prof Matt</p>
+      <div class="dial"><span>Warm-up</span><span class="on">Real interview</span><span>Grill me</span></div>
+      <span class="btn" style="margin-top:28px">Interview →</span>
+    </div>
+  </div>
+</section>
+
+<!-- 8 -->
+<section class="s" id="i8"><div class="dots"></div><span class="tag">8 · Question of the Day</span>
+  <div class="z" style="display:grid; grid-template-columns:1fr 1fr; align-items:center; gap:40px">
+    <div>
+      <p class="eyebrow">Two minutes. One question. Every day.</p>
+      <h2 style="font-size:44px; margin-top:14px; line-height:1.1">A habit, not a cram.</h2>
+      <p style="margin-top:18px; font-size:17px; line-height:1.55; opacity:.85">A short daily question from one tutor, answered out loud, with one line of feedback. Streaks keep students coming back between full interviews.</p>
+    </div>
+    <div class="phone">
+      <p class="eyebrow" style="font-size:10px">Thursday · Geography</p>
+      <p style="font-size:26px; font-weight:500; letter-spacing:-0.02em; margin-top:14px; line-height:1.25">Why are so many capital cities on rivers?</p>
+      <div style="flex:1; display:grid; place-items:center"><div class="orb river" style="width:150px; height:150px"><span class="lbl" style="font-size:10px">Tap to answer</span></div></div>
+      <p style="font-size:13px">Your streak</p>
+      <div class="streak"><i class="d">M</i><i class="d">T</i><i class="d">W</i><i>T</i><i>F</i><i>S</i><i>S</i></div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

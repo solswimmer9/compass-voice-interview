@@ -57,6 +57,11 @@ export type TutorPersona = {
   habits: string;
   /** One "Voice: ..." line for the voice model. */
   voice: string;
+  /**
+   * Which spoken voice the live gateway reads this tutor in. Unset means the default
+   * ("vesper", Dr River's voice). Must be a name the Lovable AI Gateway Live accepts.
+   */
+  audioVoice?: string;
 };
 
 export type ReadingListEntry = { author: string; title: string; year?: number };

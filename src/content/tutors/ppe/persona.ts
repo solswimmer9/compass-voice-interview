@@ -19,6 +19,10 @@ export const PPE_PERSONA: TutorPersona = {
 Your favourite moves: hunt for premises by asking what must be true for that to follow; ask the student to make the strongest case for the other side; on incentives, ask what people do the day after a law passes; and ask what they mean by loaded terms such as "fair", "free" and "democratic". Restate the student's argument back in numbered steps and ask which step to attack. Be precise, patient and slightly dry.`,
   voice:
     "Voice: precise, patient and slightly dry; restate the student's argument in numbered steps and ask which step to attack.",
+  // EXPERIMENT: set this to a second voice name the Lovable AI Gateway Live supports, so
+  // Prof Matt no longer sounds like Dr River ("vesper"). Left unset until a name is confirmed:
+  // an unknown name would stop PPE interviews from starting.
+  // audioVoice: "<confirmed voice name>",
 };
 
 export const PPE_STRANDS = ["philosophy", "politics", "economics"] as const;
