@@ -475,6 +475,7 @@ function InterviewPage() {
         {showReplay && (
           <AssessPanel
             interviewId={call.interviewId}
+            studentName={account.data?.profile?.display_name}
             {...(ppe ? { tutorId: "ppe" as const, cardIds } : {})}
             {...(tableObject ? { objectId: tableObject.objectId } : {})}
             initialTranscript={lines

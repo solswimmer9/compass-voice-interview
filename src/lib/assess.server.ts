@@ -9,6 +9,7 @@ import { authenticateRequest } from "./request-auth.server.ts";
 import { isServerTester } from "./testers.ts";
 import { isPpeRequest, ppeFeedbackContext } from "./ppe.server.ts";
 import { objectFeedbackContext, usableObjectById } from "../content/objects/index.ts";
+import { ARGUMENT_MAP_INSTRUCTIONS } from "./feedback/argument-map.ts";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1";
 const TEXT_MODEL = "openai/gpt-6-astra";
@@ -95,6 +96,8 @@ export async function handleAssess(request: Request) {
   const system = [
     ppe ? ppeSystem(body.cardIds, preview) : SYSTEM,
     object && objectFeedbackContext(object),
+    // Last, so the reply always ends with the map block the panel splits off.
+    ARGUMENT_MAP_INSTRUCTIONS,
   ]
     .filter(Boolean)
     .join("\n\n");
