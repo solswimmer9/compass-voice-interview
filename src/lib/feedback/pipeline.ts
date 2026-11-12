@@ -207,17 +207,24 @@ export function buildWriterPrompt(
 
 // ---------------------------------------------------------------- text checks
 
-const CITATION_GROUP = /\[([^\]]*)\]/g;
+// Turn references in any of the forms a writer uses: [T7], [T 7], (T7), T7, [see T7], [T7, T9],
+// (turn 7), [turn 7], turns 7 and 9, turns 4, 6 & 9.
+const TURN_WORD_REF = /\bturns?\s+(\d+(?:\s*(?:,|and|&)\s*\d+)*)/gi;
+const T_REF = /(?<![\p{L}\p{N}])T\s?(\d+)(?![\p{L}\p{N}])/gu;
 
-/** Turn numbers cited as [T7] or [T7, T9] in a piece of text. */
+/** Turn numbers cited in a piece of text, e.g. [T7], (turn 7) or "turns 7 and 9". */
 export function citedTurns(text: string): number[] {
+  if (typeof text !== "string") return [];
   const out: number[] = [];
-  for (const g of text.matchAll(CITATION_GROUP)) {
-    const inner = g[1] ?? "";
-    if (!/^\s*T\d+/.test(inner)) continue;
-    for (const m of inner.matchAll(/T(\d+)/g)) out.push(Number(m[1]));
-  }
+  for (const m of text.matchAll(T_REF)) out.push(Number(m[1]));
+  for (const m of text.matchAll(TURN_WORD_REF))
+    for (const n of (m[1] ?? "").match(/\d+/g) ?? []) out.push(Number(n));
   return out;
+}
+
+/** Text with every turn reference removed. */
+export function stripTurnReferences(text: string): string {
+  return text.replace(TURN_WORD_REF, " ").replace(T_REF, " ");
 }
 
 const SENTENCE_BREAK = /(?<=[.!?]["”')\]]?)\s+(?=[A-Z[“"])/;

@@ -5,7 +5,7 @@ import {
   ANALYST_FAILED_CAVEAT,
   WRITER_FAILED_CAVEAT,
   citedTurns,
-  filterSentences,
+  stripTurnReferences,
   type GroundedFeedback,
 } from "./pipeline";
 import type { Turn } from "./types";
@@ -27,16 +27,29 @@ const QUOTE_PATTERNS: RegExp[] = [
   /"([^"]+)"/g,
   /“([^“”]+)”/g,
   /(?<![\p{L}\p{N}])‘([^‘\n]+?)’(?![\p{L}\p{N}])/gu,
-  /(?<![\p{L}\p{N}])'([^'\n]+?)'(?![\p{L}\p{N}])/gu,
+  // Straight single marks: an apostrophe between letters ("don't") may sit inside the quote.
+  /(?<![\p{L}\p{N}])'((?:[^'\n]|(?<=[\p{L}\p{N}])'(?=[\p{L}\p{N}]))+?)'(?![\p{L}\p{N}])/gu,
 ];
 
-// Any quotation mark left once every pair has been consumed means quoting the checker cannot
-// read. A straight single quote counts only where it opens a word ("'like"), so apostrophes in
-// "don't" and "students' views" do not.
-const STRAY_MARK = /["“”„«»‹›‘‚`]|(?<![\p{L}\p{N}])'(?=[\p{L}\p{N}])/u;
+// Characters that can mark a quotation. Once every known pair has been read, any of these left
+// over (or any opening or closing punctuation in Unicode's Pi and Pf classes) means quoting the
+// checker cannot read, and the line fails. Apostrophes ’ ʼ ' are allowed only between two
+// letters or digits ("don’t"); anywhere else they count as stray.
+const QUOTE_CHARS = /["＂〝〞〟「」『』❝❞❛❜′″‟‛＇`„‚«»‹›“”‘’ʼ']|[\p{Pi}\p{Pf}]/u;
+const APOSTROPHES = new Set(["’", "ʼ", "'"]);
+const WORD_CHAR = /[\p{L}\p{N}]/u;
 
-/** Markdown blockquote: text presented as quoted that the checker does not attribute. */
-const BLOCKQUOTE = /^\s{0,3}>/m;
+function hasStrayMark(text: string): boolean {
+  const chars = [...text];
+  return chars.some((c, i) => {
+    if (!QUOTE_CHARS.test(c)) return false;
+    if (!APOSTROPHES.has(c)) return true;
+    return !(WORD_CHAR.test(chars[i - 1] ?? "") && WORD_CHAR.test(chars[i + 1] ?? ""));
+  });
+}
+
+/** Markdown blockquote, also inside a list item ("- > x", "1. > x"). */
+const BLOCKQUOTE = /^\s{0,3}(?:(?:[-*+]|\d+[.)])\s+)*>/m;
 
 /**
  * Every quotation in a piece of text, and whether any quotation mark was left unpaired.
@@ -53,7 +66,7 @@ export function scanQuotes(text: string): { quotes: string[]; unpaired: boolean 
       return " ".repeat(whole.length);
     });
   }
-  return { quotes, unpaired: STRAY_MARK.test(rest) };
+  return { quotes, unpaired: hasStrayMark(rest) };
 }
 
 export function extractQuotes(text: string): string[] {
@@ -82,15 +95,43 @@ export function unverifiedQuotes(text: string, turns: Turn[]): string[] {
 }
 
 /**
- * True when a sentence must not be shown: it has a quotation mark the checker cannot pair, it
- * quotes words the student did not say, or it cites turns ([T4]) and a quotation is not in any
- * of them. A wrong turn reference drops the whole sentence rather than being silently removed.
+ * True when a line (or any passage) must not be shown: it has a quotation mark the checker cannot
+ * pair, it quotes words the student did not say, or it cites turns and a quotation is not in any
+ * of them. Lines are checked whole, before anything splits them into sentences, so no fragment
+ * of a failed quotation can survive.
  */
-export function sentenceFailsCheck(sentence: string, turns: Turn[]): boolean {
-  const { quotes, unpaired } = scanQuotes(sentence);
+export function passageFailsCheck(text: string, turns: Turn[]): boolean {
+  if (BLOCKQUOTE.test(text)) return true;
+  const { quotes, unpaired } = scanQuotes(text);
   if (unpaired) return true;
-  const cited = citedTurns(sentence);
+  const cited = citedTurns(text);
   return quotes.some((q) => !isStudentQuote(q, turns, cited));
+}
+
+/** Older name, kept for callers and tests. */
+export const sentenceFailsCheck = passageFailsCheck;
+
+const HEADING_LINE = /^\s{0,3}#{1,6}\s/;
+
+/** A line with nothing left once citations, list markers and punctuation are removed. */
+export function isDebrisLine(line: string): boolean {
+  if (HEADING_LINE.test(line) || !line.trim()) return false;
+  const rest = stripTurnReferences(line).replace(/\b(?:see|cf|and|also)\b/gi, " ");
+  return !/\p{L}{2,}/u.test(rest);
+}
+
+/** Drops every non-heading line that fails the check, and every debris line. */
+function keepCheckedLines(markdown: string, turns: Turn[]): { text: string; removed: number } {
+  let removed = 0;
+  const kept = markdown.split("\n").filter((line) => {
+    if (HEADING_LINE.test(line) || !line.trim()) return true;
+    if (passageFailsCheck(line, turns) || isDebrisLine(line)) {
+      removed++;
+      return false;
+    }
+    return true;
+  });
+  return { text: kept.join("\n"), removed };
 }
 
 /** Removes headings with no text under them. */
@@ -119,8 +160,8 @@ export function readableCitations(text: string): string {
 export type GroundedRender = { text: string } | { failure: string };
 
 /**
- * Builds the panel's Markdown from a pipeline result. Sentences quoting words the student did
- * not say are removed; the result is refused (failure) if the pipeline did not really run, if too
+ * Builds the panel's Markdown from a pipeline result. Lines quoting words the student did not
+ * say, or left as debris, are removed whole; the result is refused (failure) if the pipeline did not really run, if too
  * little verified material is left, or if any quotation still fails the check.
  */
 export function renderGroundedFeedback(result: GroundedFeedback, turns: Turn[]): GroundedRender {
@@ -132,16 +173,14 @@ export function renderGroundedFeedback(result: GroundedFeedback, turns: Turn[]):
   const markdown = report.sections.map((s) => `## ${s.heading}\n${s.body}`).join("\n\n");
   // Fail closed on quoting the checker does not attribute.
   if (BLOCKQUOTE.test(markdown)) return { failure: "blockquote" };
-  const filtered = filterSentences(markdown, (s) => sentenceFailsCheck(s, turns)).text;
-  const text = dropEmptySections(filtered);
+  const text = dropEmptySections(keepCheckedLines(markdown, turns).text);
 
   // Check again on the whole text, so a quotation wrapping onto a second line is still read.
   const whole = scanQuotes(text);
   if (whole.unpaired) return { failure: "unpaired quotation mark" };
   if (whole.quotes.some((q) => !isStudentQuote(q, turns)))
     return { failure: "unverified quotation" };
-  if (filterSentences(text, (s) => sentenceFailsCheck(s, turns)).removed)
-    return { failure: "unverified quotation" };
+  if (keepCheckedLines(text, turns).removed) return { failure: "unverified quotation" };
   const quotes = whole.quotes.filter((q) => normalise(q));
   if (quotes.length < MIN_SHOWN_QUOTES) return { failure: "too few verified quotations" };
   if (!/^## /m.test(text)) return { failure: "no sections" };

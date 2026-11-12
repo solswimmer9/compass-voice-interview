@@ -4,6 +4,7 @@ import {
   readableCitations,
   renderGroundedFeedback,
   scanQuotes,
+  isDebrisLine,
   sentenceFailsCheck,
   unverifiedQuotes,
 } from "@/lib/feedback/grounded-output";
@@ -13,7 +14,7 @@ import {
   parseModelJson,
   runTesterFeedback,
 } from "@/lib/feedback/grounded.server";
-import { runGroundedFeedback, type FeedbackDeps } from "@/lib/feedback/pipeline";
+import { citedTurns, runGroundedFeedback, type FeedbackDeps } from "@/lib/feedback/pipeline";
 import { parseTranscript } from "@/lib/feedback/transcript";
 import { countWords } from "@/lib/feedback/word-limit";
 
@@ -81,6 +82,12 @@ async function pipelineResult(writer: string, json: unknown = OBSERVATIONS) {
     groundedInput({ transcript: TRANSCRIPT, ppe: false }),
     deps(json, writer),
   );
+}
+
+/** What a tester would see for this writer output, or null when the run falls back. */
+async function shownFor(writer: string): Promise<string | null> {
+  const out = renderGroundedFeedback(await pipelineResult(writer), TURNS);
+  return "text" in out ? out.text : null;
 }
 
 describe("extractQuotes", () => {
@@ -318,10 +325,13 @@ describe("quotation checking fails closed (verifier findings)", () => {
     for (const quoted of [`«${Q1}»`, `„${Q1}“`, `\`${Q1}\``, `‘${Q1}’`, `'${Q1}'`]) {
       expect(sentenceFailsCheck(`You said ${quoted} [T2].`, TURNS)).toBe(false);
     }
-    // Apostrophes are not quotation marks.
-    expect(sentenceFailsCheck("You don't weigh the students' views or the city’s.", TURNS)).toBe(
+    // Apostrophes between letters are not quotation marks.
+    expect(sentenceFailsCheck("You don't weigh the city’s or the riverʼs views.", TURNS)).toBe(
       false,
     );
+    // A trailing apostrophe ("students' views") is indistinguishable from a closing mark, so the
+    // line fails closed: dropped, never shown unchecked.
+    expect(sentenceFailsCheck("You don't weigh the students' views.", TURNS)).toBe(true);
   });
 
   it("drops a sentence whose quotation is not in the turn it cites", async () => {
@@ -334,5 +344,151 @@ describe("quotation checking fails closed (verifier findings)", () => {
     expect(text).not.toBeNull();
     expect(text).not.toContain(Q1);
     expect(text).toContain(Q2);
+  });
+});
+
+describe("second-round verifier findings", () => {
+  // Turn 4 contains two sentences, as in the verifier's report.
+  const T4 = "Some say it's about defence. Others say it's farmland.";
+  const transcript2 = [
+    "Dr River: Why do towns sit on rivers?",
+    `You: I think ${Q1}.`,
+    "Dr River: Anything else?",
+    `You: ${T4}`,
+    "Dr River: And now?",
+    `You: I suppose ${Q3}.`,
+  ].join("\n\n");
+  const turns2 = parseTranscript(transcript2, "Dr River");
+  const obs2 = [
+    OBSERVATIONS[0],
+    {
+      id: "b",
+      criterionId: "evidence",
+      kind: "strength",
+      claim: "Two views",
+      evidence: [{ turn: 4, quote: "Some say it's about defence" }],
+    },
+    OBSERVATIONS[2],
+  ];
+  const report2 = (line: string) => `## Overall impression
+You weighed two explanations.
+## Strengths in reasoning
+- You said "${Q1}" [T2].
+${line}
+## Where the reasoning slipped
+- You said "${Q3}" [T6] without asking who pays.`;
+  async function shown2(line: string): Promise<string | null> {
+    const result = await runGroundedFeedback(
+      groundedInput({ transcript: transcript2, ppe: false }),
+      deps(obs2, report2(line)),
+    );
+    const out = renderGroundedFeedback(result, turns2);
+    return "text" in out ? out.text : null;
+  }
+
+  it.each([
+    [
+      "curly single",
+      "- You said ‘Some say it’s about defence. Rivers are eternal and always win.’ [T4]",
+    ],
+    [
+      "straight single",
+      "- You said 'Some say it's about defence. Rivers are eternal and always win.' [T4]",
+    ],
+    [
+      "curly double",
+      "- You said “Some say it's about defence. Rivers are eternal and always win.” [T4]",
+    ],
+    [
+      "straight double",
+      '- You said "Some say it\'s about defence. Rivers are eternal and always win." [T4]',
+    ],
+  ])("drops the whole line when a %s quotation is partly unsaid", async (_, line) => {
+    const text = await shown2(line);
+    expect(text).not.toBeNull(); // two valid quotations remain elsewhere
+    expect(text).not.toContain("eternal");
+    expect(text).not.toContain("about defence");
+    expect(text).not.toMatch(/^\s*-\s*\(turns? \d+\)\s*$/m);
+    expect(text).toContain(Q1);
+    expect(text).toContain(Q3);
+  });
+
+  it("keeps a valid quotation that spans the student's two sentences", async () => {
+    const text = await shown2(`- You said "${T4}" [T4].`);
+    expect(text).toContain("Others say it's farmland.");
+  });
+
+  it("drops debris lines that hold only a citation", async () => {
+    for (const debris of ["- [T4]", "- (turn 4).", "1. [T2, T6]", "  [see T4]"]) {
+      expect(isDebrisLine(debris)).toBe(true);
+      const text = await shown2(debris);
+      expect(text).not.toMatch(/^\s*(?:-|1\.)?\s*\(turns? [\d, and]+\)\.?\s*$/m);
+    }
+    expect(isDebrisLine("- You changed scale [T4].")).toBe(false);
+  });
+
+  it("falls back when dropping lines leaves fewer than two verified quotations", async () => {
+    const result = await runGroundedFeedback(
+      groundedInput({ transcript: transcript2, ppe: false }),
+      deps(
+        obs2,
+        `## Strengths in reasoning\n- You said "${Q1}" [T2].\n- You said ‘Some say it’s about defence. Rivers always win.’ [T4]`,
+      ),
+    );
+    expect(renderGroundedFeedback(result, turns2)).toEqual({
+      failure: "too few verified quotations",
+    });
+  });
+
+  it.each(["＂", "〝〞", "「」", "『』", "❝❞", "❛❜", "′", "″", "‟", "‛", "ʼ", "＇", "‹›"])(
+    "treats %s marks as quotation marks the checker cannot read",
+    async (marks) => {
+      const open = [...marks][0]!;
+      const close = [...marks][1] ?? open;
+      const line = `- You said ${open}rivers are eternal${close}.`;
+      expect(sentenceFailsCheck(line, TURNS)).toBe(true);
+      const text = await shownFor(
+        WRITER_REPORT.replace(`- You said "${Q2}" [T4].`, `- You said "${Q2}" [T4].\n${line}`),
+      );
+      if (text !== null) expect(text).not.toContain("eternal");
+    },
+  );
+
+  it.each([
+    "- > rivers are eternal",
+    "1. > rivers are eternal",
+    "* > rivers are eternal",
+    "> rivers are eternal",
+  ])("falls back on a blockquote, also inside a list item: %s", async (line) => {
+    const writer = WRITER_REPORT.replace(
+      `- You said "${Q2}" [T4].`,
+      `- You said "${Q2}" [T4].\n${line}`,
+    );
+    expect(renderGroundedFeedback(await pipelineResult(writer), TURNS)).toEqual({
+      failure: "blockquote",
+    });
+  });
+
+  it.each(["(turn 4)", "T4", "(T4)", "[turn 4]", "[T 4]", "[see T4]", "(turns 4 and 6)"])(
+    "holds a quotation to the turn cited as %s",
+    (ref) => {
+      expect(citedTurns(`x ${ref}`)).toContain(4);
+      // Q1 is from turn 2, so citing turn 4 (or 4 and 6) fails.
+      expect(sentenceFailsCheck(`You said "${Q1}" ${ref}.`, TURNS)).toBe(true);
+    },
+  );
+
+  it("reads every citation form, and nothing else", () => {
+    expect(citedTurns("see [T7, T9] and [note]")).toEqual([7, 9]);
+    expect(citedTurns("turns 4, 6 & 9")).toEqual([4, 6, 9]);
+    expect(citedTurns("At 4pm, PT4 and BT40 are not turns.")).toEqual([]);
+    expect(sentenceFailsCheck(`You said "${Q1}" (turn 2).`, TURNS)).toBe(false);
+  });
+
+  it("pairs a straight single quotation containing a contraction", () => {
+    expect(scanQuotes("You said 'I don't think so' here.")).toEqual({
+      quotes: ["I don't think so"],
+      unpaired: false,
+    });
   });
 });
