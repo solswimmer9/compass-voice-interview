@@ -125,4 +125,54 @@ describe("feedback access", () => {
     expect(system).toContain("[bag-charge]");
     expect(system).not.toContain("[rent-cap-day-after]");
   });
+
+  it("keeps a draft object's notes out of a student's feedback", async () => {
+    const { handleAssess } = await import("@/lib/assess.server");
+    const rpc = vi.fn().mockResolvedValue({ data: true, error: null });
+    authenticateRequest.mockResolvedValue({
+      user: { email: "student-object@example.com" },
+      supabase: { rpc },
+    });
+    const request = post(
+      PUBLISHED_URL,
+      {
+        transcript: "x",
+        interviewId: "00000000-0000-0000-0000-000000000000",
+        objectId: "geo-chart-a",
+      },
+      "a.b.c",
+    );
+    request.headers.set("x-forwarded-for", "203.0.113.78");
+    const response = await handleAssess(request);
+    expect(response.status).toBe(200);
+    expect(rpc).toHaveBeenCalledWith("consume_feedback", expect.anything());
+    const { system } = streamText.mock.calls[0]![0] as { system: string };
+    expect(system).not.toContain("OBJECT INTERVIEW NOTES");
+  });
+
+  it("gives a tester feedback from the draft object's notes, for the matching tutor only", async () => {
+    const { handleAssess } = await import("@/lib/assess.server");
+    authenticateRequest.mockResolvedValue({
+      user: { email: "tester@example.com" },
+      supabase: { rpc: vi.fn() },
+    });
+    await handleAssess(
+      post(
+        PUBLISHED_URL,
+        { transcript: "x", interviewId: "preview", tutorId: "ppe", objectId: "ppe-chart-a" },
+        "a.b.c",
+      ),
+    );
+    const { system } = streamText.mock.calls[0]![0] as { system: string };
+    expect(system).toContain("OBJECT INTERVIEW NOTES");
+    await handleAssess(
+      post(
+        PUBLISHED_URL,
+        { transcript: "x", interviewId: "preview", objectId: "ppe-chart-a" },
+        "a.b.c",
+      ),
+    );
+    const { system: geography } = streamText.mock.calls[1]![0] as { system: string };
+    expect(geography).not.toContain("OBJECT INTERVIEW NOTES");
+  });
 });

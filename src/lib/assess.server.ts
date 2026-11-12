@@ -8,6 +8,7 @@ import { limitMessage, takeFeedback, visitorKey } from "./rate-limit.server.ts";
 import { authenticateRequest } from "./request-auth.server.ts";
 import { isServerTester } from "./testers.ts";
 import { isPpeRequest, ppeFeedbackContext } from "./ppe.server.ts";
+import { objectFeedbackContext, usableObjectById } from "../content/objects/index.ts";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1";
 const TEXT_MODEL = "openai/gpt-6-astra";
@@ -60,6 +61,7 @@ export async function handleAssess(request: Request) {
     interviewId?: unknown;
     tutorId?: unknown;
     cardIds?: unknown;
+    objectId?: unknown;
   };
   try {
     body = await request.json();
@@ -86,7 +88,16 @@ export async function handleAssess(request: Request) {
       ? body.videoType
       : "video/mp4";
   const interviewId = typeof body.interviewId === "string" ? body.interviewId : "";
-  const system = ppe ? ppeSystem(body.cardIds, preview) : SYSTEM;
+  // Object interview notes: approved objects for everyone, drafts' notes for testers only.
+  const object = usableObjectById(body.objectId, ppe ? "ppe" : "geography", {
+    includeDrafts: preview,
+  });
+  const system = [
+    ppe ? ppeSystem(body.cardIds, preview) : SYSTEM,
+    object && objectFeedbackContext(object),
+  ]
+    .filter(Boolean)
+    .join("\n\n");
   if (!transcript && !video)
     return Response.json({ error: "Add a transcript or a video" }, { status: 400 });
   if (video && video.length * 0.75 > MAX_VIDEO_BYTES)

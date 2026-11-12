@@ -31,6 +31,8 @@ export type LiveStartContext = {
   readingId?: string;
   /** "ppe" runs an Oxford-style PPE interview with Prof Matt; omitted means geography. */
   tutorId?: "ppe";
+  /** "object" opens with an unlabelled chart on the table. The server picks the object. */
+  mode?: "object";
 };
 
 const initialState: LiveState = {

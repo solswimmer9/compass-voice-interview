@@ -14,10 +14,15 @@ import { isPreviewBrowser } from "@/lib/preview";
 const HEADLINE_WORDS = ["democratise", "open up", "demystify", "widen access to"];
 
 export const Route = createFileRoute("/")({
-  validateSearch: (search: Record<string, unknown>): { reading?: string; tutor?: "ppe" } => ({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { reading?: string; tutor?: "ppe"; mode?: "object" } => ({
     ...(typeof search["reading"] === "string" ? { reading: search["reading"] } : {}),
     // PPE with Prof Matt. Uses an interview credit like geography (none for tester accounts).
     ...(search["tutor"] === "ppe" ? { tutor: "ppe" as const } : {}),
+    // Object interview: the tutor puts an unlabelled chart on the table. The server decides
+    // which object (approved only for students) and refuses before any credit if none exists.
+    ...(search["mode"] === "object" ? { mode: "object" as const } : {}),
   }),
   head: () => ({
     meta: [
@@ -38,6 +43,35 @@ export const Route = createFileRoute("/")({
   }),
   component: Index,
 });
+
+/** What the browser is shown of an object interview. The tutor's notes never reach it. */
+type TableObject = { objectId: string; svg: string; alt: string; caption: string };
+
+function tableObjectFrom(event: LiveEvent): TableObject | null {
+  const { objectId, svg, alt, caption } = event;
+  if (typeof objectId !== "string" || typeof svg !== "string" || !svg.startsWith("<svg")) {
+    return null;
+  }
+  return {
+    objectId,
+    svg,
+    alt: typeof alt === "string" ? alt : "An unlabelled chart",
+    caption: typeof caption === "string" ? caption : "Your tutor has put this on the table",
+  };
+}
+
+function ObjectCard({ object }: { object: TableObject }) {
+  // Drawn as an image, so the SVG cannot run scripts or pick up page styles.
+  const src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(object.svg)}`;
+  return (
+    <figure className="rounded-md border bg-card p-4 sm:p-5">
+      <figcaption className="text-xs font-medium uppercase tracking-[0.25em] text-muted-foreground">
+        {object.caption}
+      </figcaption>
+      <img src={src} alt={object.alt} className="mt-4 block h-auto w-full" />
+    </figure>
+  );
+}
 
 type Fragment = { text: string; start: number; end: number; sequence: number };
 type Line = {
@@ -99,7 +133,12 @@ function InterviewPage() {
   const fragmentSequence = useRef(0);
 
   const [cardIds, setCardIds] = useState<string[]>([]);
+  const [tableObject, setTableObject] = useState<TableObject | null>(null);
   const onEvent = useCallback((event: LiveEvent) => {
+    if (event.type === "app.interview.object") {
+      setTableObject(tableObjectFrom(event));
+      return;
+    }
     if (event.type === "app.interview.started") {
       const ids = Array.isArray(event["cardIds"]) ? event["cardIds"] : [];
       setCardIds(ids.filter((id): id is string => typeof id === "string"));
@@ -123,19 +162,26 @@ function InterviewPage() {
     setLines((previous) => appendTranscriptFragment(previous, role, fragment));
   }, []);
 
-  const { reading: readingParam, tutor: tutorParam } = Route.useSearch();
+  const { reading: readingParam, tutor: tutorParam, mode } = Route.useSearch();
   const ppe = tutorParam === "ppe";
-  // Practice readings are geography articles, so PPE interviews ignore them.
-  const reading = ppe ? undefined : readingById(readingParam);
+  const objectMode = mode === "object";
+  // Practice readings are geography articles, so PPE and object interviews ignore them.
+  const reading = ppe || objectMode ? undefined : readingById(readingParam);
   const tutorName = ppe ? "Prof Matt" : "Dr River";
   const getStartContext = useCallback(async () => {
     const environment = getPaymentsEnvironment();
     const { data } = await supabase.auth.getSession();
     const accessToken = data.session?.access_token;
     if (!accessToken) throw new Error("Please sign in again before starting your interview.");
-    if (ppe) return { accessToken, environment, tutorId: "ppe" as const };
-    return { accessToken, environment, ...(reading ? { readingId: reading.id } : {}) };
-  }, [reading, ppe]);
+    const objectRequest = objectMode ? { mode: "object" as const } : {};
+    if (ppe) return { accessToken, environment, tutorId: "ppe" as const, ...objectRequest };
+    return {
+      accessToken,
+      environment,
+      ...objectRequest,
+      ...(reading ? { readingId: reading.id } : {}),
+    };
+  }, [reading, ppe, objectMode]);
   const call = useLiveVoice({ onEvent, getStartContext });
   const account = useAccountSnapshot();
   const [preview, setPreview] = useState(false);
@@ -160,6 +206,7 @@ function InterviewPage() {
   const start = () => {
     setLines([]);
     setCardIds([]);
+    setTableObject(null);
     fragmentSequence.current = 0;
     call.start();
   };
@@ -196,7 +243,9 @@ function InterviewPage() {
           </Link>
         )}
       </nav>
-      <main className="relative z-10 mx-auto flex min-h-[100svh] max-w-2xl flex-col justify-center px-6 py-16">
+      <main
+        className={`relative z-10 mx-auto flex min-h-[100svh] max-w-2xl flex-col justify-center px-6 py-16 ${tableObject ? "lg:max-w-4xl" : ""}`}
+      >
         <div className="text-center">
           <p className="text-xs font-medium uppercase tracking-[0.25em] text-muted-foreground">
             {ppe ? "Oxford-style practice · PPE" : "Oxbridge practice · Geography"}
@@ -261,6 +310,19 @@ function InterviewPage() {
             </Link>
           </p>
         )}
+        {objectMode && idle && (
+          <p className="mt-6 rounded-md border border-accent/60 px-4 py-3 text-center text-sm">
+            Object interview: {tutorName} puts an unlabelled chart on the table and asks what it
+            could be.{" "}
+            <Link
+              to="/"
+              search={ppe ? { tutor: "ppe" } : {}}
+              className="text-muted-foreground underline"
+            >
+              Switch to a normal interview
+            </Link>
+          </p>
+        )}
         {reading && (
           <p className="mt-6 rounded-md border border-accent/60 px-4 py-3 text-center text-sm">
             Reading interview: <span className="font-medium">{reading.title}</span>.{" "}
@@ -269,97 +331,104 @@ function InterviewPage() {
             </Link>
           </p>
         )}
-        <section className="mt-6 rounded-md border bg-card p-6">
-          <audio ref={call.audioRef} controls className="hidden" playsInline />
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            {idle ? (
-              !account.user ? (
-                <Link
-                  to="/auth"
-                  search={ppe ? { tutor: "ppe" } : {}}
-                  className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
-                >
-                  Sign in to start
-                </Link>
-              ) : !preview && account.data?.totalRemaining === 0 ? (
-                <Link
-                  to="/pricing"
-                  className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
-                >
-                  Get more interviews
-                </Link>
-              ) : (
-                <button
-                  onClick={start}
-                  disabled={!preview && account.loading}
-                  className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
-                >
-                  {showReplay ? "Start a new interview" : "Start interview"}
-                </button>
-              )
-            ) : (
-              <>
-                <span
-                  className={`h-3 w-3 rounded-full bg-accent ${call.status === "connected" ? "live-pulse" : "opacity-50"}`}
-                />
-                <span className="text-sm text-muted-foreground">
-                  {call.status === "connected"
-                    ? `In the interview room · ${clock(Math.min(elapsed, INTERVIEW_MINUTES * 60))} of ${INTERVIEW_MINUTES}:00`
-                    : call.status === "stopping"
-                      ? "Wrapping up…"
-                      : "Connecting…"}
-                </span>
-                <button
-                  disabled={call.status !== "connected"}
-                  onClick={() => call.setMuted(!call.muted)}
-                  className="ml-auto rounded-full border px-4 py-2 text-sm disabled:opacity-40"
-                >
-                  {call.muted ? "Unmute" : "Mute"}
-                </button>
-                <button
-                  disabled={call.status === "stopping"}
-                  onClick={call.stop}
-                  className="rounded-full bg-destructive px-4 py-2 text-sm text-destructive-foreground disabled:opacity-40"
-                >
-                  End interview
-                </button>
-              </>
-            )}
-          </div>
-          {call.playbackBlocked && (
-            <button
-              onClick={call.resumePlayback}
-              className="mx-auto mt-3 block rounded-full border px-4 py-2 text-sm"
-            >
-              Play {tutorName}’s voice
-            </button>
-          )}
-          {preview ? (
-            <p className="mt-2 text-center text-xs text-muted-foreground">
-              Tester mode · unlimited
-            </p>
-          ) : (
-            account.user &&
-            account.data && (
-              <p className="mt-2 text-center text-xs text-muted-foreground">
-                {account.data.lifetime ? (
-                  "Lifetime access · unlimited interviews"
+        <div
+          className={
+            tableObject ? "mt-6 grid gap-4 lg:grid-cols-[3fr_2fr] lg:items-start" : "contents"
+          }
+        >
+          {tableObject && <ObjectCard object={tableObject} />}
+          <section className={`${tableObject ? "" : "mt-6 "}rounded-md border bg-card p-6`}>
+            <audio ref={call.audioRef} controls className="hidden" playsInline />
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              {idle ? (
+                !account.user ? (
+                  <Link
+                    to="/auth"
+                    search={ppe ? { tutor: "ppe" } : {}}
+                    className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
+                  >
+                    Sign in to start
+                  </Link>
+                ) : !preview && account.data?.totalRemaining === 0 ? (
+                  <Link
+                    to="/pricing"
+                    className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
+                  >
+                    Get more interviews
+                  </Link>
                 ) : (
-                  <>
-                    {account.data.totalRemaining}{" "}
-                    {account.data.totalRemaining === 1 ? "interview" : "interviews"} remaining ·{" "}
-                    {account.data.freeRemaining} free · {account.data.paidRemaining} purchased
-                  </>
-                )}
+                  <button
+                    onClick={start}
+                    disabled={!preview && account.loading}
+                    className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
+                  >
+                    {showReplay ? "Start a new interview" : "Start interview"}
+                  </button>
+                )
+              ) : (
+                <>
+                  <span
+                    className={`h-3 w-3 rounded-full bg-accent ${call.status === "connected" ? "live-pulse" : "opacity-50"}`}
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {call.status === "connected"
+                      ? `In the interview room · ${clock(Math.min(elapsed, INTERVIEW_MINUTES * 60))} of ${INTERVIEW_MINUTES}:00`
+                      : call.status === "stopping"
+                        ? "Wrapping up…"
+                        : "Connecting…"}
+                  </span>
+                  <button
+                    disabled={call.status !== "connected"}
+                    onClick={() => call.setMuted(!call.muted)}
+                    className="ml-auto rounded-full border px-4 py-2 text-sm disabled:opacity-40"
+                  >
+                    {call.muted ? "Unmute" : "Mute"}
+                  </button>
+                  <button
+                    disabled={call.status === "stopping"}
+                    onClick={call.stop}
+                    className="rounded-full bg-destructive px-4 py-2 text-sm text-destructive-foreground disabled:opacity-40"
+                  >
+                    End interview
+                  </button>
+                </>
+              )}
+            </div>
+            {call.playbackBlocked && (
+              <button
+                onClick={call.resumePlayback}
+                className="mx-auto mt-3 block rounded-full border px-4 py-2 text-sm"
+              >
+                Play {tutorName}’s voice
+              </button>
+            )}
+            {preview ? (
+              <p className="mt-2 text-center text-xs text-muted-foreground">
+                Tester mode · unlimited
               </p>
-            )
-          )}
-          {call.error && (
-            <p role="alert" className="mt-4 text-sm text-destructive">
-              {call.error}
-            </p>
-          )}
-        </section>
+            ) : (
+              account.user &&
+              account.data && (
+                <p className="mt-2 text-center text-xs text-muted-foreground">
+                  {account.data.lifetime ? (
+                    "Lifetime access · unlimited interviews"
+                  ) : (
+                    <>
+                      {account.data.totalRemaining}{" "}
+                      {account.data.totalRemaining === 1 ? "interview" : "interviews"} remaining ·{" "}
+                      {account.data.freeRemaining} free · {account.data.paidRemaining} purchased
+                    </>
+                  )}
+                </p>
+              )
+            )}
+            {call.error && (
+              <p role="alert" className="mt-4 text-sm text-destructive">
+                {call.error}
+              </p>
+            )}
+          </section>
+        </div>
 
         {lines.length > 0 && (
           <section className="mt-10">
@@ -398,6 +467,7 @@ function InterviewPage() {
           <AssessPanel
             interviewId={call.interviewId}
             {...(ppe ? { tutorId: "ppe" as const, cardIds } : {})}
+            {...(tableObject ? { objectId: tableObject.objectId } : {})}
             initialTranscript={lines
               .map((l) => `${l.role === "assistant" ? tutorName : "You"}: ${l.text.trim()}`)
               .join("\n\n")}

@@ -15,12 +15,15 @@ export function AssessPanel({
   interviewId,
   tutorId,
   cardIds,
+  objectId,
 }: {
   initialTranscript: string;
   interviewId: string | null;
   /** Set for the PPE trial so feedback uses the PPE tutor's notes. */
   tutorId?: "ppe";
   cardIds?: string[];
+  /** Set for an object interview so feedback can use that object's notes. */
+  objectId?: string;
 }) {
   const [transcript, setTranscript] = useState(initialTranscript);
   const [video, setVideo] = useState<File | null>(null);
@@ -50,6 +53,7 @@ export function AssessPanel({
         body["tutorId"] = tutorId;
         if (cardIds?.length) body["cardIds"] = cardIds;
       }
+      if (objectId) body["objectId"] = objectId;
       if (video) {
         body["video"] = await readDataURL(video);
         body["videoType"] = video.type || "video/mp4";

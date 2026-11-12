@@ -16,6 +16,15 @@ import { INTERVIEW_MINUTES } from "./limits.ts";
 import { authenticateAccessToken } from "./request-auth.server.ts";
 import { isServerTester } from "./testers.ts";
 import { buildPpeSession, isPpeRequest, ppeTutor, PPE_TUTOR_ID } from "./ppe.server.ts";
+import {
+  objectFeedbackContext,
+  objectForBrowser,
+  objectLiveSection,
+  objectOpening,
+  selectObject,
+} from "../content/objects/index.ts";
+import { tutorById } from "../content/index.ts";
+import type { InterviewObject, TutorId } from "../content/types.ts";
 
 export type LiveConfig = {
   baseURL: string;
@@ -417,6 +426,35 @@ export function bindLiveConnection(
     return result.interviewId;
   }
 
+  /**
+   * Object interviews. Students get approved objects only; testers may also get drafts. Call
+   * inside authorizeStart's beforeCredit callback, so a missing object never costs a credit.
+   */
+  function pickObject(tutorId: TutorId, tester: boolean, seed: unknown): InterviewObject {
+    const object = selectObject(tutorId, {
+      includeDrafts: tester,
+      ...(typeof seed === "number" ? { seed } : {}),
+    });
+    if (!object) {
+      throw new Error(
+        "There is no object interview for this tutor yet. Please start a normal interview instead.",
+      );
+    }
+    return object;
+  }
+
+  /**
+   * Puts the object on the table: tutor-only notes go to the voice and backend models; the
+   * browser gets only the picture, its neutral description and a caption.
+   */
+  function applyObject(object: InterviewObject, baseInstructions: string) {
+    config.openingInstructions = objectOpening(object);
+    instructions = `${baseInstructions}\n\n${objectLiveSection(object)}`;
+    brief = { ...brief, guide: `${brief.guide}\n\n${objectFeedbackContext(object)}` };
+    const name = tutorById(object.tutor)?.persona.name ?? "Your tutor";
+    emit(objectForBrowser(object, `${name} has put this on the table`));
+  }
+
   function requestGreeting() {
     const content = (
       config.openingInstructions ??
@@ -756,6 +794,10 @@ export function bindLiveConnection(
           throw new Error("Voice startup message required");
         }
         starting = true;
+        if (event.mode !== undefined && event.mode !== "object") {
+          throw new Error("Unknown interview mode");
+        }
+        const objectMode = event.mode === "object";
         if (event.tutorId !== undefined && event.tutorId !== "geography") {
           if (!isPpeRequest(event.tutorId)) {
             throw new Error("Unknown tutor");
@@ -763,10 +805,12 @@ export function bindLiveConnection(
           execution.waitUntil(
             (async () => {
               let session: Awaited<ReturnType<typeof buildPpeSession>> | undefined;
+              let object: InterviewObject | undefined;
               // Built after sign-in and before the credit: drafts for testers, approved cards
-              // only for everyone else, and a build failure never costs a credit.
+              // and objects only for everyone else, and a build failure never costs a credit.
               const interviewId = await authorizeStart(event, async (tester) => {
                 session = await buildPpeSession(event, { includeDrafts: tester });
+                if (objectMode) object = pickObject(PPE_TUTOR_ID, tester, event.openingTurn);
               });
               if (closing || !session) return;
               config.openingInstructions = session.opening;
@@ -783,6 +827,7 @@ export function bindLiveConnection(
                   pedagogyVersion,
                   cardIds,
                   promptHash,
+                  ...(object ? { objectId: object.id } : {}),
                 }),
               );
               emit({
@@ -790,7 +835,9 @@ export function bindLiveConnection(
                 interviewId,
                 tutorId: PPE_TUTOR_ID,
                 cardIds,
+                ...(object ? { objectId: object.id } : {}),
               });
+              if (object) applyObject(object, session.liveInstructions);
               await startSession(event.sdp);
             })().catch((error) => {
               if (!closing)
@@ -811,9 +858,22 @@ export function bindLiveConnection(
           : openingInstructions(event.openingTurn);
         execution.waitUntil(
           (async () => {
-            const interviewId = await authorizeStart(event);
+            let object: InterviewObject | undefined;
+            const interviewId = await authorizeStart(
+              event,
+              objectMode
+                ? async (tester) => {
+                    object = pickObject("geography", tester, event.openingTurn);
+                  }
+                : undefined,
+            );
             if (closing) return;
-            emit({ type: "app.interview.started", interviewId });
+            emit({
+              type: "app.interview.started",
+              interviewId,
+              ...(object ? { objectId: object.id } : {}),
+            });
+            if (object) applyObject(object, conversationInstructions);
             await startSession(event.sdp);
           })().catch((error) => {
             if (!closing)
