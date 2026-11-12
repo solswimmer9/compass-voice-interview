@@ -30,7 +30,7 @@ function TutorsPage() {
         </Link>
       </nav>
       <main className="relative z-10 mx-auto flex min-h-[85svh] max-w-3xl flex-col justify-center px-6 py-16">
-        <h1 className="text-center text-4xl font-medium tracking-tighter sm:text-6xl">
+        <h1 className="text-center text-2xl font-medium tracking-tight sm:text-3xl">
           Choose your interview
         </h1>
         <ul className="mt-12 grid gap-4 sm:grid-cols-2">
