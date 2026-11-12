@@ -582,7 +582,7 @@ Hook: ships leave a port loaded with grain, fruit or coffee while, in the same c
 
 Underlying argument: whether people eat depends on whether they can get food, and having it nearby is not the same as being able to obtain it. A country can sell food abroad while some of its people cannot afford it, cannot reach it, or have lost their means of earning. National figures, such as total food produced or total exports, hide who actually has access. Export crops can bring in income, but who receives it, who owns the land and what happens to prices at home all matter.
 
-Positions to test: whether hunger is mostly about supply or about access, and what evidence would settle it for one place; who benefits from exports and who does not, including smallholders and workers on larger farms; how prices, debts and trade rules shape what is grown; whether stopping exports would help hungry people or harm those who earn from them; how price, roads, storage, conflict, weather, transport and storage can interrupt supply; how the answer changes between one household, a region and the nation.
+Positions to test: whether hunger is mostly about supply or about access, and what evidence would settle it for one place; who benefits from exports and who does not, including smallholders and workers on larger farms; how prices, debts and trade rules shape what is grown; whether stopping exports would help hungry people or harm those who earn from them; how price, roads, storage, conflict, weather and transport can interrupt supply; how the answer changes between one household, a region and the nation.
 
 Link to other cards: fair trade and who holds power along a supply chain; what a national statistic hides.
 
