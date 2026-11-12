@@ -1,5 +1,6 @@
 // DRAFT from Solomon's PPE interview pack (11 November 2026), restructured by Claude.
 // Questions are the pack's original practice questions; summaries are in our own words.
+// Fleshed out for review on 2026-11-12. Still a draft: students never hear it until it is approved.
 import type { TopicCard } from "../../../types.ts";
 
 const card: TopicCard = {
@@ -27,6 +28,7 @@ const card: TopicCard = {
   ],
   reviewedBy: "",
   reviewedAt: "",
+  recheckBy: "2027-11-12",
 };
 
 export default card;
