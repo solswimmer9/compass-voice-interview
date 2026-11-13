@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getPaymentsEnvironment } from "@/lib/stripe";
 import { AssessPanel } from "@/components/AssessPanel";
 import { FlippingWord } from "@/components/FlippingWord";
-import { TutorOrb } from "@/components/TutorOrb";
+import { LiveRoom } from "@/components/LiveRoom";
 import { tutorKey } from "@/lib/tutor-theme";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import { INTERVIEW_MINUTES } from "@/lib/limits";
@@ -225,271 +225,271 @@ function InterviewPage() {
   return (
     <div className="relative min-h-[100svh] overflow-hidden">
       <DotPattern className="h-[100svh] [mask-image:radial-gradient(520px_circle_at_center,white,transparent)]" />
-      <nav className="relative z-20 mx-auto flex max-w-2xl items-center justify-end gap-5 px-6 pt-6 text-sm">
-        <Link to="/tutors" className="text-muted-foreground transition hover:text-foreground">
-          Subjects
-        </Link>
-        <Link to="/readings" className="text-muted-foreground transition hover:text-foreground">
-          Readings
-        </Link>
-        <Link to="/pricing" className="text-muted-foreground transition hover:text-foreground">
-          Pricing
-        </Link>
-        {account.user ? (
-          <Link to="/account" className="underline">
-            Your account
-          </Link>
-        ) : (
-          <Link to="/auth" className="underline">
-            Sign in
-          </Link>
-        )}
-      </nav>
-      <main
-        className={`relative z-10 mx-auto flex min-h-[100svh] max-w-2xl flex-col justify-center px-6 py-16 ${tableObject ? "lg:max-w-4xl" : ""}`}
-      >
-        <div className="text-center">
-          <p className="text-xs font-medium uppercase tracking-[0.25em] text-muted-foreground">
-            {ppe ? "Oxford-style practice · PPE" : "Oxbridge practice · Geography"}
-          </p>
-          <h1
-            aria-label="We are here to democratise Oxbridge"
-            className="mt-4 text-4xl font-medium leading-tight tracking-tighter sm:text-6xl"
-          >
-            <span aria-hidden="true" className="block">
-              We are here to
-            </span>
-            <span aria-hidden="true" className="block">
-              <FlippingWord words={HEADLINE_WORDS} />
-            </span>
-            <span aria-hidden="true" className="block">
-              Oxbridge
-            </span>
-          </h1>
-          <div className="mx-auto mt-6 max-w-xl bg-background shadow-[0_0_20px_16px_var(--background)]">
-            <p className="text-lg font-medium">
-              Built by Cambridge students for applicants, based on real context.
-            </p>
-            <p className="mt-3 text-foreground/90">
-              Preparing for an Oxbridge interview has been too hard for too long. We change that.
-            </p>
-            {ppe ? (
-              <p className="mt-2 text-foreground/90">
-                Practise out loud with Prof Matt, an AI tutor for Oxford-style Philosophy, Politics
-                and Economics, who will test your premises and push on your arguments.
-              </p>
+      {/* Always mounted, so the tutor's voice keeps playing as the page switches views. */}
+      <audio ref={call.audioRef} controls className="hidden" playsInline />
+      {idle ? (
+        <>
+          <nav className="relative z-20 mx-auto flex max-w-2xl items-center justify-end gap-5 px-6 pt-6 text-sm">
+            <Link to="/tutors" className="text-muted-foreground transition hover:text-foreground">
+              Subjects
+            </Link>
+            <Link to="/readings" className="text-muted-foreground transition hover:text-foreground">
+              Readings
+            </Link>
+            <Link to="/pricing" className="text-muted-foreground transition hover:text-foreground">
+              Pricing
+            </Link>
+            {account.user ? (
+              <Link to="/account" className="underline">
+                Your account
+              </Link>
             ) : (
-              <p className="mt-2 text-foreground/90">
-                Practise out loud with Dr River, an AI tutor informed by real Cambridge geography
-                notes, who will challenge your reasoning.
+              <Link to="/auth" className="underline">
+                Sign in
+              </Link>
+            )}
+          </nav>
+          <main
+            className={`relative z-10 mx-auto flex min-h-[100svh] max-w-2xl flex-col justify-center px-6 py-16 ${tableObject ? "lg:max-w-4xl" : ""}`}
+          >
+            <div className="text-center">
+              <p className="text-xs font-medium uppercase tracking-[0.25em] text-muted-foreground">
+                {ppe ? "Oxford-style practice · PPE" : "Oxbridge practice · Geography"}
+              </p>
+              <h1
+                aria-label="We are here to democratise Oxbridge"
+                className="mt-4 text-4xl font-medium leading-tight tracking-tighter sm:text-6xl"
+              >
+                <span aria-hidden="true" className="block">
+                  We are here to
+                </span>
+                <span aria-hidden="true" className="block">
+                  <FlippingWord words={HEADLINE_WORDS} />
+                </span>
+                <span aria-hidden="true" className="block">
+                  Oxbridge
+                </span>
+              </h1>
+              <div className="mx-auto mt-6 max-w-xl bg-background shadow-[0_0_20px_16px_var(--background)]">
+                <p className="text-lg font-medium">
+                  Built by Cambridge students for applicants, based on real context.
+                </p>
+                <p className="mt-3 text-foreground/90">
+                  Preparing for an Oxbridge interview has been too hard for too long. We change
+                  that.
+                </p>
+                {ppe ? (
+                  <p className="mt-2 text-foreground/90">
+                    Practise out loud with Prof Matt, an AI tutor for Oxford-style Philosophy,
+                    Politics and Economics, who will test your premises and push on your arguments.
+                  </p>
+                ) : (
+                  <p className="mt-2 text-foreground/90">
+                    Practise out loud with Dr River, an AI tutor informed by real Cambridge
+                    geography notes, who will challenge your reasoning.
+                  </p>
+                )}
+              </div>
+              <ol className="mt-8 grid gap-3 text-left text-sm sm:grid-cols-3">
+                <li className="rounded-md border bg-card p-3">
+                  <span className="font-medium">1. Talk.</span>{" "}
+                  <span className="text-muted-foreground">
+                    Up to {INTERVIEW_MINUTES} minutes, using your microphone.
+                  </span>
+                </li>
+                <li className="rounded-md border bg-card p-3">
+                  <span className="font-medium">2. Read back.</span>{" "}
+                  <span className="text-muted-foreground">
+                    See the transcript of how you argued.
+                  </span>
+                </li>
+                <li className="rounded-md border bg-card p-3">
+                  <span className="font-medium">3. Get feedback.</span>{" "}
+                  <span className="text-muted-foreground">
+                    Find out where your reasoning slipped.
+                  </span>
+                </li>
+              </ol>
+            </div>
+
+            {idle && (
+              <p className="mt-6 text-center text-sm">
+                <span className="font-medium">
+                  {ppe ? "PPE · Prof Matt" : "Geography · Dr River"}
+                </span>
+                <span className="text-muted-foreground"> · </span>
+                <Link to="/tutors" className="text-muted-foreground underline">
+                  Change subject
+                </Link>
               </p>
             )}
-          </div>
-          <ol className="mt-8 grid gap-3 text-left text-sm sm:grid-cols-3">
-            <li className="rounded-md border bg-card p-3">
-              <span className="font-medium">1. Talk.</span>{" "}
-              <span className="text-muted-foreground">
-                Up to {INTERVIEW_MINUTES} minutes, using your microphone.
-              </span>
-            </li>
-            <li className="rounded-md border bg-card p-3">
-              <span className="font-medium">2. Read back.</span>{" "}
-              <span className="text-muted-foreground">See the transcript of how you argued.</span>
-            </li>
-            <li className="rounded-md border bg-card p-3">
-              <span className="font-medium">3. Get feedback.</span>{" "}
-              <span className="text-muted-foreground">Find out where your reasoning slipped.</span>
-            </li>
-          </ol>
-        </div>
-
-        {idle && (
-          <p className="mt-6 text-center text-sm">
-            <span className="font-medium">{ppe ? "PPE · Prof Matt" : "Geography · Dr River"}</span>
-            <span className="text-muted-foreground"> · </span>
-            <Link to="/tutors" className="text-muted-foreground underline">
-              Change subject
-            </Link>
-          </p>
-        )}
-        {objectMode && idle && (
-          <p className="mt-6 rounded-md border border-accent/60 px-4 py-3 text-center text-sm">
-            Object interview: {tutorName} puts an unlabelled chart on the table and asks what it
-            could be.{" "}
-            <Link
-              to="/"
-              search={ppe ? { tutor: "ppe" } : {}}
-              className="text-muted-foreground underline"
+            {objectMode && idle && (
+              <p className="mt-6 rounded-md border border-accent/60 px-4 py-3 text-center text-sm">
+                Object interview: {tutorName} puts an unlabelled chart on the table and asks what it
+                could be.{" "}
+                <Link
+                  to="/"
+                  search={ppe ? { tutor: "ppe" } : {}}
+                  className="text-muted-foreground underline"
+                >
+                  Switch to a normal interview
+                </Link>
+              </p>
+            )}
+            {reading && (
+              <p className="mt-6 rounded-md border border-accent/60 px-4 py-3 text-center text-sm">
+                Reading interview: <span className="font-medium">{reading.title}</span>.{" "}
+                <Link to="/" search={{}} className="text-muted-foreground underline">
+                  Switch to a normal interview
+                </Link>
+              </p>
+            )}
+            <div
+              className={
+                tableObject ? "mt-6 grid gap-4 lg:grid-cols-[3fr_2fr] lg:items-start" : "contents"
+              }
             >
-              Switch to a normal interview
-            </Link>
-          </p>
-        )}
-        {reading && (
-          <p className="mt-6 rounded-md border border-accent/60 px-4 py-3 text-center text-sm">
-            Reading interview: <span className="font-medium">{reading.title}</span>.{" "}
-            <Link to="/" search={{}} className="text-muted-foreground underline">
-              Switch to a normal interview
-            </Link>
-          </p>
-        )}
-        <div
-          className={
-            tableObject ? "mt-6 grid gap-4 lg:grid-cols-[3fr_2fr] lg:items-start" : "contents"
-          }
-        >
-          {tableObject && <ObjectCard object={tableObject} />}
-          <section className={`${tableObject ? "" : "mt-6 "}rounded-md border bg-card p-6`}>
-            <audio ref={call.audioRef} controls className="hidden" playsInline />
-            {call.status !== "idle" && call.status !== "closed" && (
-              <TutorOrb
-                tutor={tutorKey(ppe ? "ppe" : undefined)}
-                status={call.status}
-                audioRef={call.audioRef}
+              {tableObject && <ObjectCard object={tableObject} />}
+              <section className={`${tableObject ? "" : "mt-6 "}rounded-md border bg-card p-6`}>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  {!account.user ? (
+                    <Link
+                      to="/auth"
+                      search={{
+                        ...(ppe ? { tutor: "ppe" as const } : {}),
+                        ...(objectMode ? { mode: "object" as const } : {}),
+                      }}
+                      className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
+                    >
+                      Sign in to start
+                    </Link>
+                  ) : !preview && account.data?.totalRemaining === 0 ? (
+                    <Link
+                      to="/pricing"
+                      className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
+                    >
+                      Get more interviews
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={start}
+                      disabled={!preview && account.loading}
+                      className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
+                    >
+                      {showReplay ? "Start a new interview" : "Start interview"}
+                    </button>
+                  )}
+                </div>
+                {call.playbackBlocked && (
+                  <button
+                    onClick={call.resumePlayback}
+                    className="mx-auto mt-3 block rounded-full border px-4 py-2 text-sm"
+                  >
+                    Play {tutorName}’s voice
+                  </button>
+                )}
+                {preview ? (
+                  <p className="mt-2 text-center text-xs text-muted-foreground">
+                    Tester mode · unlimited
+                  </p>
+                ) : (
+                  account.user &&
+                  account.data && (
+                    <p className="mt-2 text-center text-xs text-muted-foreground">
+                      {account.data.lifetime ? (
+                        "Lifetime access · unlimited interviews"
+                      ) : (
+                        <>
+                          {account.data.totalRemaining}{" "}
+                          {account.data.totalRemaining === 1 ? "interview" : "interviews"} remaining
+                          · {account.data.freeRemaining} free · {account.data.paidRemaining}{" "}
+                          purchased
+                        </>
+                      )}
+                    </p>
+                  )
+                )}
+                {call.error && (
+                  <p role="alert" className="mt-4 text-sm text-destructive">
+                    {call.error}
+                  </p>
+                )}
+              </section>
+            </div>
+
+            {lines.length > 0 && (
+              <section className="mt-10">
+                <h2 className="font-serif text-3xl font-semibold">
+                  {showReplay ? "Replay" : "Transcript"}
+                </h2>
+                {showReplay && (
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Read back how you argued. Where did {tutorName} push hardest?
+                  </p>
+                )}
+                <ol className="mt-6 space-y-5">
+                  {lines.map((line, i) => (
+                    <li
+                      key={i}
+                      className={
+                        line.role === "assistant" ? "border-l-2 border-accent pl-4" : "pl-4"
+                      }
+                    >
+                      <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                        {line.role === "assistant" ? tutorName : "You"}
+                      </p>
+                      <p
+                        className={
+                          line.role === "assistant" ? "mt-1 font-serif text-xl italic" : "mt-1"
+                        }
+                      >
+                        {line.text}
+                      </p>
+                    </li>
+                  ))}
+                </ol>
+                <div ref={endRef} />
+              </section>
+            )}
+
+            {showReplay && (
+              <AssessPanel
+                interviewId={call.interviewId}
+                studentName={account.data?.profile?.display_name}
+                {...(ppe ? { tutorId: "ppe" as const, cardIds } : {})}
+                {...(tableObject ? { objectId: tableObject.objectId } : {})}
+                initialTranscript={lines
+                  .map((l) => `${l.role === "assistant" ? tutorName : "You"}: ${l.text.trim()}`)
+                  .join("\n\n")}
               />
             )}
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              {idle ? (
-                !account.user ? (
-                  <Link
-                    to="/auth"
-                    search={{
-                      ...(ppe ? { tutor: "ppe" as const } : {}),
-                      ...(objectMode ? { mode: "object" as const } : {}),
-                    }}
-                    className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
-                  >
-                    Sign in to start
-                  </Link>
-                ) : !preview && account.data?.totalRemaining === 0 ? (
-                  <Link
-                    to="/pricing"
-                    className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
-                  >
-                    Get more interviews
-                  </Link>
-                ) : (
-                  <button
-                    onClick={start}
-                    disabled={!preview && account.loading}
-                    className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
-                  >
-                    {showReplay ? "Start a new interview" : "Start interview"}
-                  </button>
-                )
-              ) : (
-                <>
-                  <span
-                    className={`h-3 w-3 rounded-full bg-accent ${call.status === "connected" ? "live-pulse" : "opacity-50"}`}
-                  />
-                  <span className="text-sm text-muted-foreground">
-                    {call.status === "connected"
-                      ? `In the interview room · ${clock(Math.min(elapsed, INTERVIEW_MINUTES * 60))} of ${INTERVIEW_MINUTES}:00`
-                      : call.status === "stopping"
-                        ? "Wrapping up…"
-                        : "Connecting…"}
-                  </span>
-                  <button
-                    disabled={call.status !== "connected"}
-                    onClick={() => call.setMuted(!call.muted)}
-                    className="ml-auto rounded-full border px-4 py-2 text-sm disabled:opacity-40"
-                  >
-                    {call.muted ? "Unmute" : "Mute"}
-                  </button>
-                  <button
-                    disabled={call.status === "stopping"}
-                    onClick={call.stop}
-                    className="rounded-full bg-destructive px-4 py-2 text-sm text-destructive-foreground disabled:opacity-40"
-                  >
-                    End interview
-                  </button>
-                </>
-              )}
-            </div>
-            {call.playbackBlocked && (
-              <button
-                onClick={call.resumePlayback}
-                className="mx-auto mt-3 block rounded-full border px-4 py-2 text-sm"
-              >
-                Play {tutorName}’s voice
-              </button>
-            )}
-            {preview ? (
-              <p className="mt-2 text-center text-xs text-muted-foreground">
-                Tester mode · unlimited
-              </p>
-            ) : (
-              account.user &&
-              account.data && (
-                <p className="mt-2 text-center text-xs text-muted-foreground">
-                  {account.data.lifetime ? (
-                    "Lifetime access · unlimited interviews"
-                  ) : (
-                    <>
-                      {account.data.totalRemaining}{" "}
-                      {account.data.totalRemaining === 1 ? "interview" : "interviews"} remaining ·{" "}
-                      {account.data.freeRemaining} free · {account.data.paidRemaining} purchased
-                    </>
-                  )}
-                </p>
-              )
-            )}
-            {call.error && (
-              <p role="alert" className="mt-4 text-sm text-destructive">
-                {call.error}
-              </p>
-            )}
-          </section>
-        </div>
-
-        {lines.length > 0 && (
-          <section className="mt-10">
-            <h2 className="font-serif text-3xl font-semibold">
-              {showReplay ? "Replay" : "Transcript"}
-            </h2>
-            {showReplay && (
-              <p className="mt-1 text-sm text-muted-foreground">
-                Read back how you argued. Where did {tutorName} push hardest?
-              </p>
-            )}
-            <ol className="mt-6 space-y-5">
-              {lines.map((line, i) => (
-                <li
-                  key={i}
-                  className={line.role === "assistant" ? "border-l-2 border-accent pl-4" : "pl-4"}
-                >
-                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                    {line.role === "assistant" ? tutorName : "You"}
-                  </p>
-                  <p
-                    className={
-                      line.role === "assistant" ? "mt-1 font-serif text-xl italic" : "mt-1"
-                    }
-                  >
-                    {line.text}
-                  </p>
-                </li>
-              ))}
-            </ol>
-            <div ref={endRef} />
-          </section>
-        )}
-
-        {showReplay && (
-          <AssessPanel
-            interviewId={call.interviewId}
-            studentName={account.data?.profile?.display_name}
-            {...(ppe ? { tutorId: "ppe" as const, cardIds } : {})}
-            {...(tableObject ? { objectId: tableObject.objectId } : {})}
-            initialTranscript={lines
-              .map((l) => `${l.role === "assistant" ? tutorName : "You"}: ${l.text.trim()}`)
-              .join("\n\n")}
+          </main>
+          <footer className="relative z-10 mx-auto max-w-2xl px-6 pb-10 text-center text-xs text-muted-foreground">
+            Not affiliated with Oxford or Cambridge. AI can make mistakes.
+          </footer>
+        </>
+      ) : (
+        call.status !== "idle" &&
+        call.status !== "closed" && (
+          <LiveRoom
+            tutor={tutorKey(ppe ? "ppe" : undefined)}
+            tutorName={tutorName}
+            subjectLabel={ppe ? "PPE · Prof Matt" : "Geography · Dr River"}
+            objectMode={objectMode}
+            object={tableObject ? <ObjectCard object={tableObject} /> : undefined}
+            status={call.status}
+            audioRef={call.audioRef}
+            line={lines.at(-1)}
+            clock={`${clock(Math.min(elapsed, INTERVIEW_MINUTES * 60))} / ${INTERVIEW_MINUTES}:00`}
+            muted={call.muted}
+            onToggleMute={() => call.setMuted(!call.muted)}
+            onEnd={call.stop}
+            playbackBlocked={call.playbackBlocked}
+            onResumePlayback={call.resumePlayback}
+            error={call.error}
           />
-        )}
-      </main>
-      <footer className="relative z-10 mx-auto max-w-2xl px-6 pb-10 text-center text-xs text-muted-foreground">
-        Not affiliated with Oxford or Cambridge. AI can make mistakes.
-      </footer>
+        )
+      )}
     </div>
   );
 }
