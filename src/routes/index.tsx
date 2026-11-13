@@ -1,5 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { readingById } from "@/lib/readings";
+import {
+  hasChosenSubject,
+  parseInterviewChoice,
+  takeChoiceAfterSignIn,
+  type InterviewChoice,
+} from "@/lib/interview-choice";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLiveVoice, type LiveEvent } from "@/hooks/use-live-voice";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,16 +22,11 @@ import { isPreviewBrowser } from "@/lib/preview";
 const HEADLINE_WORDS = ["democratise", "open up", "demystify", "widen access to"];
 
 export const Route = createFileRoute("/")({
-  validateSearch: (
-    search: Record<string, unknown>,
-  ): { reading?: string; tutor?: "ppe"; mode?: "object" } => ({
-    ...(typeof search["reading"] === "string" ? { reading: search["reading"] } : {}),
-    // PPE with Prof Matt. Uses an interview credit like geography (none for tester accounts).
-    ...(search["tutor"] === "ppe" ? { tutor: "ppe" as const } : {}),
-    // Object interview: the tutor puts an unlabelled chart on the table. The server decides
-    // which object (approved only for students) and refuses before any credit if none exists.
-    ...(search["mode"] === "object" ? { mode: "object" as const } : {}),
-  }),
+  // tutor: "ppe" (Prof Matt) or "geography" (Dr River); a reading means geography. Object mode:
+  // the tutor puts an unlabelled chart on the table. Until a subject is chosen the page offers the
+  // subject picker. Every interview uses a credit; the server decides access on its own.
+  validateSearch: (search: Record<string, unknown>): InterviewChoice =>
+    parseInterviewChoice(search),
   head: () => ({
     meta: [
       { title: "We are here to democratise Oxbridge" },
@@ -164,7 +165,9 @@ function InterviewPage() {
     setLines((previous) => appendTranscriptFragment(previous, role, fragment));
   }, []);
 
-  const { reading: readingParam, tutor: tutorParam, mode } = Route.useSearch();
+  const search = Route.useSearch();
+  const { reading: readingParam, tutor: tutorParam, mode } = search;
+  const chosen = hasChosenSubject(search);
   const ppe = tutorParam === "ppe";
   const objectMode = mode === "object";
   // Practice readings are geography articles, so PPE and object interviews ignore them.
@@ -222,6 +225,15 @@ function InterviewPage() {
   // Also true after a dropped call, so an interview that ended early can still be assessed.
   const showReplay = idle && lines.length > 0;
 
+  // Back from a sign-in that left the site (Google, email confirmation): restore the subject.
+  const navigate = useNavigate();
+  const signedIn = Boolean(account.user);
+  useEffect(() => {
+    if (!signedIn || chosen) return;
+    const remembered = takeChoiceAfterSignIn();
+    if (remembered) void navigate({ to: "/", search: remembered, replace: true });
+  }, [signedIn, chosen, navigate]);
+
   return (
     <div className="relative min-h-[100svh] overflow-hidden">
       <DotPattern className="h-[100svh] [mask-image:radial-gradient(520px_circle_at_center,white,transparent)]" />
@@ -244,7 +256,14 @@ function InterviewPage() {
                 Your account
               </Link>
             ) : (
-              <Link to="/auth" className="underline">
+              <Link
+                to="/auth"
+                search={{
+                  ...(tutorParam ? { tutor: tutorParam } : {}),
+                  ...(objectMode ? { mode: "object" as const } : {}),
+                }}
+                className="underline"
+              >
                 Sign in
               </Link>
             )}
@@ -254,7 +273,11 @@ function InterviewPage() {
           >
             <div className="text-center">
               <p className="text-xs font-medium uppercase tracking-[0.25em] text-muted-foreground">
-                {ppe ? "Oxford-style practice · PPE" : "Oxbridge practice · Geography"}
+                {!chosen
+                  ? "Oxbridge practice"
+                  : ppe
+                    ? "Oxford-style practice · PPE"
+                    : "Oxbridge practice · Geography"}
               </p>
               <h1
                 aria-label="We are here to democratise Oxbridge"
@@ -278,7 +301,12 @@ function InterviewPage() {
                   Preparing for an Oxbridge interview has been too hard for too long. We change
                   that.
                 </p>
-                {ppe ? (
+                {!chosen ? (
+                  <p className="mt-2 text-foreground/90">
+                    Practise out loud with an AI tutor for your subject, who will challenge your
+                    reasoning like a real interviewer.
+                  </p>
+                ) : ppe ? (
                   <p className="mt-2 text-foreground/90">
                     Practise out loud with Prof Matt, an AI tutor for Oxford-style Philosophy,
                     Politics and Economics, who will test your premises and push on your arguments.
@@ -312,7 +340,7 @@ function InterviewPage() {
               </ol>
             </div>
 
-            {idle && (
+            {idle && chosen && (
               <p className="mt-6 text-center text-sm">
                 <span className="font-medium">
                   {ppe ? "PPE · Prof Matt" : "Geography · Dr River"}
@@ -329,7 +357,7 @@ function InterviewPage() {
                 could be.{" "}
                 <Link
                   to="/"
-                  search={ppe ? { tutor: "ppe" } : {}}
+                  search={{ tutor: ppe ? "ppe" : "geography" }}
                   className="text-muted-foreground underline"
                 >
                   Switch to a normal interview
@@ -339,7 +367,11 @@ function InterviewPage() {
             {reading && (
               <p className="mt-6 rounded-md border border-accent/60 px-4 py-3 text-center text-sm">
                 Reading interview: <span className="font-medium">{reading.title}</span>.{" "}
-                <Link to="/" search={{}} className="text-muted-foreground underline">
+                <Link
+                  to="/"
+                  search={{ tutor: "geography" }}
+                  className="text-muted-foreground underline"
+                >
                   Switch to a normal interview
                 </Link>
               </p>
@@ -352,11 +384,18 @@ function InterviewPage() {
               {tableObject && <ObjectCard object={tableObject} />}
               <section className={`${tableObject ? "" : "mt-6 "}rounded-md border bg-card p-6`}>
                 <div className="flex flex-wrap items-center justify-center gap-3">
-                  {!account.user ? (
+                  {!chosen ? (
+                    <Link
+                      to="/tutors"
+                      className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
+                    >
+                      Choose your subject
+                    </Link>
+                  ) : !account.user ? (
                     <Link
                       to="/auth"
                       search={{
-                        ...(ppe ? { tutor: "ppe" as const } : {}),
+                        tutor: ppe ? ("ppe" as const) : ("geography" as const),
                         ...(objectMode ? { mode: "object" as const } : {}),
                       }}
                       className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"

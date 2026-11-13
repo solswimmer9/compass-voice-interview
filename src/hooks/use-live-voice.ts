@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { microphoneErrorMessage } from "@/lib/mic-error";
 
 export type LiveEvent = {
   type: string;
@@ -446,7 +447,7 @@ function createLiveVoice(options: LiveOptions) {
         release();
       };
     } catch (error) {
-      fail(error instanceof Error ? error.message : "Microphone startup failed");
+      fail(microphoneErrorMessage(error));
     }
   }
 

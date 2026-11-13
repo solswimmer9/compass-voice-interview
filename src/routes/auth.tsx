@@ -1,4 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import {
+  parseInterviewChoice,
+  rememberChoiceForSignIn,
+  type InterviewChoice,
+} from "@/lib/interview-choice";
 import { useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -6,11 +11,11 @@ import { useAuth } from "@/components/AuthProvider";
 import "@lovable.dev/cloud-auth-js/styles.css";
 
 export const Route = createFileRoute("/auth")({
-  // Which tutor the student was on, so signing in returns them to the same interview.
-  validateSearch: (search: Record<string, unknown>): { tutor?: "ppe"; mode?: "object" } => ({
-    ...(search["tutor"] === "ppe" ? { tutor: "ppe" as const } : {}),
-    ...(search["mode"] === "object" ? { mode: "object" as const } : {}),
-  }),
+  // Which interview the student was on, so signing in returns them to the same one.
+  validateSearch: (search: Record<string, unknown>): Omit<InterviewChoice, "reading"> => {
+    const { tutor, mode } = parseInterviewChoice(search);
+    return { ...(tutor ? { tutor } : {}), ...(mode ? { mode } : {}) };
+  },
   head: () => ({
     meta: [
       { title: "Sign in | Oxbridge Interview Practice" },
@@ -72,6 +77,8 @@ function AuthPage() {
   const socialSignIn = async (provider: "google" | "lovable") => {
     setBusy(true);
     setMessage(null);
+    // Google and Lovable sign-in leave the site and come back to the home page.
+    rememberChoiceForSignIn(interviewSearch);
     const result = await lovable.auth.signInWithOAuth(provider, {
       redirect_uri: window.location.origin,
     });
@@ -85,6 +92,8 @@ function AuthPage() {
     setBusy(true);
     setMessage(null);
     if (mode === "signup") {
+      // The confirmation link comes back to the home page, usually in this browser.
+      rememberChoiceForSignIn(interviewSearch);
       const { data, error } = await supabase.auth.signUp({
         email,
         password,

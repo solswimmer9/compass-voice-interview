@@ -8,7 +8,12 @@ import { isPreviewBrowser } from "@/lib/preview";
 // sign-in, credits and feedback rules are enforced there and on the server.
 const TUTORS = [
   { id: "ppe", subject: "PPE", tutor: "Prof Matt", search: { tutor: "ppe" as const } },
-  { id: "geography", subject: "Geography", tutor: "Dr River", search: {} },
+  {
+    id: "geography",
+    subject: "Geography",
+    tutor: "Dr River",
+    search: { tutor: "geography" as const },
+  },
 ] as const;
 
 export const Route = createFileRoute("/tutors")({
