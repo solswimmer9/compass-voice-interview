@@ -479,7 +479,7 @@ function InterviewPage() {
             object={tableObject ? <ObjectCard object={tableObject} /> : undefined}
             status={call.status}
             audioRef={call.audioRef}
-            line={lines.at(-1)}
+            line={lines.length ? { ...lines.at(-1)!, key: lines.length } : undefined}
             clock={`${clock(Math.min(elapsed, INTERVIEW_MINUTES * 60))} / ${INTERVIEW_MINUTES}:00`}
             muted={call.muted}
             onToggleMute={() => call.setMuted(!call.muted)}

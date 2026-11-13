@@ -21,8 +21,8 @@ export function TutorOrb({
   tutor: TutorKey;
   status: OrbStatus;
   audioRef: RefObject<HTMLAudioElement | null>;
-  /** "lg" is the live room's centrepiece. */
-  size?: "md" | "lg";
+  /** "lg" is the live room's centrepiece; "sm" shares the room with a chart. */
+  size?: "sm" | "md" | "lg";
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [speaking, setSpeaking] = useState(false);
@@ -141,7 +141,7 @@ export function TutorOrb({
       data-testid="tutor-orb"
       data-tutor={tutor}
       data-speaking={speaking}
-      className={`tutor-orb relative mx-auto grid place-items-center ${size === "lg" ? "size-44 sm:size-[280px]" : "mb-6 size-40 sm:size-[200px]"}`}
+      className={`tutor-orb relative mx-auto grid place-items-center ${size === "lg" ? "size-44 sm:size-[280px]" : size === "sm" ? "size-24 sm:size-[200px]" : "mb-6 size-40 sm:size-[200px]"}`}
       style={
         {
           "--orb-level": "0",

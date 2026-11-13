@@ -22,7 +22,7 @@ export function LiveCaption({
     <div
       aria-live="polite"
       aria-label={role ? `${tutor ? tutorName : "You"}: ${text}` : undefined}
-      className="mx-auto mt-10 min-h-[6.5rem] max-w-3xl px-2 text-center sm:mt-12"
+      className={`mx-auto max-w-3xl px-2 text-center ${compact ? "mt-3 min-h-[4.5rem] sm:mt-8" : "mt-10 min-h-[6.5rem] sm:mt-12"}`}
     >
       {role && words.length > 0 && (
         <>
@@ -38,8 +38,8 @@ export function LiveCaption({
             aria-hidden="true"
             className={
               tutor
-                ? `text-2xl font-medium leading-snug tracking-tight ${compact ? "sm:text-[1.75rem]" : "sm:text-4xl"}`
-                : `text-lg leading-snug text-foreground/75 ${compact ? "sm:text-xl" : "sm:text-2xl"}`
+                ? `font-medium leading-snug tracking-tight ${compact ? "text-lg sm:text-[1.75rem]" : "text-2xl sm:text-4xl"}`
+                : `leading-snug text-foreground/75 ${compact ? "text-base sm:text-xl" : "text-lg sm:text-2xl"}`
             }
           >
             {trimmed && "… "}

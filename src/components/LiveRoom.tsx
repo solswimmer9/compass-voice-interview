@@ -1,4 +1,4 @@
-import type { ReactNode, RefObject } from "react";
+import { useEffect, type ReactNode, type RefObject } from "react";
 import { LiveCaption } from "@/components/LiveCaption";
 import { TutorOrb } from "@/components/TutorOrb";
 import type { TutorKey } from "@/lib/tutor-theme";
@@ -36,7 +36,7 @@ export function LiveRoom({
   status: LiveStatus;
   audioRef: RefObject<HTMLAudioElement | null>;
   /** The latest line of the conversation. */
-  line: { role: "user" | "assistant"; text: string } | undefined;
+  line: { role: "user" | "assistant"; text: string; key?: number } | undefined;
   /** e.g. "11:24 / 20:00" */
   clock: string;
   muted: boolean;
@@ -46,6 +46,8 @@ export function LiveRoom({
   onResumePlayback: () => void;
   error: string | null;
 }) {
+  // The room replaces a page the student may have scrolled down to reach Start.
+  useEffect(() => window.scrollTo({ top: 0 }), []);
   return (
     <main
       className={`relative z-10 mx-auto flex min-h-[100svh] flex-col px-6 py-6 ${object ? "max-w-5xl" : "max-w-4xl"}`}
@@ -57,22 +59,23 @@ export function LiveRoom({
       <div
         className={
           object
-            ? "grid flex-1 content-center items-center gap-8 py-8 lg:grid-cols-[3fr_2fr]"
+            ? "grid flex-1 content-center items-center gap-4 py-4 sm:gap-8 sm:py-8 lg:grid-cols-[3fr_2fr]"
             : "flex flex-1 flex-col justify-center py-8"
         }
       >
         {object}
         <div>
-          <TutorOrb tutor={tutor} status={status} audioRef={audioRef} size="lg" />
+          <TutorOrb tutor={tutor} status={status} audioRef={audioRef} size={object ? "sm" : "lg"} />
           <LiveCaption
             role={line?.role ?? null}
+            key={line?.key}
             text={line?.text ?? ""}
             tutorName={tutorName}
             compact={Boolean(object)}
           />
         </div>
       </div>
-      <div className="flex flex-col items-center gap-3 pb-6 sm:pb-8">
+      <div className="flex flex-col items-center gap-3 pb-4 sm:pb-8">
         {playbackBlocked && (
           <button onClick={onResumePlayback} className="rounded-full border px-4 py-2 text-sm">
             Play {tutorName}’s voice
