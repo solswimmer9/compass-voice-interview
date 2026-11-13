@@ -71,6 +71,20 @@ One feedback report per interview, enforced on the server. Below it, the full tr
 
 Interviews are 20 minutes (`INTERVIEW_MINUTES`).
 
-## Still open
+## Decisions (round 2, 13 Nov)
 
-See chat.
+- Base: `main` merged into `experiments/ideas`, main's code kept (done, commit 153ce1a).
+- Chart comes out around minute 8–10 of the 20, in every interview. Same chart each time is fine for now.
+- Waiting room lasts until the tutor is connected; the credit is used only once connected.
+- When the call ends, go straight to the letter page; the letter starts writing itself.
+- Optional video upload: dropped.
+- After the letter: head to pricing (home as the secondary link).
+- Sign-in asked for at "Start interview" (default, not discussed).
+
+## Build order
+
+1. `/subjects` page with Start buttons; readings "coming soon"; Readings out of the top menu; home button goes to `/subjects`.
+2. `/interview` room with a waiting room that connects in the background.
+3. Chart in every interview (relay + tutor instructions), timed around minute 8–10.
+4. `/feedback` letter page: auto-start, no video, then pricing.
+5. Credit only once connected (check relay first).
