@@ -49,6 +49,28 @@ One feedback report per interview, enforced on the server. Below it, the full tr
 - Credit and one-feedback-per-interview rules stay on the server unchanged; this is purely layout and navigation.
 - Old links (`/tutors`, `/#subjects`, `/?tutor=ppe`) keep working via redirects.
 
-## Open questions
+## Decisions so far (13 Nov)
 
-See the chat for the full list; answers will be recorded here.
+- **Pick a subject is its own page.** Each subject has a "Start interview" button.
+- **Start interview opens a new room with the orb, after a short waiting room** while the voice
+  agent connects, so the student isn't left watching it boot.
+- **Readings:** shown as "coming soon" on the subject page; removed from the top menu.
+- **Objects (option A):** the chart/image feature becomes part of every normal interview,
+  not a separate "Object interview" mode.
+
+## Found on `main` (not yet on `experiments/ideas`)
+
+`main` is 35 commits ahead of this branch and already has:
+- Object interviews: tutor puts an unlabelled chart on the table (`src/content/objects/`,
+  approved 12 Nov: Dr River urban/rural share, Prof Matt UK turnout). Today it is a separate
+  `?mode=object` link on the picker; the relay only sends a chart in that mode.
+- Live room with captions (`LiveRoom.tsx`, `LiveCaption.tsx`).
+- Feedback letter from the tutor plus an argument map (`FeedbackLetter.tsx`, `ArgumentMap.tsx`).
+- Onboarding: choose a subject first, subject kept through sign-in, clearer mic errors.
+- Lovable edit (13 Nov 16:10): "Picking a subject now starts the interview straight away".
+
+Interviews are 20 minutes (`INTERVIEW_MINUTES`).
+
+## Still open
+
+See chat.
