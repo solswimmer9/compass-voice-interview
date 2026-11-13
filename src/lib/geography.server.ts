@@ -31,7 +31,7 @@ export async function buildGeographySession(event: {
   readingId?: unknown;
 }): Promise<SessionContext> {
   const tutor = geographyTutor();
-  const reading = readingById(event.readingId) ?? null;
+  const reading = readingById(event.readingId, "geography") ?? null;
   const options: SelectCardsOptions = { includeDrafts: false };
   if (typeof event.openingTurn === "number") options.seed = event.openingTurn;
   // No stored card history or memory yet: pass them here once they are saved.

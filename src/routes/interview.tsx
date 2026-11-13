@@ -112,8 +112,9 @@ function InterviewRoom() {
   const { reading: readingParam, tutor: tutorParam, mode } = search;
   const ppe = tutorParam === "ppe";
   const objectMode = mode === "object";
-  // Practice readings are geography articles, so PPE and object interviews ignore them.
-  const reading = ppe || objectMode ? undefined : readingById(readingParam);
+  // A reading counts only for its own subject's tutor; object interviews ignore readings.
+  // (Only Dr River's server path runs reading interviews so far.)
+  const reading = objectMode ? undefined : readingById(readingParam, ppe ? "ppe" : "geography");
   const tutorName = ppe ? "Prof Matt" : "Dr River";
   const subjectLabel = ppe ? "PPE · Prof Matt" : "Geography · Dr River";
   const getStartContext = useCallback(async () => {
@@ -239,6 +240,7 @@ function InterviewRoom() {
           subjectLabel={subjectLabel}
           audioRef={call.audioRef}
           error={call.error}
+          chartLater={!reading && !objectMode}
           onCancel={cancel}
         />
       ) : !idle ? (

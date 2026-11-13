@@ -1,6 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { READING_MINUTES, readingById } from "@/lib/readings";
+import { subjectById } from "@/lib/subjects";
 
 export const Route = createFileRoute("/readings_/$readingId")({
   loader: ({ params }) => {
@@ -57,6 +58,7 @@ function ReadingSessionPage() {
 
   if (!found) return null;
   const reading = found;
+  const tutorName = subjectById(reading.subject)?.tutor ?? "your tutor";
   const total = READING_MINUTES * 60;
   const elapsed = startedAt === null ? 0 : Math.floor((now - startedAt) / 1000);
   const remaining = Math.max(0, total - elapsed);
@@ -64,7 +66,11 @@ function ReadingSessionPage() {
 
   return (
     <main className="mx-auto min-h-screen max-w-2xl px-6 py-10">
-      <Link to="/readings" className="text-sm text-muted-foreground hover:text-foreground">
+      <Link
+        to="/readings"
+        search={{ subject: reading.subject }}
+        className="text-sm text-muted-foreground hover:text-foreground"
+      >
         ← All readings
       </Link>
 
@@ -131,13 +137,13 @@ function ReadingSessionPage() {
           )}
         </Step>
 
-        <Step number={3} title="Talk it through with Dr River" active={done} complete={false}>
+        <Step number={3} title={`Talk it through with ${tutorName}`} active={done} complete={false}>
           <p className="mt-2 text-sm text-muted-foreground">
             He'll ask you to sum up the argument, then test it and share his own take.
           </p>
           <Link
             to="/interview"
-            search={{ reading: reading.id, start: true as const }}
+            search={{ tutor: reading.subject, reading: reading.id, start: true as const }}
             className={`mt-4 inline-flex rounded-full px-6 py-3 font-medium transition ${
               done
                 ? "bg-primary text-primary-foreground hover:opacity-90"

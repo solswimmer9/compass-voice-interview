@@ -2,24 +2,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import { SiteNav } from "@/components/SiteNav";
 import { INTERVIEW_MINUTES } from "@/lib/limits";
+import { readingsFor } from "@/lib/readings";
+import { SUBJECTS } from "@/lib/subjects";
 
-// One entry per live tutor. "Start interview" opens the interview room, which connects straight
-// away behind a short waiting room; sign-in, credits and feedback rules are enforced there and on
-// the server.
-const SUBJECTS = [
-  {
-    id: "ppe",
-    subject: "PPE",
-    tutor: "Prof Matt",
-    line: "Oxford-style Philosophy, Politics and Economics. He will test your premises.",
-  },
-  {
-    id: "geography",
-    subject: "Geography",
-    tutor: "Dr River",
-    line: "Built from real Cambridge geography notes. He will ask why, then ask again.",
-  },
-] as const;
+// "Start interview" opens the interview room, which connects straight away behind a short waiting
+// room. A subject with practice readings also offers "start with a reading". Sign-in, credits and
+// feedback rules are enforced in the room and on the server.
 
 export const Route = createFileRoute("/subjects")({
   head: () => ({
@@ -48,33 +36,37 @@ function SubjectsPage() {
         </p>
 
         <ul className="mt-12 grid gap-4 sm:grid-cols-2">
-          {SUBJECTS.map((s) => (
-            <li key={s.id} className="flex flex-col rounded-md border bg-card p-8">
-              <span className="text-4xl font-medium tracking-tight sm:text-5xl">{s.subject}</span>
-              <span className="mt-2 text-foreground/80">with {s.tutor}</span>
-              <span className="mt-4 flex-1 text-sm text-muted-foreground">{s.line}</span>
-              <Link
-                to="/interview"
-                search={{ tutor: s.id, start: true as const }}
-                className="mt-8 self-start rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition hover:opacity-90"
-              >
-                Start interview →
-              </Link>
-            </li>
-          ))}
+          {SUBJECTS.map((s) => {
+            const readings = readingsFor(s.id);
+            return (
+              <li key={s.id} className="flex flex-col rounded-md border bg-card p-8">
+                <span className="text-4xl font-medium tracking-tight sm:text-5xl">{s.name}</span>
+                <span className="mt-2 text-foreground/80">with {s.tutor}</span>
+                <span className="mt-4 flex-1 text-sm text-muted-foreground">{s.line}</span>
+                <Link
+                  to="/interview"
+                  search={{ tutor: s.id, start: true as const }}
+                  className="mt-8 self-start rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition hover:opacity-90"
+                >
+                  Start interview →
+                </Link>
+                {readings.length > 0 ? (
+                  <Link
+                    to="/readings"
+                    search={{ subject: s.id }}
+                    className="mt-4 self-start text-sm underline underline-offset-4 transition hover:text-accent"
+                  >
+                    Or start with a practice reading ({readings.length} articles)
+                  </Link>
+                ) : (
+                  <span className="mt-4 text-sm text-muted-foreground">
+                    Practice readings coming soon
+                  </span>
+                )}
+              </li>
+            );
+          })}
         </ul>
-
-        <section className="mt-16 rounded-md border border-dashed p-6 sm:p-8">
-          <p className="text-xs font-medium uppercase tracking-[0.25em] text-muted-foreground">
-            Coming soon
-          </p>
-          <h2 className="mt-2 text-xl font-medium tracking-tight">Practice readings</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Some colleges give you a short article before the interview and spend the first part
-            discussing it. Soon you will be able to read one here, then talk it through with your
-            tutor.
-          </p>
-        </section>
       </main>
       <footer className="relative z-10 mx-auto max-w-3xl px-6 pb-10 text-center text-xs text-muted-foreground">
         Not affiliated with Oxford or Cambridge. AI can make mistakes.

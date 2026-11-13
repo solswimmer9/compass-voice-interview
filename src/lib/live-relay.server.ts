@@ -11,7 +11,7 @@ import {
   readingOpeningInstructions,
   REASONING_GUIDE,
 } from "./interview-briefing.ts";
-import { readingById, READINGS } from "./readings.ts";
+import { readingById, readingsFor } from "./readings.ts";
 import { INTERVIEW_MINUTES, OBJECT_REVEAL_MINUTES } from "./limits.ts";
 import { authenticateAccessToken } from "./request-auth.server.ts";
 import { isServerTester } from "./testers.ts";
@@ -156,7 +156,12 @@ export function handleLiveRequest(request: Request): Response {
 
 const readingsContext = `PRACTICE READINGS
 The app lists these articles for students to read before an interview. When the interview opens on one of these readings, or the student says they have read one, spend the first 10 to 15 minutes on it, as some colleges do: check they understood it, then test its argument. Do not claim to have read the full article; work from what the student says and this summary. In a reading interview, raise your own thoughts on that article one at a time, as challenges rather than lectures. In any other interview, do not bring up these readings or thoughts unless the student does.
-${READINGS.map((r) => `- "${r.title}" (${r.source}): ${r.context} Questions: ${r.questions.join(" ")} Your own thoughts (only in an interview on this reading): ${r.tutorThoughts.join(" ")}`).join("\n")}`;
+${readingsFor("geography")
+  .map(
+    (r) =>
+      `- "${r.title}" (${r.source}): ${r.context} Questions: ${r.questions.join(" ")} Your own thoughts (only in an interview on this reading): ${r.tutorThoughts.join(" ")}`,
+  )
+  .join("\n")}`;
 
 const conversationInstructions = `${DR_RIVER_BRIEFING}
 
@@ -908,7 +913,7 @@ export function bindLiveConnection(
           );
           return;
         }
-        const reading = readingById(event.readingId);
+        const reading = readingById(event.readingId, "geography");
         config.openingInstructions = reading
           ? readingOpeningInstructions(reading)
           : openingInstructions(event.openingTurn);

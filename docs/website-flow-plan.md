@@ -102,3 +102,16 @@ Interviews are 20 minutes (`INTERVIEW_MINUTES`).
 
 Credit: already charged at start and automatically restored by the relay if the call never gets going,
 so a failed connection costs nothing. No change needed.
+
+## Practice readings (13 Nov, later)
+
+Readings were never removed, only unlinked. They now hang off each subject:
+
+- `src/lib/subjects.ts` lists the subjects (PPE, Geography; Medicine goes here next).
+- Each reading in `src/lib/readings.ts` has a `subject`. `readingsFor(subject)` drives the page.
+- `/subjects`: a subject with readings shows "Or start with a practice reading (N articles)" under
+  Start interview; one without shows "Practice readings coming soon".
+- `/readings?subject=geography` lists that subject's readings (old `/readings` links = Geography).
+  Each reading → 15-minute reading page → interview on it (no mid-interview chart in reading interviews).
+- To add PPE readings: add entries with `subject: "ppe"` and teach Prof Matt's server path
+  (`ppe.server.ts`, `live-relay.server.ts`) to open on a reading, as Dr River's does.

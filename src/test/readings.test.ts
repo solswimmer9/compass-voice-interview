@@ -25,3 +25,21 @@ describe("practice readings", () => {
     }
   });
 });
+
+describe("readings by subject", () => {
+  it("offers Geography's readings on the Geography page only", async () => {
+    const { readingsFor } = await import("@/lib/readings");
+    const { SUBJECTS } = await import("@/lib/subjects");
+    expect(readingsFor("geography").length).toBeGreaterThan(0);
+    expect(readingsFor("ppe")).toEqual([]);
+    for (const subject of SUBJECTS) {
+      for (const reading of readingsFor(subject.id)) expect(reading.subject).toBe(subject.id);
+    }
+  });
+
+  it("only finds a reading for its own subject when one is given", async () => {
+    const { readingById } = await import("@/lib/readings");
+    expect(readingById("escobar-hippos", "geography")?.id).toBe("escobar-hippos");
+    expect(readingById("escobar-hippos", "ppe")).toBeUndefined();
+  });
+});

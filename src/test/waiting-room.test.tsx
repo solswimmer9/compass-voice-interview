@@ -14,6 +14,7 @@ describe("waiting room", () => {
         subjectLabel="Geography · Dr River"
         audioRef={createRef<HTMLAudioElement>()}
         error="Microphone blocked"
+        chartLater
         onCancel={onCancel}
       />,
     );

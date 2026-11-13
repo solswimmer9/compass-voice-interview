@@ -19,6 +19,7 @@ export function WaitingRoom({
   subjectLabel,
   audioRef,
   error,
+  chartLater,
   onCancel,
 }: {
   tutor: TutorKey;
@@ -26,11 +27,14 @@ export function WaitingRoom({
   subjectLabel: string;
   audioRef: RefObject<HTMLAudioElement | null>;
   error: string | null;
+  /** True when the tutor will bring a chart out partway through (not in reading interviews). */
+  chartLater: boolean;
   onCancel: () => void;
 }) {
+  const tips = chartLater ? TIPS : TIPS.filter((text) => !text.includes("chart"));
   const [tip, setTip] = useState(0);
   useEffect(() => {
-    const timer = setInterval(() => setTip((n) => (n + 1) % TIPS.length), 4000);
+    const timer = setInterval(() => setTip((n) => n + 1), 4000);
     return () => clearInterval(timer);
   }, []);
   useEffect(() => {
@@ -52,7 +56,7 @@ export function WaitingRoom({
           key={tip}
           className="mt-10 max-w-md text-foreground/90 motion-safe:animate-in motion-safe:fade-in"
         >
-          {TIPS[tip]}
+          {tips[tip % tips.length]}
         </p>
         {error && (
           <p role="alert" className="mt-6 text-sm text-destructive">

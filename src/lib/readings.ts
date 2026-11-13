@@ -1,8 +1,13 @@
-// Practice readings: articles Keble College (Oxford) says it used in geography interviews.
-// We only link to them; we never copy the article text. Context and questions are our own.
+// Practice readings: articles colleges say they used in interviews, read before a practice
+// interview on them. We only link to them; we never copy the article text. Context and questions
+// are our own. Each reading belongs to one subject; a subject offers readings once it has some
+// (see readingsFor and src/lib/subjects.ts). Today only Geography has readings, and only Dr
+// River's relay path runs reading interviews, so a new subject's readings also need server work.
+import type { SubjectId } from "./subjects.ts";
 
 export type Reading = {
   id: string;
+  subject: SubjectId;
   title: string;
   source: string;
   url: string;
@@ -21,6 +26,7 @@ function search(title: string, source: string) {
 
 export const READINGS: Reading[] = [
   {
+    subject: "geography",
     id: "escobar-hippos",
     title: "Could Pablo Escobar's escaped hippos help the environment?",
     source: "National Geographic",
@@ -44,6 +50,7 @@ export const READINGS: Reading[] = [
     ],
   },
   {
+    subject: "geography",
     id: "ai-environment",
     title: "AI is bad for the environment, and the problem is bigger than energy consumption",
     source: "The Conversation",
@@ -66,6 +73,7 @@ export const READINGS: Reading[] = [
     ],
   },
   {
+    subject: "geography",
     id: "tipping-points",
     title: "What climate tipping points are and how they could suddenly change our planet",
     source: "The Conversation",
@@ -88,6 +96,7 @@ export const READINGS: Reading[] = [
     ],
   },
   {
+    subject: "geography",
     id: "progress-not-crisis",
     title:
       "Climate change is a by-product of progress, not an existential crisis, says Trump's energy czar",
@@ -118,6 +127,13 @@ export const READINGS: Reading[] = [
 
 export const READING_MINUTES = 15;
 
-export function readingById(id: unknown): Reading | undefined {
-  return typeof id === "string" ? READINGS.find((reading) => reading.id === id) : undefined;
+/** A reading by id; with a subject, only that subject's readings count. */
+export function readingById(id: unknown, subject?: SubjectId): Reading | undefined {
+  if (typeof id !== "string") return undefined;
+  return READINGS.find((reading) => reading.id === id && (!subject || reading.subject === subject));
+}
+
+/** The readings a subject offers, in display order. Empty when it has none yet. */
+export function readingsFor(subject: SubjectId): Reading[] {
+  return READINGS.filter((reading) => reading.subject === subject);
 }
