@@ -5,6 +5,8 @@ import { LIMITS, tutorById } from "@/content";
 import {
   OBJECTS,
   objectFeedbackContext,
+  objectMidwaySection,
+  OBJECT_REVEAL_INSTRUCTION,
   objectForBrowser,
   objectLiveSection,
   objectOpening,
@@ -128,8 +130,34 @@ describe("object lint", () => {
         expect(section).toMatch(/Never say what it shows/u);
         expect(objectFeedbackContext(object)).toContain(object.notes.goodReasoning);
       });
+
+      it("plans a mid-interview chart with the same notes and the same rule", () => {
+        const section = objectMidwaySection(object);
+        expect(section).toContain("CHART LATER IN THE INTERVIEW");
+        expect(section).toContain(object.notes.opening);
+        expect(section).toContain(object.notes.shows);
+        for (const probe of object.notes.probes) expect(section).toContain(probe);
+        expect(section).toMatch(/Never say what it shows/u);
+        expect(section).toMatch(/do not mention it before then/u);
+      });
     });
   }
+
+  it("keeps the reveal instruction inside the opening byte limit", () => {
+    expect(new TextEncoder().encode(OBJECT_REVEAL_INSTRUCTION).length).toBeLessThan(
+      LIMITS.openingBytes,
+    );
+    expect(OBJECT_REVEAL_INSTRUCTION).toContain("CHART LATER IN THE INTERVIEW");
+  });
+
+  it("keeps a PPE interview with a mid-interview chart inside the live word budget", async () => {
+    const object = selectObject("ppe", { includeDrafts: true });
+    for (let turn = 0; turn < 12; turn++) {
+      const session = await buildPpeSession({ openingTurn: turn }, { includeDrafts: true });
+      const live = `${session.liveInstructions}\n\n${objectMidwaySection(object!)}`;
+      expect(countWords(live)).toBeLessThanOrEqual(LIMITS.liveInstructionsWords);
+    }
+  });
 
   it("keeps a PPE object interview inside the live word budget", async () => {
     const object = selectObject("ppe", { includeDrafts: true });

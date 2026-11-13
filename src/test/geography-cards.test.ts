@@ -12,6 +12,7 @@ import {
   REASONING_GUIDE,
 } from "@/lib/interview-briefing";
 import { READINGS } from "@/lib/readings";
+import { objectMidwaySection, selectObject } from "@/content/objects";
 import {
   bindLiveConnection,
   type LiveExecutionContext,
@@ -51,6 +52,14 @@ const config = {
 const LEGACY_READINGS = `PRACTICE READINGS
 The app lists these articles for students to read before an interview. When the interview opens on one of these readings, or the student says they have read one, spend the first 10 to 15 minutes on it, as some colleges do: check they understood it, then test its argument. Do not claim to have read the full article; work from what the student says and this summary. In a reading interview, raise your own thoughts on that article one at a time, as challenges rather than lectures. In any other interview, do not bring up these readings or thoughts unless the student does.
 ${READINGS.map((r) => `- "${r.title}" (${r.source}): ${r.context} Questions: ${r.questions.join(" ")} Your own thoughts (only in an interview on this reading): ${r.tutorThoughts.join(" ")}`).join("\n")}`;
+
+/**
+ * Every normal (non-reading) interview also plans Dr River's approved chart for partway through
+ * (owner's decision, 13 November 2026). That section is appended after the prompt, unchanged
+ * otherwise; reading interviews get no chart. Testers get the same chart.
+ */
+const withChart = (prompt: string) =>
+  `${prompt}\n\n${objectMidwaySection(selectObject("geography", { includeDrafts: true })!)}`;
 
 const LEGACY_INSTRUCTIONS = `${DR_RIVER_BRIEFING}
 
@@ -232,8 +241,8 @@ describe("Dr River on topic cards in the live relay", () => {
 
     const h = await startAndGreet();
 
-    expect(h.instructions()).toBe(expected.liveInstructions);
-    expect(h.instructions()).not.toBe(LEGACY_INSTRUCTIONS);
+    expect(h.instructions()).toBe(withChart(expected.liveInstructions));
+    expect(h.instructions()).not.toBe(withChart(LEGACY_INSTRUCTIONS));
     expect(h.greeting()).toBe(expected.opening);
     for (const text of draftTexts()) expect(h.instructions()).not.toContain(text);
     expect(mocks.rpc).not.toHaveBeenCalled();
@@ -264,7 +273,7 @@ describe("Dr River on topic cards in the live relay", () => {
     for (const turn of [0, 1, 7, 13]) {
       vi.clearAllMocks();
       const h = await startAndGreet({ openingTurn: turn });
-      expect(h.instructions()).toBe(LEGACY_INSTRUCTIONS);
+      expect(h.instructions()).toBe(withChart(LEGACY_INSTRUCTIONS));
       expect(h.greeting()).toBe(openingInstructions(turn).trim());
       expect(mocks.rpc).toHaveBeenCalledTimes(1);
       expect(mocks.rpc).toHaveBeenCalledWith("consume_interview_credit", {
@@ -287,7 +296,7 @@ describe("Dr River on topic cards in the live relay", () => {
     vi.stubEnv("PREVIEW_TESTER_EMAILS", "");
     signIn(TESTER);
     const h = await startAndGreet();
-    expect(h.instructions()).toBe(LEGACY_INSTRUCTIONS);
+    expect(h.instructions()).toBe(withChart(LEGACY_INSTRUCTIONS));
     expect(mocks.rpc).toHaveBeenCalledWith("consume_interview_credit", { p_environment: "live" });
   });
 
@@ -344,7 +353,7 @@ describe("Dr River on topic cards in the live relay", () => {
         tutorId: "geography",
         hostname: "id-preview--1234.lovable.app",
       });
-      expect(h.instructions()).toBe(LEGACY_INSTRUCTIONS);
+      expect(h.instructions()).toBe(withChart(LEGACY_INSTRUCTIONS));
       expect(mocks.rpc).toHaveBeenCalledWith("consume_interview_credit", {
         p_environment: environment,
       });
@@ -359,7 +368,7 @@ describe("Dr River on topic cards in the live relay", () => {
     for (const environment of ["sandbox", "live", undefined]) {
       vi.clearAllMocks();
       const h = await startAndGreet({ environment });
-      expect(h.instructions()).toBe(expected.liveInstructions);
+      expect(h.instructions()).toBe(withChart(expected.liveInstructions));
       expect(mocks.rpc).not.toHaveBeenCalled();
     }
   });

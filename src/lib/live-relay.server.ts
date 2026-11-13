@@ -12,7 +12,7 @@ import {
   REASONING_GUIDE,
 } from "./interview-briefing.ts";
 import { readingById, READINGS } from "./readings.ts";
-import { INTERVIEW_MINUTES } from "./limits.ts";
+import { INTERVIEW_MINUTES, OBJECT_REVEAL_MINUTES } from "./limits.ts";
 import { authenticateAccessToken } from "./request-auth.server.ts";
 import { isServerTester } from "./testers.ts";
 import { buildPpeSession, isPpeRequest, PPE_TUTOR_ID } from "./ppe.server.ts";
@@ -25,6 +25,8 @@ import {
   objectFeedbackContext,
   objectForBrowser,
   objectLiveSection,
+  objectMidwaySection,
+  OBJECT_REVEAL_INSTRUCTION,
   objectOpening,
   selectObject,
 } from "../content/objects/index.ts";
@@ -321,6 +323,9 @@ export function bindLiveConnection(
 ): void {
   const config = { ...configuration };
   let durationTimer: ReturnType<typeof setTimeout> | undefined;
+  /** A normal interview's chart, brought out partway through by revealTimer. */
+  let midwayObject: InterviewObject | undefined;
+  let revealTimer: ReturnType<typeof setTimeout> | undefined;
   const runID = crypto.randomUUID();
   const setupAbort = new AbortController();
   let gateway: LiveSocket | undefined;
@@ -459,6 +464,46 @@ export function bindLiveConnection(
     emit(objectForBrowser(object, `${name} has put this on the table`));
   }
 
+  /**
+   * Normal interviews: plans the tutor's chart for partway through. Students get approved
+   * objects only; testers may also get drafts. Having no object is fine: the interview simply
+   * has no chart. Call inside authorizeStart's beforeCredit callback.
+   */
+  function planMidwayObject(tutorId: TutorId, tester: boolean, seed: unknown) {
+    midwayObject = selectObject(tutorId, {
+      includeDrafts: tester,
+      ...(typeof seed === "number" ? { seed } : {}),
+    });
+  }
+
+  /** Adds the chart notes to the tutor's instructions, before the voice session starts. */
+  function applyMidwayObject(baseInstructions: string) {
+    if (!midwayObject) return;
+    instructions = `${baseInstructions}\n\n${objectMidwaySection(midwayObject)}`;
+  }
+
+  /** Brings the chart out: the tutor is told, and the browser gets only the picture. */
+  function revealMidwayObject() {
+    const object = midwayObject;
+    if (!object || closing || gateway?.readyState !== 1) return;
+    midwayObject = undefined;
+    try {
+      gateway.send(
+        JSON.stringify({
+          type: "session.instructions.append",
+          event_id: crypto.randomUUID(),
+          delegation_id: null,
+          content: OBJECT_REVEAL_INSTRUCTION,
+        }),
+      );
+    } catch {
+      return stop();
+    }
+    brief = { ...brief, guide: `${brief.guide}\n\n${objectFeedbackContext(object)}` };
+    const name = tutorById(object.tutor)?.persona.name ?? "Your tutor";
+    emit(objectForBrowser(object, `${name} has put this on the table`));
+  }
+
   function requestGreeting() {
     const content = (
       config.openingInstructions ??
@@ -503,6 +548,7 @@ export function bindLiveConnection(
     releaseUnusedCredit();
     finished = closing = true;
     clearTimeout(durationTimer);
+    clearTimeout(revealTimer);
     clearTimeout(startTimer);
     clearTimeout(startupTimer);
     clearTimeout(closeTimer);
@@ -521,6 +567,7 @@ export function bindLiveConnection(
     releaseUnusedCredit();
     discardPendingWork();
     clearTimeout(durationTimer);
+    clearTimeout(revealTimer);
     clearTimeout(startupTimer);
     clearTimeout(startTimer);
     clearGreeting();
@@ -654,6 +701,9 @@ export function bindLiveConnection(
           });
           stop();
         }, INTERVIEW_MINUTES * 60_000);
+        if (midwayObject) {
+          revealTimer ??= setTimeout(revealMidwayObject, OBJECT_REVEAL_MINUTES * 60_000);
+        }
         requestGreeting();
       }
       if (
@@ -815,6 +865,7 @@ export function bindLiveConnection(
               const interviewId = await authorizeStart(event, async (tester) => {
                 session = await buildPpeSession(event, { includeDrafts: tester });
                 if (objectMode) object = pickObject(PPE_TUTOR_ID, tester, event.openingTurn);
+                else planMidwayObject(PPE_TUTOR_ID, tester, event.openingTurn);
               });
               if (closing || !session) return;
               config.openingInstructions = session.opening;
@@ -842,6 +893,7 @@ export function bindLiveConnection(
                 ...(object ? { objectId: object.id } : {}),
               });
               if (object) applyObject(object, session.liveInstructions);
+              else applyMidwayObject(session.liveInstructions);
               await startSession(event.sdp);
             })().catch((error) => {
               if (!closing)
@@ -870,6 +922,8 @@ export function bindLiveConnection(
             // interview's object is chosen here too, so a refusal never costs a credit.
             const interviewId = await authorizeStart(event, async (tester) => {
               if (objectMode) object = pickObject("geography", tester, event.openingTurn);
+              // A reading fills the first part of the interview, so it gets no chart.
+              else if (!reading) planMidwayObject("geography", tester, event.openingTurn);
               if (tester) cardSession = await buildGeographySession(event);
             });
             if (closing) return;
@@ -897,6 +951,7 @@ export function bindLiveConnection(
               ...(object ? { objectId: object.id } : {}),
             });
             if (object) applyObject(object, instructions);
+            else applyMidwayObject(instructions);
             await startSession(event.sdp);
           })().catch((error) => {
             if (!closing)

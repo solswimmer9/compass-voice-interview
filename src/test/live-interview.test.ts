@@ -4,6 +4,7 @@ import {
   type LiveExecutionContext,
   type LiveSocket,
 } from "@/lib/live-relay.server";
+import { OBJECT_REVEAL_MINUTES } from "@/lib/limits";
 
 const mocks = vi.hoisted(() => ({
   authenticate: vi.fn(),
@@ -362,8 +363,12 @@ describe("Dr River on topic cards (testers only)", () => {
     const { NOTES_CONTEXT } = await import("@/lib/interview-briefing");
     const expected = await buildGeographySession({ openingTurn: 1 });
 
+    const { objectMidwaySection, selectObject } = await import("@/content/objects");
+    const chart = objectMidwaySection(selectObject("geography", { includeDrafts: true, seed: 1 })!);
+
     const tester = await instructionsFor("owner@example.com");
-    expect(tester).toBe(expected.liveInstructions);
+    // Testers also get the draft chart planned for partway through (students get approved only).
+    expect(tester).toBe(`${expected.liveInstructions}\n\n${chart}`);
     expect(tester).toContain("YOUR THEMES FOR THIS INTERVIEW");
     expect(tester).not.toContain(NOTES_CONTEXT);
     expect(mocks.rpc).not.toHaveBeenCalled();
@@ -516,7 +521,7 @@ describe("Object interviews", () => {
     expect(browser.events.some((e) => e["type"] === "app.interview.object")).toBe(false);
   });
 
-  it("puts nothing on the table in a normal interview", async () => {
+  it("puts nothing on the table at the start of a normal interview", async () => {
     vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
     const sent: Array<Record<string, unknown>> = [];
     mocks.connect.mockResolvedValue(gateway(sent));
@@ -528,5 +533,144 @@ describe("Object interviews", () => {
     expect(browser.events.some((e) => e["type"] === "app.interview.object")).toBe(false);
     const session = sent[0]?.["session"] as { instructions: string };
     expect(session.instructions).not.toContain("OBJECT INTERVIEW");
+  });
+});
+
+describe("Charts partway through a normal interview", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.useRealTimers();
+  });
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.authenticate.mockResolvedValue({
+      user: { email: "owner@example.com" },
+      supabase: { rpc: mocks.rpc },
+    });
+    mocks.rpc.mockResolvedValue({ data: { allowed: true, interviewId }, error: null });
+  });
+
+  function start(extra: object = {}) {
+    return JSON.stringify({
+      type: "app.start",
+      sdp: "test-offer",
+      openingTurn: 1,
+      accessToken: "valid-access-token",
+      environment: "live",
+      ...extra,
+    });
+  }
+
+  /** Binds a call whose gateway records what it is sent and can be fed provider events. */
+  function call() {
+    let toRelay: ((data: unknown) => void) | undefined;
+    let fromGateway: ((data: unknown) => void) | undefined;
+    const sent: Array<Record<string, unknown>> = [];
+    const gatewaySocket: LiveSocket = {
+      readyState: 1,
+      send(data: string) {
+        sent.push(JSON.parse(data) as Record<string, unknown>);
+      },
+      close: vi.fn(),
+      onMessage(handler) {
+        fromGateway = handler;
+      },
+      onClose: vi.fn(),
+      onError: vi.fn(),
+    };
+    mocks.connect.mockResolvedValue(gatewaySocket);
+    const browser = browserSocket();
+    bindLiveConnection(
+      { ...browser.socket, onMessage: (h) => void (toRelay = h) },
+      config,
+      executionContext(),
+      mocks.connect,
+    );
+    return {
+      browser,
+      sent,
+      send: (data: string) => toRelay?.(data),
+      created: () =>
+        fromGateway?.(JSON.stringify({ type: "gateway.session.created", session: { id: "s1" } })),
+    };
+  }
+
+  for (const tutorId of [undefined, "ppe"] as const) {
+    const who = tutorId ?? "geography";
+
+    it(`brings a tester's ${who} chart out after ${OBJECT_REVEAL_MINUTES} minutes, notes kept off the browser`, async () => {
+      vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
+      const { selectObject } = await import("@/content/objects");
+      const object = selectObject(who, { includeDrafts: true, seed: 1 })!;
+      const { browser, sent, send, created } = call();
+
+      send(start({ tutorId }));
+      await vi.waitFor(() => expect(sent).toHaveLength(1));
+      const session = sent[0]?.["session"] as { instructions: string };
+      expect(session.instructions).toContain("CHART LATER IN THE INTERVIEW");
+      expect(session.instructions).toContain(object.notes.shows);
+      expect(browser.events.some((e) => e["type"] === "app.interview.object")).toBe(false);
+
+      vi.useFakeTimers();
+      created();
+      vi.advanceTimersByTime(OBJECT_REVEAL_MINUTES * 60_000 - 1000);
+      expect(browser.events.some((e) => e["type"] === "app.interview.object")).toBe(false);
+      vi.advanceTimersByTime(1000);
+
+      expect(sent).toContainEqual(
+        expect.objectContaining({
+          type: "session.instructions.append",
+          content: expect.stringContaining("CHART LATER IN THE INTERVIEW"),
+        }),
+      );
+      expect(browser.events).toContainEqual({
+        type: "app.interview.object",
+        objectId: object.id,
+        svg: object.svg,
+        alt: object.alt,
+        caption: `${who === "ppe" ? "Prof Matt" : "Dr River"} has put this on the table`,
+      });
+      const toBrowser = JSON.stringify(browser.events);
+      expect(toBrowser).not.toContain(object.notes.shows);
+      expect(toBrowser).not.toContain(object.notes.opening);
+      for (const probe of object.notes.probes) expect(toBrowser).not.toContain(probe);
+    });
+
+    it(`never gives a student a draft ${who} chart, but still runs the interview`, async () => {
+      vi.stubEnv("PREVIEW_TESTER_EMAILS", "someone-else@example.com");
+      const { browser, sent, send, created } = call();
+
+      send(start({ tutorId }));
+      await vi.waitFor(() => expect(sent).toHaveLength(1));
+      expect(mocks.rpc).toHaveBeenCalledWith("consume_interview_credit", {
+        p_environment: "live",
+      });
+      const session = sent[0]?.["session"] as { instructions: string };
+      expect(session.instructions).not.toContain("CHART LATER IN THE INTERVIEW");
+
+      vi.useFakeTimers();
+      created();
+      vi.advanceTimersByTime(OBJECT_REVEAL_MINUTES * 60_000 + 1000);
+      expect(browser.events.some((e) => e["type"] === "app.interview.object")).toBe(false);
+      expect(
+        sent.some(
+          (e) =>
+            e["type"] === "session.instructions.append" &&
+            e["content"] !== undefined &&
+            String(e["content"]).includes("CHART"),
+        ),
+      ).toBe(false);
+    });
+  }
+
+  it("gives a reading interview no chart", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
+    const { READINGS } = await import("@/lib/readings");
+    const { sent, send } = call();
+
+    send(start({ readingId: READINGS[0]!.id }));
+    await vi.waitFor(() => expect(sent).toHaveLength(1));
+    const session = sent[0]?.["session"] as { instructions: string };
+    expect(session.instructions).not.toContain("CHART LATER IN THE INTERVIEW");
   });
 });

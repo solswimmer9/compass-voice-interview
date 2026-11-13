@@ -47,5 +47,5 @@ use the editor.
 
 ## Tester-only trials
 
-- Signed-in tester accounts get Dr River built from approved geography cards (`src/lib/geography.server.ts`) and quote-checked feedback (`src/lib/feedback/README.md`). Every other account must keep the existing prompt and feedback request unchanged; `src/test/geography-cards.test.ts` and `src/test/assess-grounded.test.ts` guard this.
+- Signed-in tester accounts get Dr River built from approved geography cards (`src/lib/geography.server.ts`) and quote-checked feedback (`src/lib/feedback/README.md`). Every other account must keep the existing prompt and feedback request unchanged, except that every normal (non-reading) interview appends its tutor's approved mid-interview chart section (`objectMidwaySection`, revealed after `OBJECT_REVEAL_MINUTES`; owner's decision, 13 November 2026); `src/test/geography-cards.test.ts` and `src/test/assess-grounded.test.ts` guard this.
 - Topic cards and their approval rules: `src/content/README.md`. Latest handover: `docs/overnight/2026-11-12-handover.md`.
