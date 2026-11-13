@@ -4,7 +4,7 @@ import { DotPattern } from "@/components/ui/dot-pattern";
 import { TUTORS_WITH_APPROVED_OBJECTS } from "@/lib/object-interviews";
 import { isPreviewBrowser } from "@/lib/preview";
 
-// One entry per live tutor. Each card opens the interview page for that tutor;
+// One entry per live tutor. Each card starts that tutor's interview straight away;
 // sign-in, credits and feedback rules are enforced there and on the server.
 const TUTORS = [
   { id: "ppe", subject: "PPE", tutor: "Prof Matt", search: { tutor: "ppe" as const } },
@@ -51,7 +51,7 @@ function TutorsPage() {
             <li key={t.subject} className="flex flex-col">
               <Link
                 to="/"
-                search={t.search}
+                search={{ ...t.search, start: true as const }}
                 className="group flex flex-1 flex-col rounded-md border bg-card p-8 transition hover:border-accent"
               >
                 <span className="text-4xl font-medium tracking-tight sm:text-5xl">{t.subject}</span>
@@ -63,7 +63,7 @@ function TutorsPage() {
               {(preview || TUTORS_WITH_APPROVED_OBJECTS.includes(t.id)) && (
                 <Link
                   to="/"
-                  search={{ ...t.search, mode: "object" as const }}
+                  search={{ ...t.search, mode: "object" as const, start: true as const }}
                   className="mt-3 self-start px-1 text-sm text-muted-foreground underline transition hover:text-foreground"
                 >
                   Object interview

@@ -25,8 +25,11 @@ export const Route = createFileRoute("/")({
   // tutor: "ppe" (Prof Matt) or "geography" (Dr River); a reading means geography. Object mode:
   // the tutor puts an unlabelled chart on the table. Until a subject is chosen the page offers the
   // subject picker. Every interview uses a credit; the server decides access on its own.
-  validateSearch: (search: Record<string, unknown>): InterviewChoice =>
-    parseInterviewChoice(search),
+  // start: set by the subject picker so the interview opens straight away; removed once used.
+  validateSearch: (search: Record<string, unknown>): InterviewChoice & { start?: true } => ({
+    ...parseInterviewChoice(search),
+    ...(search["start"] === true || search["start"] === "true" ? { start: true as const } : {}),
+  }),
   head: () => ({
     meta: [
       { title: "We are here to democratise Oxbridge" },
@@ -233,6 +236,32 @@ function InterviewPage() {
     const remembered = takeChoiceAfterSignIn();
     if (remembered) void navigate({ to: "/", search: remembered, replace: true });
   }, [signedIn, chosen, navigate]);
+
+  // Picking a subject goes straight into the interview: sign in first if needed, and stay on
+  // this page (showing "Get more interviews") when there are none left. Runs once per pick.
+  const autoStart = search.start === true;
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (!autoStart || autoStarted.current || account.loading) return;
+    autoStarted.current = true;
+    const { start: _start, ...choice } = search;
+    if (!account.user) {
+      void navigate({
+        to: "/auth",
+        search: {
+          ...(choice.tutor ? { tutor: choice.tutor } : {}),
+          ...(choice.mode ? { mode: choice.mode } : {}),
+        },
+        replace: true,
+      });
+      return;
+    }
+    void navigate({ to: "/", search: choice, replace: true });
+    if (!isPreviewBrowser() && account.data?.totalRemaining === 0) return;
+    start();
+    // start() is recreated every render; this should only fire when a pick arrives.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoStart, account.loading, account.user, account.data, search, navigate]);
 
   return (
     <div className="relative min-h-[100svh] overflow-hidden">

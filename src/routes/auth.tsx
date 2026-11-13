@@ -66,7 +66,12 @@ function AuthPage() {
     ...(tutor ? { tutor } : {}),
     ...(interviewMode ? { mode: interviewMode } : {}),
   };
-  const backToInterview = () => navigate({ to: "/", search: interviewSearch });
+  // With a subject chosen, signing in carries straight on into the interview.
+  const backToInterview = () =>
+    navigate({
+      to: "/",
+      search: tutor || interviewMode ? { ...interviewSearch, start: true as const } : {},
+    });
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
