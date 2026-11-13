@@ -88,7 +88,7 @@ function AccountPage() {
             )}
             {data?.lifetime || (data?.totalRemaining ?? 0) > 0 ? (
               <Link
-                to="/"
+                to="/subjects"
                 className="mt-5 inline-flex rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
               >
                 Start practising

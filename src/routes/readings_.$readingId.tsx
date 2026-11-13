@@ -136,8 +136,8 @@ function ReadingSessionPage() {
             He'll ask you to sum up the argument, then test it and share his own take.
           </p>
           <Link
-            to="/"
-            search={{ reading: reading.id }}
+            to="/interview"
+            search={{ reading: reading.id, start: true as const }}
             className={`mt-4 inline-flex rounded-full px-6 py-3 font-medium transition ${
               done
                 ? "bg-primary text-primary-foreground hover:opacity-90"

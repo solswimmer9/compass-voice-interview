@@ -68,10 +68,9 @@ function AuthPage() {
   };
   // With a subject chosen, signing in carries straight on into the interview.
   const backToInterview = () =>
-    navigate({
-      to: "/",
-      search: tutor || interviewMode ? { ...interviewSearch, start: true as const } : {},
-    });
+    tutor || interviewMode
+      ? navigate({ to: "/interview", search: { ...interviewSearch, start: true as const } })
+      : navigate({ to: "/" });
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -140,7 +139,7 @@ function AuthPage() {
         <div className="mt-8 space-y-4">
           <p className="text-sm">{user.email}</p>
           <Link
-            to="/"
+            to={tutor || interviewMode ? "/interview" : "/subjects"}
             search={interviewSearch}
             className="inline-flex rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
           >

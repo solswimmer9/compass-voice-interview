@@ -8,82 +8,64 @@ import {
   tutorLetterInfo,
   type ArgumentMap as ArgumentMapData,
 } from "@/lib/feedback/argument-map";
+import {
+  transcriptText,
+  updateFinishedInterview,
+  type FinishedInterview,
+} from "@/lib/finished-interview";
 
-function readDataURL(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
-}
-
+/**
+ * The tutor's feedback letter for a finished interview. It asks for feedback as soon as it
+ * appears (once per interview; the server also allows only one) and keeps the finished letter
+ * for this tab, so a refresh shows it again instead of asking twice.
+ */
 export function AssessPanel({
-  initialTranscript,
-  interviewId,
-  tutorId,
-  cardIds,
-  objectId,
+  interview,
   studentName,
 }: {
-  initialTranscript: string;
-  interviewId: string | null;
-  /** Set for the PPE trial so feedback uses the PPE tutor's notes. */
-  tutorId?: "ppe";
-  cardIds?: string[];
-  /** Set for an object interview so feedback can use that object's notes. */
-  objectId?: string;
+  interview: FinishedInterview;
   /** The signed-in profile's display name, for the letter's greeting. */
   studentName?: string | null | undefined;
 }) {
+  const tutorId = interview.tutor === "ppe" ? ("ppe" as const) : undefined;
   const tutor = tutorLetterInfo(tutorId);
-  const [transcript, setTranscript] = useState(initialTranscript);
-  const [video, setVideo] = useState<File | null>(null);
-  const [output, setOutput] = useState("");
-  const [argumentMap, setArgumentMap] = useState<ArgumentMapData | null>(null);
+  const saved = interview.feedback ? splitFeedbackStream(interview.feedback) : null;
+  const [output, setOutput] = useState(saved?.letter ?? "");
+  const [argumentMap, setArgumentMap] = useState<ArgumentMapData | null>(
+    saved && !saved.error ? parseArgumentMap(saved.mapSource) : null,
+  );
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const abortRef = useRef<AbortController | null>(null);
-
-  useEffect(() => {
-    if (initialTranscript) setTranscript(initialTranscript);
-  }, [initialTranscript]);
+  const requested = useRef(Boolean(interview.feedbackRequested || interview.feedback));
 
   const submit = async () => {
+    requested.current = true;
     setError(null);
     setOutput("");
     setArgumentMap(null);
-    if (!interviewId) return setError("Start an interview before requesting feedback.");
-    if (video && video.size > 20 * 1024 * 1024) return setError("Video must be under 20 MB.");
     setBusy(true);
-    const controller = new AbortController();
-    abortRef.current = controller;
+    updateFinishedInterview(interview.interviewId, { feedbackRequested: true });
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
-      if (!token) throw new Error("Sign in to request feedback.");
-      const body: Record<string, string | string[]> = { transcript, interviewId };
+      if (!token) throw new Error("Sign in to get your feedback.");
+      const body: Record<string, string | string[]> = {
+        transcript: transcriptText(interview),
+        interviewId: interview.interviewId,
+      };
       if (tutorId) {
         body["tutorId"] = tutorId;
-        if (cardIds?.length) body["cardIds"] = cardIds;
+        if (interview.cardIds?.length) body["cardIds"] = interview.cardIds;
       }
-      if (objectId) body["objectId"] = objectId;
-      if (video) {
-        body["video"] = await readDataURL(video);
-        body["videoType"] = video.type || "video/mp4";
-      }
+      if (interview.objectId) body["objectId"] = interview.objectId;
       const response = await fetch("/api/assess", {
         method: "POST",
-        headers: {
-          "content-type": "application/json",
-          ...(token ? { authorization: `Bearer ${token}` } : {}),
-        },
+        headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
-        signal: controller.signal,
       });
       if (!response.ok || !response.body) {
         const result = (await response.json().catch(() => ({}))) as { error?: string };
-        throw new Error(result.error ?? "Assessment failed");
+        throw new Error(result.error ?? "Your feedback could not be written. Please try again.");
       }
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -101,62 +83,54 @@ export function AssessPanel({
       const final = splitFeedbackStream(text);
       setOutput(final.letter);
       setArgumentMap(final.error ? null : parseArgumentMap(final.mapSource));
+      if (!final.error && final.letter.trim()) {
+        updateFinishedInterview(interview.interviewId, { feedback: text });
+      }
     } catch (cause) {
-      if (!controller.signal.aborted)
-        setError(cause instanceof Error ? cause.message : "Assessment failed");
+      setError(cause instanceof Error ? cause.message : "Your feedback could not be written.");
     } finally {
       setBusy(false);
     }
   };
 
+  // Ask once, as soon as the page opens. A refresh after asking shows "Try again" instead.
+  useEffect(() => {
+    if (requested.current || !interview.lines.length) return;
+    void submit();
+    // submit is recreated every render; this should only run when the page opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [interview.interviewId]);
+
+  const waiting = !busy && !output.trim() && !error;
+
   return (
-    <section className="mt-12 rounded-md border bg-card p-4 sm:p-6">
-      <h2 className="font-serif text-3xl font-semibold">Assess my reasoning</h2>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Submit your replay, an optional video, or both. Each interview includes one AI feedback
-        assessment.
-      </p>
-      <textarea
-        value={transcript}
-        onChange={(event) => setTranscript(event.target.value)}
-        rows={6}
-        placeholder={
-          tutorId === "ppe"
-            ? "Prof Matt: Is it ever fair to punish someone before they act?\nYou: ..."
-            : "Dr River: Why do cities exist where they do?\nYou: ..."
-        }
-        className="mt-4 w-full rounded-md border bg-background p-3 text-sm"
-      />
-      <label className="mt-3 block text-sm">
-        <span className="text-muted-foreground">Optional video (under 20 MB)</span>
-        <input
-          type="file"
-          accept="video/*"
-          onChange={(event) => setVideo(event.target.files?.[0] ?? null)}
-          className="mt-1 block w-full text-sm file:mr-3 file:rounded-full file:border-0 file:bg-secondary file:px-4 file:py-2"
-        />
-      </label>
-      <div className="mt-4 flex gap-3">
-        <button
-          onClick={submit}
-          disabled={busy || !interviewId || (!transcript.trim() && !video)}
-          className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground disabled:opacity-40"
-        >
-          {busy ? "Assessing…" : "Get feedback"}
-        </button>
-        {busy && (
-          <button
-            onClick={() => abortRef.current?.abort()}
-            className="rounded-full border px-4 py-2 text-sm"
-          >
-            Stop
-          </button>
-        )}
-      </div>
-      {error && (
-        <p role="alert" className="mt-4 text-sm text-destructive">
-          {error}
+    <section>
+      {busy && !output && (
+        <p className="text-muted-foreground" aria-live="polite">
+          {tutor.name} is reading back through your answers…
         </p>
+      )}
+      {error && (
+        <div className="rounded-md border border-destructive/50 p-4">
+          <p role="alert" className="text-sm text-destructive">
+            {error}
+          </p>
+          {!busy && (
+            <button onClick={submit} className="mt-3 rounded-full border px-5 py-2 text-sm">
+              Try again
+            </button>
+          )}
+        </div>
+      )}
+      {waiting && requested.current && (
+        <div className="rounded-md border p-4">
+          <p className="text-sm text-muted-foreground">
+            Your letter was being written when the page reloaded.
+          </p>
+          <button onClick={submit} className="mt-3 rounded-full border px-5 py-2 text-sm">
+            Try again
+          </button>
+        </div>
       )}
       {(busy || output.trim()) && (
         <FeedbackLetter tutor={tutor} studentName={studentName} body={output} writing={busy} />

@@ -12,11 +12,14 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as FeedbackRouteImport } from './routes/feedback'
+import { Route as InterviewRouteImport } from './routes/interview'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReadingsRouteImport } from './routes/readings'
 import { Route as RefundsRouteImport } from './routes/refunds'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SchoolsRouteImport } from './routes/schools'
+import { Route as SubjectsRouteImport } from './routes/subjects'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TutorsRouteImport } from './routes/tutors'
 import { Route as ApiAssessRouteImport } from './routes/api/assess'
@@ -39,6 +42,16 @@ const AccountRoute = AccountRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeedbackRoute = FeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InterviewRoute = InterviewRouteImport.update({
+  id: '/interview',
+  path: '/interview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -64,6 +77,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const SchoolsRoute = SchoolsRouteImport.update({
   id: '/schools',
   path: '/schools',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SubjectsRoute = SubjectsRouteImport.update({
+  id: '/subjects',
+  path: '/subjects',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -112,11 +130,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/auth': typeof AuthRoute
+  '/feedback': typeof FeedbackRoute
+  '/interview': typeof InterviewRoute
   '/privacy': typeof PrivacyRoute
   '/readings': typeof ReadingsRoute
   '/refunds': typeof RefundsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/schools': typeof SchoolsRoute
+  '/subjects': typeof SubjectsRoute
   '/terms': typeof TermsRoute
   '/tutors': typeof TutorsRoute
   '/api/assess': typeof ApiAssessRoute
@@ -130,11 +151,14 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/auth': typeof AuthRoute
+  '/feedback': typeof FeedbackRoute
+  '/interview': typeof InterviewRoute
   '/privacy': typeof PrivacyRoute
   '/readings': typeof ReadingsRoute
   '/refunds': typeof RefundsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/schools': typeof SchoolsRoute
+  '/subjects': typeof SubjectsRoute
   '/terms': typeof TermsRoute
   '/tutors': typeof TutorsRoute
   '/api/assess': typeof ApiAssessRoute
@@ -149,11 +173,14 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/auth': typeof AuthRoute
+  '/feedback': typeof FeedbackRoute
+  '/interview': typeof InterviewRoute
   '/privacy': typeof PrivacyRoute
   '/readings': typeof ReadingsRoute
   '/refunds': typeof RefundsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/schools': typeof SchoolsRoute
+  '/subjects': typeof SubjectsRoute
   '/terms': typeof TermsRoute
   '/tutors': typeof TutorsRoute
   '/api/assess': typeof ApiAssessRoute
@@ -169,11 +196,14 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/auth'
+    | '/feedback'
+    | '/interview'
     | '/privacy'
     | '/readings'
     | '/refunds'
     | '/reset-password'
     | '/schools'
+    | '/subjects'
     | '/terms'
     | '/tutors'
     | '/api/assess'
@@ -187,11 +217,14 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/auth'
+    | '/feedback'
+    | '/interview'
     | '/privacy'
     | '/readings'
     | '/refunds'
     | '/reset-password'
     | '/schools'
+    | '/subjects'
     | '/terms'
     | '/tutors'
     | '/api/assess'
@@ -205,11 +238,14 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/auth'
+    | '/feedback'
+    | '/interview'
     | '/privacy'
     | '/readings'
     | '/refunds'
     | '/reset-password'
     | '/schools'
+    | '/subjects'
     | '/terms'
     | '/tutors'
     | '/api/assess'
@@ -224,11 +260,14 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
   AuthRoute: typeof AuthRoute
+  FeedbackRoute: typeof FeedbackRoute
+  InterviewRoute: typeof InterviewRoute
   PrivacyRoute: typeof PrivacyRoute
   ReadingsRoute: typeof ReadingsRoute
   RefundsRoute: typeof RefundsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SchoolsRoute: typeof SchoolsRoute
+  SubjectsRoute: typeof SubjectsRoute
   TermsRoute: typeof TermsRoute
   TutorsRoute: typeof TutorsRoute
   ApiAssessRoute: typeof ApiAssessRoute
@@ -260,6 +299,20 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/feedback': {
+      id: '/feedback'
+      path: '/feedback'
+      fullPath: '/feedback'
+      preLoaderRoute: typeof FeedbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/interview': {
+      id: '/interview'
+      path: '/interview'
+      fullPath: '/interview'
+      preLoaderRoute: typeof InterviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -295,6 +348,13 @@ declare module '@tanstack/react-router' {
       path: '/schools'
       fullPath: '/schools'
       preLoaderRoute: typeof SchoolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/subjects': {
+      id: '/subjects'
+      path: '/subjects'
+      fullPath: '/subjects'
+      preLoaderRoute: typeof SubjectsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -360,11 +420,14 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
   AuthRoute: AuthRoute,
+  FeedbackRoute: FeedbackRoute,
+  InterviewRoute: InterviewRoute,
   PrivacyRoute: PrivacyRoute,
   ReadingsRoute: ReadingsRoute,
   RefundsRoute: RefundsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SchoolsRoute: SchoolsRoute,
+  SubjectsRoute: SubjectsRoute,
   TermsRoute: TermsRoute,
   TutorsRoute: TutorsRoute,
   ApiAssessRoute: ApiAssessRoute,

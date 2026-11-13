@@ -1,6 +1,6 @@
 # Website flow plan (draft, from the paper sketch)
 
-Status: planning only. Nothing built yet. Open questions are at the bottom.
+Status: built on `experiments/ideas` (13 Nov). See "Build order" at the bottom for what shipped.
 
 ## The flow you sketched
 
@@ -88,3 +88,17 @@ Interviews are 20 minutes (`INTERVIEW_MINUTES`).
 3. Chart in every interview (relay + tutor instructions), timed around minute 8–10.
 4. `/feedback` letter page: auto-start, no video, then pricing.
 5. Credit only once connected (check relay first).
+
+## What shipped (13 Nov)
+
+| Step | Page | Notes |
+|---|---|---|
+| Home | `/` | Headline, "Start practising" → `/subjects`. No Readings in the menu. Old `/?tutor=…` links go to `/interview`. |
+| Pick a subject | `/subjects` | PPE and Geography cards with "Start interview". Readings shown as "Coming soon". `/tutors` redirects here. |
+| Waiting room | `/interview` | "Dr River is getting ready…" with tips, at least 2.5 s, while the call connects in the background. Cancel goes back to subjects. |
+| Orb | `/interview` | Live room unchanged. Chart comes out at minute 9 (`OBJECT_REVEAL_MINUTES`). |
+| Letter | `/feedback` | Starts writing straight away; no video upload; transcript folded underneath; kept on refresh for this tab. |
+| After | `/feedback` | "See pricing" plus "Back to home". |
+
+Credit: already charged at start and automatically restored by the relay if the call never gets going,
+so a failed connection costs nothing. No change needed.
