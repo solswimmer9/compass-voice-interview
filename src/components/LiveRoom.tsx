@@ -47,7 +47,10 @@ export function LiveRoom({
   error: string | null;
 }) {
   // The room replaces a page the student may have scrolled down to reach Start.
-  useEffect(() => window.scrollTo({ top: 0 }), []);
+  // Block body: scrollTo can return a promise, which React must not receive as a cleanup.
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, []);
   return (
     <main
       className={`relative z-10 mx-auto flex min-h-[100svh] flex-col px-6 py-6 ${object ? "max-w-5xl" : "max-w-4xl"}`}
@@ -75,7 +78,7 @@ export function LiveRoom({
           />
         </div>
       </div>
-      <div className="flex flex-col items-center gap-3 pb-4 sm:pb-8">
+      <div className="sticky bottom-0 -mx-6 flex flex-col items-center gap-3 bg-background/85 px-6 pt-3 pb-4 backdrop-blur sm:static sm:mx-0 sm:bg-transparent sm:px-0 sm:pt-0 sm:pb-8 sm:backdrop-blur-none">
         {playbackBlocked && (
           <button onClick={onResumePlayback} className="rounded-full border px-4 py-2 text-sm">
             Play {tutorName}’s voice
