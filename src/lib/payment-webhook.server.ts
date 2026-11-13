@@ -3,6 +3,7 @@ import { offerForPriceId, SCHOOL_BUNDLE } from "@/lib/offer";
 
 // Credits the purchase once per checkout session. The purchases table keeps its original
 // column names (paddle_transaction_id / paddle_customer_id); they now hold Stripe IDs.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Stripe event payload, shape checked field by field below
 async function fulfilCheckout(session: any, env: StripeEnv) {
   const userId = session.metadata?.userId;
   if (typeof userId !== "string" || !userId) {
@@ -20,7 +21,8 @@ async function fulfilCheckout(session: any, env: StripeEnv) {
     {
       user_id: userId,
       paddle_transaction_id: session.id,
-      paddle_customer_id: typeof session.customer === "string" ? session.customer : session.customer?.id ?? null,
+      paddle_customer_id:
+        typeof session.customer === "string" ? session.customer : (session.customer?.id ?? null),
       product_id: offer.productId,
       price_id: priceId,
       status: "completed",
@@ -35,7 +37,12 @@ async function fulfilCheckout(session: any, env: StripeEnv) {
 
 // Refunds and disputes revoke the remaining credits. purchases.paddle_transaction_id holds the
 // Checkout Session ID, so the charge's payment intent is mapped back to its session via Stripe.
-async function revokeForCharge(chargeOrDispute: any, env: StripeEnv, status: "refunded" | "disputed") {
+async function revokeForCharge(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Stripe charge or dispute payload, shape checked below
+  chargeOrDispute: any,
+  env: StripeEnv,
+  status: "refunded" | "disputed",
+) {
   const paymentIntent =
     typeof chargeOrDispute.payment_intent === "string"
       ? chargeOrDispute.payment_intent
@@ -44,7 +51,10 @@ async function revokeForCharge(chargeOrDispute: any, env: StripeEnv, status: "re
     console.warn("Refund/dispute event without a payment intent");
     return;
   }
-  const sessions = await createStripeClient(env).checkout.sessions.list({ payment_intent: paymentIntent, limit: 1 });
+  const sessions = await createStripeClient(env).checkout.sessions.list({
+    payment_intent: paymentIntent,
+    limit: 1,
+  });
   const sessionId = sessions.data[0]?.id;
   if (!sessionId) {
     console.warn("No checkout session found for refunded/disputed payment");
@@ -73,7 +83,10 @@ export async function handlePaymentWebhook(request: Request) {
       await fulfilCheckout(session, env);
     } else if (event.type === "charge.refunded") {
       // Only full refunds revoke access; partial refunds leave the entitlement in place.
-      if (session.refunded === true || (session.amount_refunded > 0 && session.amount_refunded >= session.amount)) {
+      if (
+        session.refunded === true ||
+        (session.amount_refunded > 0 && session.amount_refunded >= session.amount)
+      ) {
         await revokeForCharge(session, env, "refunded");
       }
     } else if (event.type === "charge.dispute.created") {

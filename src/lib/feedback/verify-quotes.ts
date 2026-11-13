@@ -32,7 +32,7 @@ function countWords(normalised: string): number {
 }
 
 /** Substring match on word boundaries, so "art" does not match inside "party". */
-function containsPhrase(haystack: string, needle: string): boolean {
+export function containsPhrase(haystack: string, needle: string): boolean {
   return ` ${haystack} `.includes(` ${needle} `);
 }
 

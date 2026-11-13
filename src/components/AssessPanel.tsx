@@ -1,6 +1,13 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { splitFeedback } from "@/lib/feedback-sections";
+import { ArgumentMap } from "@/components/ArgumentMap";
+import { FeedbackLetter } from "@/components/FeedbackLetter";
+import {
+  parseArgumentMap,
+  splitFeedbackStream,
+  tutorLetterInfo,
+  type ArgumentMap as ArgumentMapData,
+} from "@/lib/feedback/argument-map";
 
 function readDataURL(file: File) {
   return new Promise<string>((resolve, reject) => {
@@ -12,26 +19,40 @@ function readDataURL(file: File) {
 }
 
 export function AssessPanel({
-  transcript,
+  initialTranscript,
   interviewId,
   tutorId,
   cardIds,
+  objectId,
+  studentName,
 }: {
-  transcript: string;
+  initialTranscript: string;
   interviewId: string | null;
-  /** Set for PPE so feedback uses Prof Matt's notes. */
+  /** Set for the PPE trial so feedback uses the PPE tutor's notes. */
   tutorId?: "ppe";
   cardIds?: string[];
+  /** Set for an object interview so feedback can use that object's notes. */
+  objectId?: string;
+  /** The signed-in profile's display name, for the letter's greeting. */
+  studentName?: string | null | undefined;
 }) {
+  const tutor = tutorLetterInfo(tutorId);
+  const [transcript, setTranscript] = useState(initialTranscript);
   const [video, setVideo] = useState<File | null>(null);
   const [output, setOutput] = useState("");
+  const [argumentMap, setArgumentMap] = useState<ArgumentMapData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
+  useEffect(() => {
+    if (initialTranscript) setTranscript(initialTranscript);
+  }, [initialTranscript]);
+
   const submit = async () => {
     setError(null);
     setOutput("");
+    setArgumentMap(null);
     if (!interviewId) return setError("Start an interview before requesting feedback.");
     if (video && video.size > 20 * 1024 * 1024) return setError("Video must be under 20 MB.");
     setBusy(true);
@@ -46,19 +67,23 @@ export function AssessPanel({
         body["tutorId"] = tutorId;
         if (cardIds?.length) body["cardIds"] = cardIds;
       }
+      if (objectId) body["objectId"] = objectId;
       if (video) {
         body["video"] = await readDataURL(video);
         body["videoType"] = video.type || "video/mp4";
       }
       const response = await fetch("/api/assess", {
         method: "POST",
-        headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+        headers: {
+          "content-type": "application/json",
+          ...(token ? { authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify(body),
         signal: controller.signal,
       });
       if (!response.ok || !response.body) {
         const result = (await response.json().catch(() => ({}))) as { error?: string };
-        throw new Error(result.error ?? "Feedback failed. Please try again.");
+        throw new Error(result.error ?? "Assessment failed");
       }
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -67,95 +92,76 @@ export function AssessPanel({
         const { done, value } = await reader.read();
         if (done) break;
         text += decoder.decode(value, { stream: true });
-        const [main, streamError] = text.split("[[error]]");
-        setOutput(main ?? "");
+        // The argument map block (after the delimiter) never reaches the letter, even mid-stream.
+        const { letter, error: streamError } = splitFeedbackStream(text);
+        setOutput(letter);
         if (streamError) setError(streamError);
       }
+      text += decoder.decode();
+      const final = splitFeedbackStream(text);
+      setOutput(final.letter);
+      setArgumentMap(final.error ? null : parseArgumentMap(final.mapSource));
     } catch (cause) {
       if (!controller.signal.aborted)
-        setError(cause instanceof Error ? cause.message : "Feedback failed. Please try again.");
+        setError(cause instanceof Error ? cause.message : "Assessment failed");
     } finally {
       setBusy(false);
     }
   };
 
-  const sections = splitFeedback(output);
-  const started = busy || output.length > 0;
-
   return (
-    <section className="rounded-md border bg-card p-6 sm:p-8">
-      <h2 className="text-2xl font-medium tracking-tight">Your feedback</h2>
-      {!started && (
-        <>
-          <p className="mt-2 text-muted-foreground">
-            We read your answers and show where your reasoning held and where it slipped. One
-            feedback report per interview.
-          </p>
-          <details className="mt-4 text-sm">
-            <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-              Add a video of yourself (optional)
-            </summary>
-            <p className="mt-2 text-muted-foreground">
-              Under 20 MB. Lets the feedback comment on delivery as well as content.
-            </p>
-            <input
-              type="file"
-              accept="video/*"
-              onChange={(event) => setVideo(event.target.files?.[0] ?? null)}
-              className="mt-2 block w-full text-sm file:mr-3 file:rounded-full file:border-0 file:bg-secondary file:px-4 file:py-2"
-            />
-          </details>
-          <button
-            onClick={submit}
-            disabled={!interviewId || !transcript.trim()}
-            className="mt-6 rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
-          >
-            Get my feedback
-          </button>
-        </>
-      )}
-      {busy && !output && (
-        <p className="mt-4 text-muted-foreground" aria-live="polite">
-          Reading your answers…
-        </p>
-      )}
-      {sections.length > 0 && (
-        <div className="mt-6 space-y-6" aria-live="polite">
-          {sections.map((section, i) => (
-            <div key={i}>
-              {section.title && (
-                <h3 className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                  {section.title}
-                </h3>
-              )}
-              <div className="mt-2 space-y-2 leading-relaxed">
-                {section.lines.map((line, j) =>
-                  /^[-*•]\s|^\d+\.\s/.test(line) ? (
-                    <p key={j} className="border-l-2 border-accent/50 pl-3">
-                      {line.replace(/^[-*•]\s|^\d+\.\s/, "")}
-                    </p>
-                  ) : (
-                    <p key={j}>{line}</p>
-                  ),
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-      {busy && (
+    <section className="mt-12 rounded-md border bg-card p-4 sm:p-6">
+      <h2 className="font-serif text-3xl font-semibold">Assess my reasoning</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Submit your replay, an optional video, or both. Each interview includes one AI feedback
+        assessment.
+      </p>
+      <textarea
+        value={transcript}
+        onChange={(event) => setTranscript(event.target.value)}
+        rows={6}
+        placeholder={
+          tutorId === "ppe"
+            ? "Prof Matt: Is it ever fair to punish someone before they act?\nYou: ..."
+            : "Dr River: Why do cities exist where they do?\nYou: ..."
+        }
+        className="mt-4 w-full rounded-md border bg-background p-3 text-sm"
+      />
+      <label className="mt-3 block text-sm">
+        <span className="text-muted-foreground">Optional video (under 20 MB)</span>
+        <input
+          type="file"
+          accept="video/*"
+          onChange={(event) => setVideo(event.target.files?.[0] ?? null)}
+          className="mt-1 block w-full text-sm file:mr-3 file:rounded-full file:border-0 file:bg-secondary file:px-4 file:py-2"
+        />
+      </label>
+      <div className="mt-4 flex gap-3">
         <button
-          onClick={() => abortRef.current?.abort()}
-          className="mt-6 rounded-full border px-4 py-2 text-sm"
+          onClick={submit}
+          disabled={busy || !interviewId || (!transcript.trim() && !video)}
+          className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground disabled:opacity-40"
         >
-          Stop
+          {busy ? "Assessing…" : "Get feedback"}
         </button>
-      )}
+        {busy && (
+          <button
+            onClick={() => abortRef.current?.abort()}
+            className="rounded-full border px-4 py-2 text-sm"
+          >
+            Stop
+          </button>
+        )}
+      </div>
       {error && (
         <p role="alert" className="mt-4 text-sm text-destructive">
           {error}
         </p>
       )}
+      {(busy || output.trim()) && (
+        <FeedbackLetter tutor={tutor} studentName={studentName} body={output} writing={busy} />
+      )}
+      {!busy && argumentMap && <ArgumentMap map={argumentMap} tutorName={tutor.name} />}
     </section>
   );
 }

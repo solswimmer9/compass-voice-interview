@@ -24,6 +24,20 @@ Server-only. Import from `*.server.ts` files, never browser code. Spec: `docs/co
 
 Never say or imply a question was asked in a real interview.
 
+## Add an object (object interviews)
+
+The tutor "puts something on the table" (an unlabelled chart) and asks what it could be.
+
+1. Copy `objects/urban-rural-share.ts`. Give it a neutral id that does not hint at the answer
+   (`geo-chart-b`): the id, `svg` and `alt` are the only fields sent to the browser.
+2. Draw the chart with `lineChartSvg` from the real figures, years only on the axis. Put what it
+   shows, the opening question, 3-5 probes and what good reasoning looks like in `notes`
+   (tutor and feedback only), and cite every data source with a link.
+3. `status: "draft"` until a named human has checked the figures; drafts are heard by tester
+   accounts only. On approval set `reviewedBy`/`reviewedAt` and add the tutor to
+   `src/lib/object-interviews.ts` so the picker offers it to students.
+4. Add it to `OBJECTS` in `objects/index.ts`; `bunx vitest run src/test/content-objects*`.
+
 ## Add a tutor
 
 1. Add the id to `TutorId` in `types.ts`.

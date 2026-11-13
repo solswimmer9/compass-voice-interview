@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as InterviewRouteImport } from './routes/interview'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReadingsRouteImport } from './routes/readings'
 import { Route as RefundsRouteImport } from './routes/refunds'
@@ -40,11 +39,6 @@ const AccountRoute = AccountRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InterviewRoute = InterviewRouteImport.update({
-  id: '/interview',
-  path: '/interview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -118,7 +112,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/auth': typeof AuthRoute
-  '/interview': typeof InterviewRoute
   '/privacy': typeof PrivacyRoute
   '/readings': typeof ReadingsRoute
   '/refunds': typeof RefundsRoute
@@ -137,7 +130,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/auth': typeof AuthRoute
-  '/interview': typeof InterviewRoute
   '/privacy': typeof PrivacyRoute
   '/readings': typeof ReadingsRoute
   '/refunds': typeof RefundsRoute
@@ -157,7 +149,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/auth': typeof AuthRoute
-  '/interview': typeof InterviewRoute
   '/privacy': typeof PrivacyRoute
   '/readings': typeof ReadingsRoute
   '/refunds': typeof RefundsRoute
@@ -178,7 +169,6 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/auth'
-    | '/interview'
     | '/privacy'
     | '/readings'
     | '/refunds'
@@ -197,7 +187,6 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/auth'
-    | '/interview'
     | '/privacy'
     | '/readings'
     | '/refunds'
@@ -216,7 +205,6 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/auth'
-    | '/interview'
     | '/privacy'
     | '/readings'
     | '/refunds'
@@ -236,7 +224,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
   AuthRoute: typeof AuthRoute
-  InterviewRoute: typeof InterviewRoute
   PrivacyRoute: typeof PrivacyRoute
   ReadingsRoute: typeof ReadingsRoute
   RefundsRoute: typeof RefundsRoute
@@ -273,13 +260,6 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/interview': {
-      id: '/interview'
-      path: '/interview'
-      fullPath: '/interview'
-      preLoaderRoute: typeof InterviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -380,7 +360,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
   AuthRoute: AuthRoute,
-  InterviewRoute: InterviewRoute,
   PrivacyRoute: PrivacyRoute,
   ReadingsRoute: ReadingsRoute,
   RefundsRoute: RefundsRoute,

@@ -11,6 +11,17 @@ const mocks = vi.hoisted(() => ({
   connect: vi.fn(),
 }));
 
+// The real charts are approved. These tests keep checking the draft rule (students never get a
+// draft object; testers do) by treating both charts as drafts in this file only.
+vi.mock("@/content/objects/uk-turnout", async (importOriginal) => {
+  const real = (await importOriginal()) as { default: Record<string, unknown> };
+  return { default: { ...real.default, status: "draft", reviewedBy: "", reviewedAt: "" } };
+});
+vi.mock("@/content/objects/urban-rural-share", async (importOriginal) => {
+  const real = (await importOriginal()) as { default: Record<string, unknown> };
+  return { default: { ...real.default, status: "draft", reviewedBy: "", reviewedAt: "" } };
+});
+
 vi.mock("@/lib/request-auth.server", () => ({
   authenticateAccessToken: mocks.authenticate,
 }));
@@ -231,6 +242,7 @@ describe("PPE interviews", () => {
       for (const id of started?.["cardIds"] as string[]) expect(approved.has(id), id).toBe(true);
       const session = sent[0]?.["session"] as { instructions: string };
       expect(session.instructions).toContain("You are Prof Matt");
+      expect(session).toMatchObject({ audio: { output: { voice: "stone" } } });
     }
   });
 
@@ -296,6 +308,7 @@ describe("PPE interviews", () => {
     const session = sent[0]?.["session"] as { instructions: string };
     expect(session.instructions).toContain("You are Prof Matt");
     expect(session.instructions).not.toContain("Dr River");
+    expect(session).toMatchObject({ audio: { output: { voice: "stone" } } });
   });
 
   it("keeps geography on the original Dr River prompt", async () => {
@@ -310,5 +323,210 @@ describe("PPE interviews", () => {
     const session = sent[0]?.["session"] as { instructions: string };
     expect(session.instructions).toContain("Dr River");
     expect(session.instructions).not.toContain("Prof Matt");
+    expect(session).toMatchObject({ audio: { output: { voice: "vesper" } } });
+  });
+});
+
+describe("Dr River on topic cards (testers only)", () => {
+  afterEach(() => vi.unstubAllEnvs());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    mocks.authenticate.mockResolvedValue({
+      user: { email: "owner@example.com" },
+      supabase: { rpc: mocks.rpc },
+    });
+    mocks.rpc.mockResolvedValue({ data: { allowed: true, interviewId }, error: null });
+  });
+
+  async function instructionsFor(testers: string) {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", testers);
+    const sent: Array<Record<string, unknown>> = [];
+    mocks.connect.mockResolvedValue({
+      readyState: 1,
+      send: (data: string) => void sent.push(JSON.parse(data) as Record<string, unknown>),
+      close: vi.fn(),
+      onMessage: vi.fn(),
+      onClose: vi.fn(),
+      onError: vi.fn(),
+    } satisfies LiveSocket);
+    const browser = browserSocket();
+    bindLiveConnection(browser.socket, config, executionContext(), mocks.connect);
+    browser.start();
+    await vi.waitFor(() => expect(sent).toHaveLength(1));
+    return (sent[0]?.["session"] as { instructions: string }).instructions;
+  }
+
+  it("gives a tester approved geography cards and a student the fixed prompt", async () => {
+    const { buildGeographySession } = await import("@/lib/geography.server");
+    const { NOTES_CONTEXT } = await import("@/lib/interview-briefing");
+    const expected = await buildGeographySession({ openingTurn: 1 });
+
+    const tester = await instructionsFor("owner@example.com");
+    expect(tester).toBe(expected.liveInstructions);
+    expect(tester).toContain("YOUR THEMES FOR THIS INTERVIEW");
+    expect(tester).not.toContain(NOTES_CONTEXT);
+    expect(mocks.rpc).not.toHaveBeenCalled();
+
+    vi.clearAllMocks();
+    mocks.rpc.mockResolvedValue({ data: { allowed: true, interviewId }, error: null });
+    const student = await instructionsFor("someone-else@example.com");
+    expect(student).toContain(NOTES_CONTEXT);
+    expect(student).not.toContain("YOUR THEMES FOR THIS INTERVIEW");
+    expect(mocks.rpc).toHaveBeenCalledWith("consume_interview_credit", { p_environment: "live" });
+  });
+});
+
+describe("Object interviews", () => {
+  afterEach(() => vi.unstubAllEnvs());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.authenticate.mockResolvedValue({
+      user: { email: "owner@example.com" },
+      supabase: { rpc: mocks.rpc },
+    });
+    mocks.rpc.mockResolvedValue({ data: { allowed: true, interviewId }, error: null });
+    mocks.connect.mockRejectedValue(new Error("Voice startup failed for this test"));
+  });
+
+  function startObject(extra: object = {}) {
+    return JSON.stringify({
+      type: "app.start",
+      sdp: "test-offer",
+      openingTurn: 1,
+      accessToken: "valid-access-token",
+      environment: "live",
+      mode: "object",
+      ...extra,
+    });
+  }
+
+  function bound() {
+    let handler: ((data: unknown) => void) | undefined;
+    const browser = browserSocket();
+    const socket: LiveSocket = {
+      ...browser.socket,
+      onMessage(h) {
+        handler = h;
+      },
+    };
+    bindLiveConnection(socket, config, executionContext(), mocks.connect);
+    return { browser, send: (data: string) => handler?.(data) };
+  }
+
+  function gateway(sent: Array<Record<string, unknown>>): LiveSocket {
+    return {
+      readyState: 1,
+      send(data: string) {
+        sent.push(JSON.parse(data) as Record<string, unknown>);
+      },
+      close: vi.fn(),
+      onMessage: vi.fn(),
+      onClose: vi.fn(),
+      onError: vi.fn(),
+    };
+  }
+
+  for (const tutorId of [undefined, "ppe"] as const) {
+    const who = tutorId ?? "geography";
+
+    it(`refuses a student a draft ${who} object before any credit is spent`, async () => {
+      vi.stubEnv("PREVIEW_TESTER_EMAILS", "someone-else@example.com");
+      const { browser, send } = bound();
+
+      send(startObject({ tutorId }));
+
+      await vi.waitFor(() =>
+        expect(browser.events).toContainEqual(
+          expect.objectContaining({
+            type: "app.error",
+            error: { message: expect.stringMatching(/no object interview/) },
+          }),
+        ),
+      );
+      expect(mocks.rpc).not.toHaveBeenCalled();
+      expect(mocks.connect).not.toHaveBeenCalled();
+      expect(browser.events.some((e) => e["type"] === "app.interview.object")).toBe(false);
+      expect(browser.events.some((e) => e["type"] === "app.interview.started")).toBe(false);
+    });
+
+    it(`gives a tester the draft ${who} object, keeping the tutor's notes off the browser`, async () => {
+      vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
+      const sent: Array<Record<string, unknown>> = [];
+      mocks.connect.mockResolvedValue(gateway(sent));
+      const { selectObject } = await import("@/content/objects");
+      const object = selectObject(who, { includeDrafts: true, seed: 1 })!;
+      expect(object.status).toBe("draft");
+      const { browser, send } = bound();
+
+      send(startObject({ tutorId }));
+
+      await vi.waitFor(() => expect(sent).toHaveLength(1));
+      expect(mocks.rpc).not.toHaveBeenCalled();
+      expect(browser.events).toContainEqual(
+        expect.objectContaining({ type: "app.interview.started", objectId: object.id }),
+      );
+      const shown = browser.events.find((e) => e["type"] === "app.interview.object");
+      expect(shown).toEqual({
+        type: "app.interview.object",
+        objectId: object.id,
+        svg: object.svg,
+        alt: object.alt,
+        caption: `${who === "ppe" ? "Prof Matt" : "Dr River"} has put this on the table`,
+      });
+      const toBrowser = JSON.stringify(browser.events);
+      expect(toBrowser).not.toContain(object.title);
+      expect(toBrowser).not.toContain(object.notes.shows);
+      expect(toBrowser).not.toContain(object.notes.opening);
+      expect(toBrowser).not.toContain(object.notes.goodReasoning);
+      for (const probe of object.notes.probes) expect(toBrowser).not.toContain(probe);
+      const session = sent[0]?.["session"] as { instructions: string };
+      expect(session.instructions).toContain("OBJECT INTERVIEW");
+      expect(session.instructions).toContain(object.notes.shows);
+      expect(session.instructions).toContain(who === "ppe" ? "You are Prof Matt" : "Dr River");
+    });
+  }
+
+  it("refuses an unknown interview mode without touching sign-in or credits", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
+    const { browser, send } = bound();
+
+    send(startObject({ mode: "free-for-all" }));
+
+    await vi.waitFor(() =>
+      expect(browser.events).toContainEqual(expect.objectContaining({ type: "app.error" })),
+    );
+    expect(mocks.authenticate).not.toHaveBeenCalled();
+    expect(mocks.rpc).not.toHaveBeenCalled();
+    expect(mocks.connect).not.toHaveBeenCalled();
+  });
+
+  it("still refuses an object interview without sign-in", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
+    mocks.authenticate.mockResolvedValue(null);
+    const { browser, send } = bound();
+
+    send(startObject());
+
+    await vi.waitFor(() =>
+      expect(browser.events).toContainEqual(expect.objectContaining({ type: "app.error" })),
+    );
+    expect(mocks.rpc).not.toHaveBeenCalled();
+    expect(mocks.connect).not.toHaveBeenCalled();
+    expect(browser.events.some((e) => e["type"] === "app.interview.object")).toBe(false);
+  });
+
+  it("puts nothing on the table in a normal interview", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
+    const sent: Array<Record<string, unknown>> = [];
+    mocks.connect.mockResolvedValue(gateway(sent));
+    const { browser, send } = bound();
+
+    send(startObject({ mode: undefined }));
+
+    await vi.waitFor(() => expect(sent).toHaveLength(1));
+    expect(browser.events.some((e) => e["type"] === "app.interview.object")).toBe(false);
+    const session = sent[0]?.["session"] as { instructions: string };
+    expect(session.instructions).not.toContain("OBJECT INTERVIEW");
   });
 });

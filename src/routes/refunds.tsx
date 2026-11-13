@@ -5,9 +5,15 @@ export const Route = createFileRoute("/refunds")({
   head: () => ({
     meta: [
       { title: "Refund Policy | Oxbridge Interview Practice" },
-      { name: "description", content: "30-day money-back guarantee on Oxbridge interview practice purchases." },
+      {
+        name: "description",
+        content: "30-day money-back guarantee on Oxbridge interview practice purchases.",
+      },
       { property: "og:title", content: "Refund Policy | Oxbridge Interview Practice" },
-      { property: "og:description", content: "30-day money-back guarantee on Oxbridge interview practice purchases." },
+      {
+        property: "og:description",
+        content: "30-day money-back guarantee on Oxbridge interview practice purchases.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -24,7 +30,9 @@ function RefundsPage() {
       </p>
       <h2>How to request a refund</h2>
       <p>
-        To request a refund, reply to your payment receipt email or contact us with the email address you used to buy. Approved refunds go back to your original payment method, usually within 5–10 working days.
+        To request a refund, reply to your payment receipt email or contact us with the email
+        address you used to buy. Approved refunds go back to your original payment method, usually
+        within 5–10 working days.
       </p>
     </LegalLayout>
   );

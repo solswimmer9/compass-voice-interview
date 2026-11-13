@@ -104,7 +104,8 @@ function ReadingSessionPage() {
             </span>
           </a>
           <p className="mt-2 text-xs text-muted-foreground">
-            {reading.searchLink ? "Searching" : "Opening it"} starts your {READING_MINUTES}-minute reading timer.
+            {reading.searchLink ? "Searching" : "Opening it"} starts your {READING_MINUTES}-minute
+            reading timer.
           </p>
         </Step>
 
@@ -135,7 +136,7 @@ function ReadingSessionPage() {
             He'll ask you to sum up the argument, then test it and share his own take.
           </p>
           <Link
-            to="/interview"
+            to="/"
             search={{ reading: reading.id }}
             className={`mt-4 inline-flex rounded-full px-6 py-3 font-medium transition ${
               done
