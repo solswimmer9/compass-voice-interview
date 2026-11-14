@@ -187,7 +187,7 @@ describe("feedback access", () => {
     expect(geography).not.toContain("OBJECT INTERVIEW NOTES");
   });
 
-  it("gives a student's multi-turn transcript today's single feedback call after the allowance check", async () => {
+  it("charges a student's multi-turn transcript once, then falls back to single-call feedback if the checked path fails", async () => {
     const { handleAssess } = await import("@/lib/assess.server");
     const rpc = vi.fn().mockResolvedValue({ data: true, error: null });
     authenticateRequest.mockResolvedValue({
@@ -208,6 +208,10 @@ describe("feedback access", () => {
     request.headers.set("x-forwarded-for", "203.0.113.78");
     const response = await handleAssess(request);
     expect(response.status).toBe(200);
+    expect(rpc).toHaveBeenCalledTimes(1);
+    // The checked path runs first for everyone; generateText is not mocked here, so it fails and
+    // the student silently gets the single-call feedback, still charged only once.
+    await response.text();
     expect(rpc).toHaveBeenCalledTimes(1);
     expect(streamText).toHaveBeenCalledTimes(1);
     const { system } = streamText.mock.calls[0]![0] as { system: string };

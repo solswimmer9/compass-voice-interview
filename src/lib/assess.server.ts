@@ -12,9 +12,11 @@ import { objectFeedbackContext, usableObjectById } from "../content/objects/inde
 import { ARGUMENT_MAP_INSTRUCTIONS } from "./feedback/argument-map.ts";
 import {
   canUseGroundedFeedback,
+  GROUNDED_TIMEOUT_MS,
   parseModelJson,
-  runTesterFeedback,
+  runCheckedFeedback,
 } from "./feedback/grounded.server.ts";
+import { buildArgumentMapBlock } from "./feedback/argument-map.server.ts";
 import type { FeedbackDeps } from "./feedback/pipeline.ts";
 import { createMapAwareLimiter } from "./feedback/map-aware-limit.ts";
 
@@ -135,8 +137,8 @@ export async function handleAssess(request: Request) {
       );
   }
 
-  // Today's feedback: one streamed model call with the prompts above. Called lazily on the
-  // tester path, only if the evidence-checked feedback falls back.
+  // Single-call feedback: one streamed model call with the prompts above. Used for videos and
+  // very short transcripts, and lazily if the evidence-checked feedback falls back.
   const startTodayFeedback = () => {
     const intro = transcript
       ? `Interview transcript:\n\n${transcript}`
@@ -175,30 +177,46 @@ export async function handleAssess(request: Request) {
     "cache-control": "no-cache, no-transform",
   };
 
-  // Tester accounts only: evidence-checked feedback, every quotation verified against the
-  // transcript. All access rules above have already run; testers use no feedback allowance,
-  // so nothing here can charge twice. Any failure falls back silently to today's feedback.
-  if (preview && canUseGroundedFeedback({ transcript, video, ppe })) {
+  // Every account: evidence-checked feedback, every quotation verified against the transcript.
+  // All access rules above have already run and the feedback allowance is charged once, before
+  // this point, so nothing here can charge twice. Testers may draw on draft notes; students only
+  // on approved ones. Any failure falls back silently to the single-call feedback.
+  if (canUseGroundedFeedback({ transcript, video, ppe })) {
     const stream = new ReadableStream<Uint8Array>({
       async start(controller) {
         const pipelineAbort = new AbortController();
         const signal = AbortSignal.any([request.signal, pipelineAbort.signal]);
-        const outcome = await runTesterFeedback(
-          { transcript, ppe, cardIds: body.cardIds, interviewId },
-          gatewayFeedbackDeps(key, signal),
+        const deps = gatewayFeedbackDeps(key, signal);
+        // The checked letter has no argument map, so ask for it alongside, in parallel.
+        const mapBlock = buildArgumentMapBlock(transcript, deps.generateText, GROUNDED_TIMEOUT_MS);
+        const outcome = await runCheckedFeedback(
+          {
+            transcript,
+            ppe,
+            cardIds: body.cardIds,
+            interviewId,
+            includeDrafts: preview,
+            ...(object ? { objectContext: objectFeedbackContext(object) } : {}),
+          },
+          deps,
           { abort: () => pipelineAbort.abort() },
         );
         console.info(
-          "[assess] tester feedback",
+          "[assess] checked feedback",
           outcome.ok
-            ? { grounded: true, truncated: outcome.truncated }
-            : { grounded: false, reason: outcome.reason },
+            ? { grounded: true, truncated: outcome.truncated, tester: preview }
+            : { grounded: false, reason: outcome.reason, tester: preview },
         );
-        if (request.signal.aborted) return controller.close();
-        if (outcome.ok) {
-          controller.enqueue(encoder.encode(outcome.text));
+        if (request.signal.aborted) {
+          pipelineAbort.abort();
           return controller.close();
         }
+        if (outcome.ok) {
+          controller.enqueue(encoder.encode(outcome.text + (await mapBlock)));
+          return controller.close();
+        }
+        // Falling back: the single-call reply brings its own map, so cancel the separate one.
+        pipelineAbort.abort();
         let result: ReturnType<typeof startTodayFeedback>;
         try {
           result = startTodayFeedback();
