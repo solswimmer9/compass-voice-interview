@@ -212,7 +212,12 @@ export async function handleAssess(request: Request) {
           return controller.close();
         }
         if (outcome.ok) {
-          controller.enqueue(encoder.encode(outcome.text + (await mapBlock)));
+          // Send the checked letter at once; the panel already accepts the map arriving after it.
+          controller.enqueue(encoder.encode(outcome.text));
+          const map = await withinGrace(mapBlock, MAP_GRACE_MS);
+          // Stop a map call that is still running so it is not billed after the response ends.
+          pipelineAbort.abort();
+          if (map && !request.signal.aborted) controller.enqueue(encoder.encode(map));
           return controller.close();
         }
         // Falling back: the single-call reply brings its own map, so cancel the separate one.
@@ -242,6 +247,24 @@ export async function handleAssess(request: Request) {
 }
 
 const encoder = new TextEncoder();
+
+/** How long the argument map may still take once the checked letter has been sent. */
+export const MAP_GRACE_MS = 10_000;
+
+/** Resolves to the value, or "" if it takes longer than `ms`. Clears its timer either way. */
+async function withinGrace(value: Promise<string>, ms: number): Promise<string> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      value,
+      new Promise<string>((resolve) => {
+        timer = setTimeout(() => resolve(""), ms);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
 
 /** Streams a model reply to the browser within the word limit, with today's error messages. */
 async function pipeFeedback(

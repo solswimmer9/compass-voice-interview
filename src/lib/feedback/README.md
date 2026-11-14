@@ -11,7 +11,9 @@ Rules:
 - Object interviews pass the chart's notes to the analyst (`objectContext`), as the single-call prompt does.
 - Fail closed: if the checker cannot read a quoting construct, drop the line or fall back. Never show a quotation that has not been matched to the student's own words.
 - `word-limit.ts` applies to both paths. The streamed output must always equal `limitWords(fullText)`; the argument map block sits after the letter and is not counted.
-- The checked path costs three text-model calls (analyst, writer, argument map) and at most one rewrite, against one call for the single-call path.
+- The checked path costs three text-model calls (analyst, writer, argument map) plus at most one rewrite, against one call for the single-call path. A fallback adds the single streamed call on top of whatever the pipeline already spent.
+- The checked letter cannot stream: the student sees nothing until it has passed every check (up to `GROUNDED_TIMEOUT_MS`, 60 s, before a fallback starts streaming). The letter is sent as soon as it is ready; the map then has at most `MAP_GRACE_MS` (10 s) more, after which any map call still running is cancelled.
+- The quote check covers the letter only. The argument map comes from a separate call that never sees the letter, so it is validated for shape (`parseArgumentMap`) but not quote-checked, exactly as on the single-call path.
 - Logs carry counts and reasons only, never transcript text.
 
 Known low-severity gaps are listed in `docs/overnight/2026-11-12-handover.md`.

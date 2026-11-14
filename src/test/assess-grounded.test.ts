@@ -78,9 +78,10 @@ function streamOf(
 }
 
 let visitor = 0;
-function post(body: unknown) {
+function post(body: unknown, signal?: AbortSignal) {
   return new Request(URL, {
     method: "POST",
+    ...(signal ? { signal } : {}),
     headers: {
       "content-type": "application/json",
       authorization: "Bearer a.b.c",
@@ -342,6 +343,88 @@ describe("student feedback is evidence-checked, with the single-call path as fal
     expect(text).toMatch(/^## Overall impression/);
     expect(text).toContain("(turn 4)");
     expect(text).not.toContain("<<<ARGUMENT_MAP>>>");
+    expect(streamText).not.toHaveBeenCalled();
+  });
+
+  it("gives the student's analyst the chart notes in an object interview", async () => {
+    const { handleAssess } = await import("@/lib/assess.server");
+    signIn("student@example.com");
+    modelReplies(OBSERVATIONS, WRITER_REPORT);
+    await (
+      await handleAssess(
+        post({ transcript: TRANSCRIPT, interviewId: INTERVIEW, objectId: "geo-chart-a" }),
+      )
+    ).text();
+    expect(pipelineCalls()[0]![0].prompt).toContain("OBJECT INTERVIEW NOTES");
+  });
+
+  it("sends the checked letter without waiting long for a slow map, then cancels the map call", async () => {
+    vi.useFakeTimers();
+    const { handleAssess, MAP_GRACE_MS } = await import("@/lib/assess.server");
+    signIn("student@example.com");
+    const queue = [OBSERVATIONS, WRITER_REPORT];
+    let mapSignal: AbortSignal | undefined;
+    generateText.mockImplementation(async (args: { system?: string; abortSignal: AbortSignal }) => {
+      if (isMapCall(args)) {
+        mapSignal = args.abortSignal;
+        return new Promise(() => {});
+      }
+      return { text: queue.shift() };
+    });
+    const response = await handleAssess(post({ transcript: TRANSCRIPT, interviewId: INTERVIEW }));
+    const reader = response.body!.getReader();
+    const first = await reader.read();
+    const letter = new TextDecoder().decode(first.value);
+    expect(letter).toMatch(/^## Overall impression/);
+    expect(letter).toContain("(turn 4)");
+    expect(mapSignal?.aborted).toBe(false);
+    await vi.advanceTimersByTimeAsync(MAP_GRACE_MS);
+    expect((await reader.read()).done).toBe(true);
+    expect(mapSignal?.aborted).toBe(true);
+    expect(streamText).not.toHaveBeenCalled();
+  });
+
+  it("cancels the map call when the checked path falls back", async () => {
+    const { handleAssess } = await import("@/lib/assess.server");
+    signIn("student@example.com");
+    let mapSignal: AbortSignal | undefined;
+    generateText.mockImplementation(async (args: { system?: string; abortSignal: AbortSignal }) => {
+      if (isMapCall(args)) {
+        mapSignal = args.abortSignal;
+        return new Promise(() => {});
+      }
+      return { text: "I cannot help with that." };
+    });
+    const text = await (
+      await handleAssess(post({ transcript: TRANSCRIPT, interviewId: INTERVIEW }))
+    ).text();
+    expect(text).toBe(TODAY_TEXT);
+    expect(mapSignal?.aborted).toBe(true);
+  });
+
+  it("stops everything, with no fallback call, when the student leaves mid-check", async () => {
+    const { handleAssess } = await import("@/lib/assess.server");
+    signIn("student@example.com");
+    const leave = new AbortController();
+    const signals: AbortSignal[] = [];
+    generateText.mockImplementation(
+      (args: { abortSignal: AbortSignal }) =>
+        new Promise((_, reject) => {
+          signals.push(args.abortSignal);
+          args.abortSignal.addEventListener("abort", () => reject(new Error("aborted")));
+        }),
+    );
+    const response = await handleAssess(
+      post({ transcript: TRANSCRIPT, interviewId: INTERVIEW }, leave.signal),
+    );
+    const reader = response.body!.getReader();
+    const done = reader.read().catch(() => ({ done: true, value: undefined }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    leave.abort();
+    await done;
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(signals.length).toBeGreaterThan(0);
+    for (const signal of signals) expect(signal.aborted).toBe(true);
     expect(streamText).not.toHaveBeenCalled();
   });
 

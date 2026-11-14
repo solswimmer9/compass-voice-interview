@@ -2,6 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const authenticateRequest = vi.fn();
 const streamText = vi.fn();
+// The checked feedback path's calls. Rejecting sends every student and tester request on to the
+// single-call path these tests check, after recording what the analyst would have been given.
+const generateText = vi.fn();
 
 // The real charts are approved. These tests keep checking the draft rule (students never get a
 // draft object; testers do) by treating both charts as drafts in this file only.
@@ -16,7 +19,7 @@ vi.mock("@/content/objects/urban-rural-share", async (importOriginal) => {
 
 vi.mock("@/lib/request-auth.server", () => ({ authenticateRequest }));
 vi.mock("../lib/request-auth.server.ts", () => ({ authenticateRequest }));
-vi.mock("ai", () => ({ streamText }));
+vi.mock("ai", () => ({ streamText, generateText }));
 
 const PUBLISHED_URL = "https://compass-voice-interview.lovable.app/api/assess";
 // The kind of internal address the published server may see for itself.
@@ -41,8 +44,14 @@ describe("feedback access", () => {
     authenticateRequest.mockReset();
     streamText.mockReset();
     streamText.mockReturnValue({ fullStream: (async function* () {})() });
+    generateText.mockReset();
+    generateText.mockRejectedValue(new Error("checked path unavailable in this file"));
+    vi.spyOn(console, "info").mockImplementation(() => {});
   });
-  afterEach(() => vi.unstubAllEnvs());
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
 
   it("refuses feedback with no sign-in, whatever the address", async () => {
     const { handleAssess } = await import("@/lib/assess.server");
@@ -161,6 +170,47 @@ describe("feedback access", () => {
     expect(system).not.toContain("OBJECT INTERVIEW NOTES");
   });
 
+  it("keeps a draft object's notes out of a student's checked feedback, but not a tester's", async () => {
+    const { handleAssess } = await import("@/lib/assess.server");
+    const transcript = [
+      "Dr River: What could this chart show?",
+      "You: Maybe the share of people living in towns over time.",
+      "Dr River: Why do you say that?",
+      "You: Because the line rises steadily, like urbanisation usually does.",
+    ].join("\n\n");
+    const analystPrompts = () =>
+      (generateText.mock.calls as [{ prompt: string }][]).map(([args]) => args.prompt);
+    const rpc = vi.fn().mockResolvedValue({ data: true, error: null });
+    authenticateRequest.mockResolvedValue({
+      user: { email: "student-object-checked@example.com" },
+      supabase: { rpc },
+    });
+    const student = post(
+      PUBLISHED_URL,
+      { transcript, interviewId: "00000000-0000-0000-0000-000000000000", objectId: "geo-chart-a" },
+      "a.b.c",
+    );
+    student.headers.set("x-forwarded-for", "203.0.113.79");
+    await (await handleAssess(student)).text();
+    expect(analystPrompts().length).toBeGreaterThan(0);
+    for (const prompt of analystPrompts()) expect(prompt).not.toContain("OBJECT INTERVIEW NOTES");
+    generateText.mockClear();
+    authenticateRequest.mockResolvedValue({
+      user: { email: "tester@example.com" },
+      supabase: { rpc: vi.fn() },
+    });
+    await (
+      await handleAssess(
+        post(
+          PUBLISHED_URL,
+          { transcript, interviewId: "preview", objectId: "geo-chart-a" },
+          "a.b.c",
+        ),
+      )
+    ).text();
+    expect(analystPrompts().some((prompt) => prompt.includes("OBJECT INTERVIEW NOTES"))).toBe(true);
+  });
+
   it("gives a tester feedback from the draft object's notes, for the matching tutor only", async () => {
     const { handleAssess } = await import("@/lib/assess.server");
     authenticateRequest.mockResolvedValue({
@@ -209,8 +259,8 @@ describe("feedback access", () => {
     const response = await handleAssess(request);
     expect(response.status).toBe(200);
     expect(rpc).toHaveBeenCalledTimes(1);
-    // The checked path runs first for everyone; generateText is not mocked here, so it fails and
-    // the student silently gets the single-call feedback, still charged only once.
+    // The checked path runs first for everyone; generateText rejects here, so it fails and the
+    // student silently gets the single-call feedback, still charged only once.
     await response.text();
     expect(rpc).toHaveBeenCalledTimes(1);
     expect(streamText).toHaveBeenCalledTimes(1);
