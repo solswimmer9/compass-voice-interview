@@ -4,11 +4,51 @@ The database is managed by Lovable (see `AGENTS.md`), so these are written as me
 
 ## 1. Close the free-interview refund hole (urgent)
 
-Any signed-in account, including the new guest accounts, can call `release_interview_credit` directly from the browser after an interview and get the credit back. For a free interview this also resets the free allowance, so free interviews become unlimited. The app only ever refunds a call that failed to start, which it decides within about a minute, so limiting refunds to the first 90 seconds closes the hole without any app change.
+Any signed-in account, including the new guest accounts, can call `release_interview_credit` directly from the browser and get an interview's credit back. For a free interview this also resets the free allowance, so free interviews become unlimited.
 
-> Please change `release_interview_credit(p_interview_id uuid)` so it only releases a session created in the last 90 seconds: add `AND created_at > now() - interval '90 seconds'` to its `SELECT ... FOR UPDATE`. Keep everything else about the function, its grants and all other functions exactly as they are.
+A time limit on its own does not close this: a student can call it 10 seconds into an interview, get the credit back, and carry on talking for the full interview. So only the server may call it. The app already does this (`releaseInterviewCredit` in `src/lib/live-relay.server.ts`): it calls the new server-only version below with the service role, and falls back to the old call only while the new one does not exist yet, so refunds for calls that fail to start keep working before and after the change.
 
-Check afterwards: start an interview, talk for two minutes, end it, and confirm your remaining interview count did not go back up.
+If the earlier 90-second version of this request was already applied, send this one anyway: it replaces the function.
+
+> Please apply these database changes exactly. Keep all other tables, functions, policies and credit rules as they are.
+>
+> Make `release_interview_credit` server-only and have it take the user explicitly. It currently uses `auth.uid()` and is executable by `authenticated`, so users can refund their own credits during or after an interview. Replace it with a version that takes the user id and can only be run by `service_role`:
+>
+> ```sql
+> REVOKE EXECUTE ON FUNCTION public.release_interview_credit(uuid) FROM PUBLIC, anon, authenticated;
+> DROP FUNCTION public.release_interview_credit(uuid);
+>
+> CREATE FUNCTION public.release_interview_credit(p_interview_id uuid, p_user_id uuid)
+> RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+> DECLARE v_purchase_id uuid;
+> BEGIN
+>   IF p_user_id IS NULL THEN RAISE EXCEPTION 'User required'; END IF;
+>   SELECT purchase_id INTO v_purchase_id FROM public.interview_sessions
+>   WHERE id = p_interview_id AND user_id = p_user_id AND feedback_used = false
+>     AND created_at > now() - interval '10 minutes'
+>   FOR UPDATE;
+>   IF NOT FOUND THEN RETURN false; END IF;
+>   DELETE FROM public.interview_sessions WHERE id = p_interview_id;
+>   IF v_purchase_id IS NOT NULL THEN
+>     UPDATE public.purchases SET interviews_remaining = interviews_remaining + 1, updated_at = now()
+>     WHERE id = v_purchase_id;
+>   END IF;
+>   RETURN true;
+> END; $$;
+>
+> REVOKE ALL ON FUNCTION public.release_interview_credit(uuid, uuid) FROM PUBLIC, anon, authenticated;
+> GRANT EXECUTE ON FUNCTION public.release_interview_credit(uuid, uuid) TO service_role;
+> ```
+>
+> Then regenerate the Supabase types.
+
+The 10-minute window is a backstop only: the server refunds a call only when it saw it fail to start, with no student speech, within 20 seconds (`MIN_BILLABLE_SESSION_MS`).
+
+Check afterwards:
+
+- In the browser console of a signed-in account, calling `release_interview_credit` now fails with a permission or "function not found" error.
+- Start an interview, talk for two minutes, end it, and confirm your remaining interview count did not go back up.
+- Start an interview and close the tab before the tutor speaks: the credit should come back (server log has no "could not be restored" error).
 
 ## 2. Two free tries for guests
 

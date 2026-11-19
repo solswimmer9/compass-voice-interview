@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateText, streamText, type ModelMessage } from "ai";
 import process from "node:process";
 import type { Database } from "@/integrations/supabase/types";
+import { supabaseAdmin } from "../integrations/supabase/client.server.ts";
 import {
   DR_RIVER_BRIEFING,
   NOTES_CONTEXT,
@@ -201,6 +202,48 @@ Delegation policy:
 Backend tools: A careful reasoning assistant that analyses the candidate's argument and suggests the sharpest follow-up challenge.
 Delegate to the backend when: The candidate gives a long or complex argument and you need a precise counter-argument, or they ask for detailed feedback on the interview.
 Do not delegate to the backend when: Greeting, asking the opening question, short follow-ups, hints, or clarifications. Wait for the backend result before presenting it.`;
+
+/** PostgREST's code for "no function with these arguments", e.g. before the database change. */
+const FUNCTION_NOT_FOUND = "PGRST202";
+
+type RpcError = { code?: string; message?: string } | null;
+
+/**
+ * Gives back the credit of a call that failed to start. Only the server should be able to: the
+ * server-only `release_interview_credit(p_interview_id, p_user_id)` runs with the service role,
+ * so once Lovable has revoked the old signed-in version a student can no longer refund their own
+ * interview from the browser (docs/lovable-requests-2026-11-19.md). Until then the server-only
+ * version does not exist, so this falls back to the old call. The protection lives in the
+ * database grants, not here: after the change the fallback simply fails.
+ */
+export async function releaseInterviewCredit(credit: {
+  id: string;
+  userId: string;
+  supabase: SupabaseClient<Database>;
+}): Promise<RpcError> {
+  let serverOnly: RpcError;
+  try {
+    // The generated database types still describe the old signature, so call it untyped.
+    const admin = supabaseAdmin as unknown as {
+      rpc(name: string, args: Record<string, string>): PromiseLike<{ error: RpcError }>;
+    };
+    ({ error: serverOnly } = await admin.rpc("release_interview_credit", {
+      p_interview_id: credit.id,
+      p_user_id: credit.userId,
+    }));
+  } catch (error) {
+    serverOnly = { message: error instanceof Error ? error.message : String(error) };
+  }
+  if (!serverOnly) return null;
+  if (serverOnly.code !== FUNCTION_NOT_FOUND)
+    console.warn("Server-only credit release failed; trying the signed-in call", {
+      code: serverOnly.code,
+    });
+  const { error } = await credit.supabase.rpc("release_interview_credit", {
+    p_interview_id: credit.id,
+  });
+  return error;
+}
 
 /** Backchannel and hesitation sounds ("mm-hm", "uh-huh", "um", "erm") that add no reasoning. */
 export function isListeningSound(text: string) {
@@ -405,7 +448,8 @@ export function bindLiveConnection(
   let finishDrain: (() => void) | undefined;
   let browserReady = false;
   // Only set when this connection consumed a fresh credit; never on a resumed interview.
-  let interviewCredit: { id: string; supabase: SupabaseClient<Database> } | undefined;
+  let interviewCredit:
+    { id: string; userId: string; supabase: SupabaseClient<Database> } | undefined;
   let creditRelease: Promise<void> | undefined;
   // Server-side evidence used to decide whether an unused credit may be restored.
   let sessionCreatedAt: number | undefined;
@@ -479,9 +523,7 @@ export function bindLiveConnection(
     if (!interviewCredit || creditRelease || !callFailedToStart()) return;
     const credit = interviewCredit;
     creditRelease = (async () => {
-      const { error } = await credit.supabase.rpc("release_interview_credit", {
-        p_interview_id: credit.id,
-      });
+      const error = await releaseInterviewCredit(credit);
       if (error) console.error("The unused interview credit could not be restored", error);
     })();
     execution.waitUntil(creditRelease);
@@ -546,7 +588,7 @@ export function bindLiveConnection(
         "Your free interview has been used. See the pricing page for more interviews or lifetime access.",
       );
     }
-    interviewCredit = { id: result.interviewId, supabase: auth.supabase };
+    interviewCredit = { id: result.interviewId, userId: auth.user.id, supabase: auth.supabase };
     return result.interviewId;
   }
 
