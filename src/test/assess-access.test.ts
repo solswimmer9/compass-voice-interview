@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const authenticateRequest = vi.fn();
 const streamText = vi.fn();
+const adminEq = vi.fn();
+const adminUpdate = vi.fn();
 
 // The real charts are approved. These tests keep checking the draft rule (students never get a
 // draft object; testers do) by treating both charts as drafts in this file only.
@@ -17,6 +19,9 @@ vi.mock("@/content/objects/urban-rural-share", async (importOriginal) => {
 vi.mock("@/lib/request-auth.server", () => ({ authenticateRequest }));
 vi.mock("../lib/request-auth.server.ts", () => ({ authenticateRequest }));
 vi.mock("ai", () => ({ streamText }));
+vi.mock("@/integrations/supabase/client.server", () => ({
+  supabaseAdmin: { from: () => ({ update: adminUpdate }) },
+}));
 
 const PUBLISHED_URL = "https://compass-voice-interview.lovable.app/api/assess";
 // The kind of internal address the published server may see for itself.
@@ -41,6 +46,11 @@ describe("feedback access", () => {
     authenticateRequest.mockReset();
     streamText.mockReset();
     streamText.mockReturnValue({ fullStream: (async function* () {})() });
+    adminEq.mockReset();
+    adminUpdate.mockReset();
+    const chain = { eq: adminEq, error: null };
+    adminEq.mockReturnValue(chain);
+    adminUpdate.mockReturnValue(chain);
   });
   afterEach(() => vi.unstubAllEnvs());
 
@@ -212,5 +222,41 @@ describe("feedback access", () => {
     expect(streamText).toHaveBeenCalledTimes(1);
     const { system } = streamText.mock.calls[0]![0] as { system: string };
     expect(system).toContain("Cambridge geography admissions tutor");
+  });
+
+  describe("a failed letter gives the feedback back", () => {
+    const interviewId = "00000000-0000-0000-0000-000000000000";
+    let visitor = 0;
+    async function requestLetter(parts: { type: string; text?: string; error?: unknown }[]) {
+      const { handleAssess } = await import("@/lib/assess.server");
+      streamText.mockReturnValue({
+        fullStream: (async function* () {
+          yield* parts;
+        })(),
+      });
+      authenticateRequest.mockResolvedValue({
+        user: { id: "student-id", email: "student@example.com" },
+        supabase: { rpc: vi.fn().mockResolvedValue({ data: true, error: null }) },
+      });
+      const request = post(PUBLISHED_URL, { transcript: "x", interviewId }, "a.b.c");
+      // Its own visitor, so the feedback rate limit shared by this file never applies.
+      request.headers.set("cf-connecting-ip", `198.51.100.${++visitor}`);
+      const response = await handleAssess(request);
+      return response.text();
+    }
+
+    it("restores the allowance when the model fails", async () => {
+      const text = await requestLetter([{ type: "error", error: { statusCode: 500 } }]);
+      expect(text).toContain("[[error]]");
+      expect(adminUpdate).toHaveBeenCalledWith({ feedback_used: false });
+      expect(adminEq).toHaveBeenCalledWith("id", interviewId);
+      expect(adminEq).toHaveBeenCalledWith("user_id", "student-id");
+    });
+
+    it("keeps the allowance used once a letter is delivered", async () => {
+      const text = await requestLetter([{ type: "text-delta", text: "Dear student," }]);
+      expect(text).toContain("Dear student,");
+      expect(adminUpdate).not.toHaveBeenCalled();
+    });
   });
 });

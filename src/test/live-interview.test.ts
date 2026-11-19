@@ -189,7 +189,7 @@ describe("PPE interviews", () => {
     });
   }
 
-  function bound() {
+  function bound(visitor?: string) {
     let handler: ((data: unknown) => void) | undefined;
     const browser = browserSocket();
     const socket: LiveSocket = {
@@ -198,7 +198,7 @@ describe("PPE interviews", () => {
         handler = h;
       },
     };
-    bindLiveConnection(socket, config, executionContext(), mocks.connect);
+    bindLiveConnection(socket, config, executionContext(), mocks.connect, visitor);
     return { browser, send: (data: string) => handler?.(data) };
   }
 
@@ -285,6 +285,43 @@ describe("PPE interviews", () => {
       ),
     );
     expect(mocks.connect).not.toHaveBeenCalled();
+  });
+
+  it("limits how many free tries one connection can start as a guest", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
+    mocks.authenticate.mockResolvedValue({
+      user: { is_anonymous: true },
+      supabase: { rpc: mocks.rpc },
+    });
+    const errors: string[] = [];
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const { browser, send } = bound("203.0.113.7");
+      send(startPpe(browser));
+      await vi.waitFor(() =>
+        expect(browser.events.some((event) => event["type"] === "app.error")).toBe(true),
+      );
+      const error = browser.events.find((event) => event["type"] === "app.error");
+      errors.push((error?.["error"] as { message: string }).message);
+    }
+    // Two guest starts an hour are allowed through to the credit check; the third is refused.
+    expect(errors[2]).toMatch(/limit for free tries/);
+    const creditChecks = mocks.rpc.mock.calls.filter(
+      ([name]) => name === "consume_interview_credit",
+    );
+    expect(creditChecks).toHaveLength(2);
+  });
+
+  it("never applies the guest limit to signed-in accounts on a shared connection", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const { browser, send } = bound("203.0.113.8");
+      send(startPpe(browser));
+      await vi.waitFor(() =>
+        expect(browser.events.some((event) => event["type"] === "app.error")).toBe(true),
+      );
+      const error = browser.events.find((event) => event["type"] === "app.error");
+      expect((error?.["error"] as { message: string }).message).not.toMatch(/limit/);
+    }
   });
 
   it("refuses PPE without sign-in", async () => {

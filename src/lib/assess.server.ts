@@ -213,24 +213,56 @@ export async function handleAssess(request: Request) {
     return new Response(stream, { headers });
   }
 
-  const result = startTodayFeedback();
+  // The allowance was taken above, before the letter exists. If the letter then fails (model
+  // error, timeout, or the student's connection drops before it finishes), give the feedback back
+  // so the student can try again instead of losing it.
+  const userId = auth?.user.id;
+  const restore = () => (userId ? restoreFeedback(interviewId, userId) : Promise.resolve());
+  let result: ReturnType<typeof startTodayFeedback>;
+  try {
+    result = startTodayFeedback();
+  } catch (error) {
+    await restore();
+    throw error;
+  }
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
-      await pipeFeedback(result, controller, request.signal);
+      const delivered = await pipeFeedback(result, controller, request.signal);
+      if (!delivered) await restore();
       controller.close();
     },
   });
   return new Response(stream, { headers });
 }
 
+/** Marks a student's interview as not yet having had feedback, after a letter failed. */
+async function restoreFeedback(interviewId: string, userId: string) {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("interview_sessions")
+      .update({ feedback_used: false })
+      .eq("id", interviewId)
+      .eq("user_id", userId);
+    if (error) throw error;
+  } catch (error) {
+    console.error("[assess] could not restore feedback after a failed letter", error);
+  }
+}
+
 const encoder = new TextEncoder();
 
-/** Streams a model reply to the browser within the word limit, with today's error messages. */
+/**
+ * Streams a model reply to the browser within the word limit, with today's error messages.
+ * Returns true only if a letter was sent in full: some text, no error, and not cut off.
+ */
 async function pipeFeedback(
   result: { fullStream: AsyncIterable<{ type: string; text?: string; error?: unknown }> },
   controller: ReadableStreamDefaultController<Uint8Array>,
   signal: AbortSignal,
-) {
+): Promise<boolean> {
+  let sentText = false;
+  let failed = false;
   // The word limit covers the letter; a trailing argument-map block passes through intact.
   const limiter = createMapAwareLimiter();
   const send = (text: string) => {
@@ -239,10 +271,12 @@ async function pipeFeedback(
   try {
     for await (const part of result.fullStream) {
       if (part.type === "text-delta") {
+        if (part.text) sentText = true;
         send(limiter.push(part.text ?? ""));
         if (limiter.done) break; // Nothing more will be sent.
       }
       if (part.type === "error") {
+        failed = true;
         send(limiter.end());
         const err = part.error as { statusCode?: number; message?: string };
         const message =
@@ -256,11 +290,13 @@ async function pipeFeedback(
     }
     send(limiter.end());
   } catch {
+    failed = true;
     if (!signal.aborted) {
       send(limiter.end());
       controller.enqueue(encoder.encode("\n\n[[error]]The assessment could not be completed."));
     }
   }
+  return sentText && !failed && !signal.aborted;
 }
 
 function textModel(key: string) {

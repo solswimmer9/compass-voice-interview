@@ -15,6 +15,7 @@ import { readingById, readingsFor } from "./readings.ts";
 import { INTERVIEW_MINUTES, OBJECT_REVEAL_MINUTES } from "./limits.ts";
 import { authenticateAccessToken } from "./request-auth.server.ts";
 import { isServerTester } from "./testers.ts";
+import { limitMessage, takeGuestInterview, visitorKey } from "./rate-limit.server.ts";
 import { buildPpeSession, isPpeRequest, PPE_TUTOR_ID } from "./ppe.server.ts";
 import {
   buildGeographySession,
@@ -143,13 +144,19 @@ export function handleLiveRequest(request: Request): Response {
   if (rejected) return rejected;
   const pair = new WebSocketPair();
   pair[1].accept();
-  bindLiveConnection(workerSocket(pair[1]), config, { waitUntil }, async (url, headers, signal) => {
-    const response = await fetch(url, { headers: { ...headers, Upgrade: "websocket" }, signal });
-    const socket = (response as Response & { webSocket?: WorkerSocket | null }).webSocket;
-    if (!socket) throw await gatewayRejection(response);
-    socket.accept();
-    return workerSocket(socket);
-  });
+  bindLiveConnection(
+    workerSocket(pair[1]),
+    config,
+    { waitUntil },
+    async (url, headers, signal) => {
+      const response = await fetch(url, { headers: { ...headers, Upgrade: "websocket" }, signal });
+      const socket = (response as Response & { webSocket?: WorkerSocket | null }).webSocket;
+      if (!socket) throw await gatewayRejection(response);
+      socket.accept();
+      return workerSocket(socket);
+    },
+    visitorKey(request),
+  );
   const response: ResponseInit & { webSocket: WebSocket } = { status: 101, webSocket: pair[0] };
   return new Response(null, response);
 }
@@ -325,6 +332,8 @@ export function bindLiveConnection(
   configuration: LiveConfig,
   execution: LiveExecutionContext,
   connect: LiveConnector,
+  /** Who is connecting (their IP address), for the guest interview limit. */
+  visitor = "unknown",
 ): void {
   const config = { ...configuration };
   let durationTimer: ReturnType<typeof setTimeout> | undefined;
@@ -421,6 +430,14 @@ export function bindLiveConnection(
     }
     const auth = await authenticateAccessToken(event.accessToken);
     if (!auth) throw new Error("Your sign-in has expired. Please sign in again.");
+    if (auth.user.is_anonymous) {
+      const allowed = takeGuestInterview(visitor);
+      if (!allowed.ok) {
+        throw new Error(
+          `${limitMessage("free tries", allowed.retryAfterMinutes)} Or sign in to keep practising.`,
+        );
+      }
+    }
     // Unlimited testing is per signed-in tester account, never by web address.
     const tester = isServerTester(auth.user.email);
     await beforeCredit?.(tester);
