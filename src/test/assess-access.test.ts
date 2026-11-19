@@ -338,4 +338,27 @@ describe("feedback access", () => {
       expect(adminUpdate).not.toHaveBeenCalled();
     });
   });
+
+  it("limits feedback per student, not per school connection", async () => {
+    const { handleAssess } = await import("@/lib/assess.server");
+    const ask = async (studentId: string) => {
+      authenticateRequest.mockResolvedValue({
+        user: { id: studentId, email: `${studentId}@example.com` },
+        supabase: { rpc: vi.fn().mockResolvedValue({ data: false, error: null }) },
+      });
+      const request = post(
+        PUBLISHED_URL,
+        { transcript: "x", interviewId: "00000000-0000-0000-0000-000000000000" },
+        "a.b.c",
+      );
+      request.headers.set("cf-connecting-ip", "192.0.2.50");
+      return (await handleAssess(request)).status;
+    };
+    // Thirty students behind one address are each let through to their allowance check.
+    for (let index = 0; index < 30; index++) expect(await ask(`class-${index}`)).toBe(403);
+    // One student asking again and again is still limited.
+    const statuses = [];
+    for (let index = 0; index < 5; index++) statuses.push(await ask("busy-student"));
+    expect(statuses.at(-1)).toBe(429);
+  });
 });

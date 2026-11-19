@@ -78,6 +78,7 @@ function streamOf(
 }
 
 let visitor = 0;
+let student = 0;
 function post(body: unknown, signal?: AbortSignal) {
   return new Request(URL, {
     method: "POST",
@@ -94,7 +95,11 @@ function post(body: unknown, signal?: AbortSignal) {
 
 function signIn(email: string, consumed = true) {
   const rpc = vi.fn().mockResolvedValue({ data: consumed, error: null });
-  authenticateRequest.mockResolvedValue({ user: { email }, supabase: { rpc } });
+  // A fresh student id each time too, so the per-student feedback limit never interferes.
+  authenticateRequest.mockResolvedValue({
+    user: { id: `student-${++student}`, email },
+    supabase: { rpc },
+  });
   return rpc;
 }
 

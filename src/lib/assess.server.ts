@@ -4,7 +4,12 @@ import process from "node:process";
 import { createLovableAiGatewayProvider } from "./ai/gateway-helpers.ts";
 import { createLovableAiGatewayRunIdFetch } from "./ai/run-id.ts";
 import { NOTES_CONTEXT, REASONING_GUIDE } from "./interview-briefing.ts";
-import { limitMessage, takeFeedback, visitorKey } from "./rate-limit.server.ts";
+import {
+  limitMessage,
+  takeFeedback,
+  takeFeedbackRequest,
+  visitorKey,
+} from "./rate-limit.server.ts";
 import { authenticateRequest } from "./request-auth.server.ts";
 import { isServerTester } from "./testers.ts";
 import { isPpeRequest, ppeFeedbackContext } from "./ppe.server.ts";
@@ -81,7 +86,10 @@ export async function handleAssess(request: Request) {
   const ppe = isPpeRequest(body.tutorId);
 
   if (!preview) {
-    const allowed = takeFeedback(visitorKey(request));
+    // A loose per-address flood guard, then the real limit per signed-in student.
+    const flood = takeFeedbackRequest(visitorKey(request));
+    const allowed =
+      flood.ok && auth ? takeFeedback(`user:${auth.user.id ?? auth.user.email}`) : flood;
     if (!allowed.ok) {
       return Response.json(
         { error: limitMessage("feedback", allowed.retryAfterMinutes) },
