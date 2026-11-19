@@ -55,3 +55,8 @@ use the editor.
 ## Feedback
 
 - Every account gets quote-checked feedback for transcripts with at least two student turns (owner's decision, 14 November 2026): see `src/lib/feedback/README.md`. Students' analyst sees approved notes only; draft PPE notes stay tester-only. Any failure falls back silently to the single-call feedback, which also handles videos and very short transcripts. `src/test/assess-grounded.test.ts` and `src/test/assess-access.test.ts` guard this.
+
+## Turn analyst and phase director
+
+- Every live interview runs the turn analyst and phase director (`src/lib/interview/live-director.ts`, wired in `live-relay.server.ts`) after each student turn. Steering notes reach the live tutor only for tester accounts; everyone else is shadow mode, where turn states are logged as `interview.turn` lines and nothing is sent (owner's decision, 19 November 2026, following the migration plan in `docs/multi-subject-interview-architecture.md`). Logs carry labels only, never transcript text or user identifiers. To steer students too, change `steer` in `startDirector` calls; `src/test/live-delegation.test.ts` guards both modes.
+

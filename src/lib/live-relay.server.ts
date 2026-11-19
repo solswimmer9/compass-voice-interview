@@ -1,6 +1,6 @@
 import { createOpenAI } from "@ai-sdk/openai";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { streamText, type ModelMessage } from "ai";
+import { generateText, streamText, type ModelMessage } from "ai";
 import process from "node:process";
 import type { Database } from "@/integrations/supabase/types";
 import {
@@ -13,6 +13,8 @@ import {
 import { readingById, readingsFor } from "./readings.ts";
 import { INTERVIEW_MINUTES, OBJECT_REVEAL_MINUTES } from "./limits.ts";
 import { groupTurns } from "./evals/metrics.ts";
+import { GEOGRAPHY_CRITERIA, PPE_CRITERIA } from "./feedback/criteria.ts";
+import { createLiveDirector, type LiveDirector } from "./interview/live-director.ts";
 import { authenticateAccessToken } from "./request-auth.server.ts";
 import { isServerTester } from "./testers.ts";
 import { limitMessage, takeGuestInterview, visitorKey } from "./rate-limit.server.ts";
@@ -235,6 +237,42 @@ export function backendTranscript(
 type BackendBrief = { subject: string; guide: string };
 const GEOGRAPHY_BRIEF: BackendBrief = { subject: GEOGRAPHY_SUBJECT, guide: REASONING_GUIDE };
 
+/** One turn-analyst call: a short, low-effort, single-step request on the backend model. */
+async function analyseTurnText(
+  prompt: string,
+  config: LiveConfig,
+  correlation: { runID: string; sessionID: string | undefined },
+  signal: AbortSignal,
+) {
+  const provider = createOpenAI({
+    baseURL: gatewayAPIBase(config.baseURL),
+    apiKey: config.key,
+    headers: { "Lovable-API-Key": config.key, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
+  });
+  const { text } = await generateText({
+    model: provider.responses(config.backendModel),
+    abortSignal: signal,
+    maxRetries: 0,
+    headers: {
+      "X-Lovable-AIG-Run-ID": correlation.runID,
+      "X-Lovable-AIG-Metadata": JSON.stringify({
+        live_session_id: correlation.sessionID,
+        purpose: "turn_analyst",
+      }),
+    },
+    providerOptions: {
+      openai: {
+        store: false,
+        ...(config.backendModel !== "openai/chat-latest"
+          ? { forceReasoning: true, reasoningEffort: "low" }
+          : {}),
+      },
+    },
+    prompt,
+  });
+  return text;
+}
+
 async function answerQuestion(
   messages: ModelMessage[],
   config: LiveConfig,
@@ -385,6 +423,8 @@ export function bindLiveConnection(
     stop();
   }, 5000);
   const transcripts: Transcript[] = [];
+  // Turn analyst and phase director: shadow mode for everyone, steering notes for testers.
+  let liveDirector: LiveDirector | undefined;
   const delegations = new Set<string>();
 
   function emit(event: object) {
@@ -609,6 +649,47 @@ export function bindLiveConnection(
     );
   }
 
+  /**
+   * Starts the turn analyst and director once the interview is authorised. `steer` sends the
+   * director's notes to the live tutor; otherwise they are only logged (shadow mode).
+   */
+  function startDirector(plan: {
+    tutorId: TutorId;
+    steer: boolean;
+    hasStimulus: boolean;
+    cardIds?: string[];
+  }) {
+    liveDirector = createLiveDirector({
+      minutes: INTERVIEW_MINUTES,
+      hasStimulus: plan.hasStimulus,
+      criteria: plan.tutorId === PPE_TUTOR_ID ? PPE_CRITERIA : GEOGRAPHY_CRITERIA,
+      ...(plan.cardIds?.length ? { cardIds: plan.cardIds } : {}),
+      steer: plan.steer,
+      analyse: (prompt, signal) => analyseTurnText(prompt, config, { runID, sessionID }, signal),
+      sendNote: (text) => sendCue(text),
+      // Labels and counts only; never transcript text or user identifiers.
+      log: (entry) =>
+        console.log(JSON.stringify({ ...entry, tutorId: plan.tutorId, steering: plan.steer })),
+    });
+  }
+
+  /** Time into the interview, counting a resumed interview from its original start. */
+  function interviewElapsedMs() {
+    const limit = INTERVIEW_MINUTES * 60_000;
+    if (resumeDeadline !== undefined) return Math.max(0, limit - (resumeDeadline - Date.now()));
+    return sessionCreatedAt === undefined ? 0 : Date.now() - sessionCreatedAt;
+  }
+
+  function noteStudentTurnEnded() {
+    if (!liveDirector) return;
+    const spoken = transcripts.filter(({ listeningSound }) => !listeningSound);
+    if (spoken.at(-1)?.role !== "user") return;
+    const turns = groupTurns(
+      spoken.map(({ role, text }) => ({ role, text, start_ms: 0, end_ms: 0 })),
+    ).map(({ turn, role, text }) => ({ turn, role, text }));
+    liveDirector.studentTurnEnded(turns, interviewElapsedMs());
+  }
+
   function discardPendingWork() {
     pendingDelegations.length = 0;
     completedDelegation = undefined;
@@ -677,6 +758,7 @@ export function bindLiveConnection(
     clearTimeout(restartTimer);
     clearGreeting();
     discardPendingWork();
+    liveDirector?.close();
     setupAbort.abort();
     close(gateway);
     close(browser);
@@ -848,6 +930,8 @@ export function bindLiveConnection(
         if (!event.delta?.trim()) return;
         if (role === "user") userSpoke = true;
         const listeningSound = role === "user" && isListeningSound(event.delta);
+        // The tutor starting to speak after the student means the student's turn has ended.
+        if (role === "assistant") noteStudentTurnEnded();
         transcripts.push({
           role,
           text: event.delta,
@@ -1011,6 +1095,12 @@ export function bindLiveConnection(
                 ...(object ? { objectId: object.id } : {}),
                 ...(resume ? { resumed: true } : {}),
               });
+              startDirector({
+                tutorId: PPE_TUTOR_ID,
+                steer: interviewId === "preview",
+                hasStimulus: Boolean(object),
+                cardIds,
+              });
               if (object) applyObject(object, session.liveInstructions);
               else applyMidwayObject(session.liveInstructions);
               await startSession(event.sdp);
@@ -1075,6 +1165,13 @@ export function bindLiveConnection(
               interviewId,
               ...(object ? { objectId: object.id } : {}),
               ...(resume ? { resumed: true } : {}),
+            });
+            startDirector({
+              tutorId: GEOGRAPHY_TUTOR_ID,
+              // Testers only ("preview" is the tester interview id); everyone else is shadow mode.
+              steer: interviewId === "preview",
+              hasStimulus: Boolean(reading || object),
+              ...(cardSession ? { cardIds: cardSession.cardIds } : {}),
             });
             if (object) applyObject(object, instructions);
             else applyMidwayObject(instructions);

@@ -20,12 +20,14 @@ type Call = {
 const mocks = vi.hoisted(() => ({
   authenticate: vi.fn(),
   streamText: vi.fn(),
+  generateText: vi.fn(),
 }));
 
 vi.mock("@/lib/request-auth.server", () => ({ authenticateAccessToken: mocks.authenticate }));
 vi.mock("ai", async (importOriginal) => ({
   ...(await importOriginal<typeof import("ai")>()),
   streamText: mocks.streamText,
+  generateText: mocks.generateText,
 }));
 
 const config = {
@@ -280,5 +282,83 @@ describe("live delegation", () => {
     ]);
     expect(DELEGATION_FALLBACK).not.toMatch(/backend|try again|error|fail/i);
     expect(calls).toHaveLength(1);
+  });
+});
+
+describe("turn analyst and director in the live relay", () => {
+  const analystReply = JSON.stringify({
+    turn: 2,
+    phase: "opening",
+    cardId: "unknown",
+    skillTested: "assumptions",
+    tutorMove: "clarify",
+    studentEvidence: {
+      gaveReason: true,
+      usedExample: false,
+      handledChallenge: "na",
+      knowledgeGap: null,
+      weakPattern: null,
+    },
+    tutorFlags: { leading: false, lectured: false, offTopic: false, ignoredStudent: false },
+    transcriptUnclear: false,
+    difficulty: 2,
+    nextObjective: "Ask what evidence would decide it.",
+  });
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    calls = [];
+    mocks.streamText.mockReset().mockImplementation(fakeStream);
+    mocks.generateText.mockReset().mockResolvedValue({ text: analystReply });
+    vi.spyOn(console, "log").mockImplementation(() => undefined);
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
+  async function exchange(email: string) {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "tester@example.com");
+    const rpc = vi.fn().mockResolvedValue({
+      data: { allowed: true, interviewId: "00000000-0000-4000-8000-000000000001" },
+      error: null,
+    });
+    mocks.authenticate.mockResolvedValue({ user: { email }, supabase: { rpc } });
+    const interview = await startInterview();
+    interview.say("Who owns the outdoors?", "assistant");
+    interview.say("Whoever paid for the land, because they bought it.");
+    // The tutor starts replying, so the student's turn has ended.
+    interview.say("Right, but consider footpaths.", "assistant");
+    await vi.waitFor(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+      expect(console.log).toHaveBeenCalledWith(expect.stringContaining('"interview.turn"'));
+    });
+    const notes = interview.gateway.sent.filter(
+      ({ type, content }) =>
+        type === "session.instructions.append" && typeof content === "string" && content !== "",
+    );
+    // This harness never marks the browser ready, so no greeting is sent: any instruction
+    // appended to the session is a steering note.
+    return { notes };
+  }
+
+  it("analyses a tester's turns and steers their tutor", async () => {
+    const { notes } = await exchange("tester@example.com");
+    expect(mocks.generateText).toHaveBeenCalledOnce();
+    // The student gave a reason in the opening, so the director moves on to the baseline.
+    expect(notes.map(({ content }) => content)).toEqual([expect.stringMatching(/starting level/)]);
+  });
+
+  it("analyses a student's turns in shadow mode, without steering their tutor", async () => {
+    const { notes } = await exchange("student@example.com");
+    expect(mocks.generateText).toHaveBeenCalledOnce();
+    expect(notes).toEqual([]);
+    const logged = vi
+      .mocked(console.log)
+      .mock.calls.map(([line]) => String(line))
+      .find((line) => line.includes('"interview.turn"'));
+    expect(logged).toContain('"steering":false');
+    expect(logged).not.toContain("Whoever paid");
   });
 });
