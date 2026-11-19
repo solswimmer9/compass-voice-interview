@@ -747,7 +747,7 @@ export function bindLiveConnection(
         clearGreeting();
         emit({
           type: "app.greeting.error",
-          error: { message: event.error.message ?? "The opening was rejected" },
+          error: { message: event.error?.message ?? "The opening was rejected" },
         });
       }
       if (
