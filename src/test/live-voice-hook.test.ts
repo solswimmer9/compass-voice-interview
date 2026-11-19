@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   HEARTBEAT_ACK_WINDOW_MS,
   MEDIA_RECOVERY_GRACE_MS,
+  STARTUP_TIMEOUT_MS,
   useLiveVoice,
 } from "@/hooks/use-live-voice";
 
@@ -256,5 +257,31 @@ describe("live voice hook resilience", () => {
     expect(hook.result.current.ending).toBe("failed");
     act(() => hook.result.current.reconnect("You: hi"));
     expect(FakeWebSocket.instances).toHaveLength(1);
+  });
+
+  it("stops waiting and explains when the microphone prompt is never answered", async () => {
+    const stop = vi.fn();
+    let grant: (stream: unknown) => void = () => {};
+    vi.mocked(navigator.mediaDevices.getUserMedia).mockImplementation(
+      () => new Promise((resolve) => (grant = resolve as (stream: unknown) => void)),
+    );
+    const hook = setup();
+    act(() => hook.result.current.start());
+    await flush();
+    expect(hook.result.current.status).not.toBe("idle");
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(STARTUP_TIMEOUT_MS);
+    });
+    expect(hook.result.current.ending).toBe("failed");
+    expect(FakeWebSocket.instances).toHaveLength(0);
+
+    // A late "Allow" must not leave the microphone switched on.
+    const track = { enabled: true, stop, addEventListener: vi.fn() };
+    await act(async () => {
+      grant({ getTracks: () => [track], getAudioTracks: () => [track] });
+      await flush();
+    });
+    expect(stop).toHaveBeenCalled();
   });
 });

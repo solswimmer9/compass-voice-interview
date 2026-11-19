@@ -203,46 +203,30 @@ Backend tools: A careful reasoning assistant that analyses the candidate's argum
 Delegate to the backend when: The candidate gives a long or complex argument and you need a precise counter-argument, or they ask for detailed feedback on the interview.
 Do not delegate to the backend when: Greeting, asking the opening question, short follow-ups, hints, or clarifications. Wait for the backend result before presenting it.`;
 
-/** PostgREST's code for "no function with these arguments", e.g. before the database change. */
-const FUNCTION_NOT_FOUND = "PGRST202";
+export const TEST_MODE_TESTERS_ONLY =
+  "Test-mode interviews are only for tester accounts. Please use the live site.";
 
 type RpcError = { code?: string; message?: string } | null;
 
 /**
- * Gives back the credit of a call that failed to start. Only the server should be able to: the
- * server-only `release_interview_credit(p_interview_id, p_user_id)` runs with the service role,
- * so once Lovable has revoked the old signed-in version a student can no longer refund their own
- * interview from the browser (docs/lovable-requests-2026-11-19.md). Until then the server-only
- * version does not exist, so this falls back to the old call. The protection lives in the
- * database grants, not here: after the change the fallback simply fails.
+ * Gives back the credit of a call that failed to start. Only the server can: the database's
+ * `release_interview_credit(p_interview_id, p_user_id)` is executable by the service role only,
+ * so a student can never refund their own interview from the browser.
  */
 export async function releaseInterviewCredit(credit: {
   id: string;
   userId: string;
-  supabase: SupabaseClient<Database>;
 }): Promise<RpcError> {
-  let serverOnly: RpcError;
   try {
-    // The generated database types still describe the old signature, so call it untyped.
-    const admin = supabaseAdmin as unknown as {
-      rpc(name: string, args: Record<string, string>): PromiseLike<{ error: RpcError }>;
-    };
-    ({ error: serverOnly } = await admin.rpc("release_interview_credit", {
+    const { error } = await supabaseAdmin.rpc("release_interview_credit", {
       p_interview_id: credit.id,
       p_user_id: credit.userId,
-    }));
-  } catch (error) {
-    serverOnly = { message: error instanceof Error ? error.message : String(error) };
-  }
-  if (!serverOnly) return null;
-  if (serverOnly.code !== FUNCTION_NOT_FOUND)
-    console.warn("Server-only credit release failed; trying the signed-in call", {
-      code: serverOnly.code,
     });
-  const { error } = await credit.supabase.rpc("release_interview_credit", {
-    p_interview_id: credit.id,
-  });
-  return error;
+    return error;
+  } catch (error) {
+    const message = (error as { message?: unknown } | null)?.message;
+    return { message: typeof message === "string" ? message : String(error) };
+  }
 }
 
 /** Backchannel and hesitation sounds ("mm-hm", "uh-huh", "um", "erm") that add no reasoning. */
@@ -448,8 +432,7 @@ export function bindLiveConnection(
   let finishDrain: (() => void) | undefined;
   let browserReady = false;
   // Only set when this connection consumed a fresh credit; never on a resumed interview.
-  let interviewCredit:
-    { id: string; userId: string; supabase: SupabaseClient<Database> } | undefined;
+  let interviewCredit: { id: string; userId: string } | undefined;
   let creditRelease: Promise<void> | undefined;
   // Server-side evidence used to decide whether an unused credit may be restored.
   let sessionCreatedAt: number | undefined;
@@ -564,6 +547,8 @@ export function bindLiveConnection(
     if (event.environment !== "sandbox" && event.environment !== "live") {
       throw new Error("Your interview settings could not be checked.");
     }
+    // Test-mode purchases cost nothing, so test-mode credits never unlock real interviews.
+    if (event.environment === "sandbox") throw new Error(TEST_MODE_TESTERS_ONLY);
     if (resume) {
       // A resumed interview reuses the credit it already paid for: nothing is consumed
       // here and interviewCredit stays unset, so this connection can never refund it.
@@ -588,7 +573,9 @@ export function bindLiveConnection(
         "Your free interview has been used. See the pricing page for more interviews or lifetime access.",
       );
     }
-    interviewCredit = { id: result.interviewId, userId: auth.user.id, supabase: auth.supabase };
+    interviewCredit = { id: result.interviewId, userId: auth.user.id };
+    // The student may have left while the credit was being taken: give it straight back.
+    if (closing) releaseUnusedCredit();
     return result.interviewId;
   }
 
@@ -635,6 +622,11 @@ export function bindLiveConnection(
 
   /** Adds the chart notes to the tutor's instructions, before the voice session starts. */
   function applyMidwayObject(baseInstructions: string) {
+    // A resumed interview past the reveal time already had its chart (or ran out of time for
+    // it), so it never gets a second one.
+    if (resumeDeadline !== undefined && interviewElapsedMs() >= OBJECT_REVEAL_MINUTES * 60_000) {
+      midwayObject = undefined;
+    }
     if (!midwayObject) return;
     instructions = `${baseInstructions}\n\n${objectMidwaySection(midwayObject)}`;
   }
@@ -970,7 +962,11 @@ export function bindLiveConnection(
         clearTimeout(startupTimer);
         scheduleTimeCues();
         if (midwayObject) {
-          revealTimer ??= setTimeout(revealMidwayObject, OBJECT_REVEAL_MINUTES * 60_000);
+          // Counted from the interview's original start, so a reconnect keeps the same time.
+          revealTimer ??= setTimeout(
+            revealMidwayObject,
+            Math.max(0, OBJECT_REVEAL_MINUTES * 60_000 - interviewElapsedMs()),
+          );
         }
         requestGreeting();
       }

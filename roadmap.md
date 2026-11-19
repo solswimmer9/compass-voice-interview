@@ -29,3 +29,19 @@
 - [x] Give Prof Matt a separate Live voice while preserving Dr River's voice; verify tutor-specific startup payloads.
 - [x] Speed up the interview connection: tutor starts speaking about a second sooner after audio connects.
 - [x] Make Dr River (geography) sharper at testing assumptions hidden in students' answers.
+
+## Bug fixes from tester sweep (19 Nov 2026)
+- [x] Students can no longer restore their own interview credits (server-only refund)
+- [x] Test-mode payments and interviews limited to tester accounts
+- [x] Early refund/dispute notices still revoke the purchase when it arrives
+- [x] Credit returned when a student leaves while the interview is starting
+- [x] One claim per student per school code
+- [x] Guests get the two free tries the app promises (database rule)
+- [x] Chart timing survives reconnects (no late or repeat chart)
+- [x] "Connecting" can no longer hang forever
+- [x] Interview record stays in spoken order
+- [x] School tax and tutor wording consistent with terms
+- [x] Reset-password sign-in link, sign-up title/stale message, not-found page title
+- [x] Update dependencies with security warnings (critical fixed; remaining are build/dev tools and a major zod upgrade)
+- [x] Video feedback format/size checks; update stale tests
+- [ ] Publish so the live site gets these fixes — waits for Solomon

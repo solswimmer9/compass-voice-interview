@@ -115,3 +115,42 @@ describe("buildResumeRecap", () => {
     expect(buildResumeRecap([])).toBe("");
   });
 });
+
+describe("turn order when fragments arrive late", () => {
+  it("puts a late student turn before the tutor reply that followed it", async () => {
+    const { appendTranscriptFragment, formatTranscript } = await import("@/lib/transcript");
+    let lines = appendTranscriptFragment([], "assistant", {
+      text: "Why do you say that?",
+      start: 2000,
+      end: 2600,
+      sequence: 2,
+    });
+    lines = appendTranscriptFragment(lines, "user", {
+      text: "Cities grow near rivers.",
+      start: 1000,
+      end: 1500,
+      sequence: 1,
+    });
+    expect(lines.map((line) => line.role)).toEqual(["user", "assistant"]);
+    expect(formatTranscript(lines)).toBe("You: Cities grow near rivers.\n\nDr River: Why do you say that?");
+  });
+
+  it("never moves a turn ahead of an earlier session after a reconnect", async () => {
+    const { appendTranscriptFragment } = await import("@/lib/transcript");
+    let lines = appendTranscriptFragment([], "assistant", {
+      text: "Before the drop.",
+      start: 50_000,
+      end: 51_000,
+      sequence: 1,
+      segment: 0,
+    });
+    lines = appendTranscriptFragment(lines, "user", {
+      text: "After reconnecting.",
+      start: 100,
+      end: 900,
+      sequence: 2,
+      segment: 1,
+    });
+    expect(lines.map((line) => line.text)).toEqual(["Before the drop.", "After reconnecting."]);
+  });
+});

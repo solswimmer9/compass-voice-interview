@@ -54,17 +54,23 @@ export function appendTranscriptFragment(
     index = next.length - 1;
   }
   if (index < 0) {
-    return [
-      ...next,
-      {
-        role,
-        text: fragment.text,
-        start: fragment.start,
-        end: fragment.end,
-        ...(fragment.segment === undefined ? {} : { segment }),
-        fragments: [fragment],
-      },
-    ];
+    // A new turn goes in time order within its session: a late fragment from an earlier turn
+    // lands before the reply that followed it, not after.
+    let position = next.length;
+    while (position > 0) {
+      const before = next[position - 1]!;
+      if ((before.segment ?? 0) !== segment || before.start <= fragment.start) break;
+      position--;
+    }
+    next.splice(position, 0, {
+      role,
+      text: fragment.text,
+      start: fragment.start,
+      end: fragment.end,
+      ...(fragment.segment === undefined ? {} : { segment }),
+      fragments: [fragment],
+    });
+    return next;
   }
   const line = next[index]!;
   const fragments = [...line.fragments, fragment].sort(

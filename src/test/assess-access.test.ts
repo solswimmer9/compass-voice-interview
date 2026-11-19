@@ -92,6 +92,34 @@ describe("feedback access", () => {
     expect(streamText).not.toHaveBeenCalled();
   });
 
+  it("refuses an unsupported video format before using a feedback", async () => {
+    const { handleAssess } = await import("@/lib/assess.server");
+    const rpc = vi.fn();
+    authenticateRequest.mockResolvedValue({ user: { email: "student@example.com" }, supabase: { rpc } });
+    const response = await handleAssess(
+      post(
+        PUBLISHED_URL,
+        { video: "AAAA", videoType: "video/x-evil", interviewId: "00000000-0000-0000-0000-000000000000" },
+        "a.b.c",
+      ),
+    );
+    expect(response.status).toBe(415);
+    expect(rpc).not.toHaveBeenCalled();
+    expect(streamText).not.toHaveBeenCalled();
+  });
+
+  it("refuses an oversized request before reading it", async () => {
+    const { handleAssess, MAX_REQUEST_BYTES } = await import("@/lib/assess.server");
+    authenticateRequest.mockResolvedValue({ user: { email: "student@example.com" }, supabase: { rpc: vi.fn() } });
+    const request = new Request(PUBLISHED_URL, {
+      method: "POST",
+      headers: { "content-type": "application/json", "content-length": String(MAX_REQUEST_BYTES + 1) },
+      body: "{}",
+    });
+    const response = await handleAssess(request);
+    expect(response.status).toBe(413);
+  });
+
   it("lets a listed tester run unlimited preview feedback", async () => {
     const { handleAssess } = await import("@/lib/assess.server");
     const rpc = vi.fn();

@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { microphoneErrorMessage } from "@/lib/mic-error";
 
+/** Longest wait before the voice service is contacted (includes the microphone prompt). */
+export const STARTUP_TIMEOUT_MS = 45_000;
+export const STARTUP_TIMEOUT_MESSAGE =
+  "The call didn't start in time. Check your microphone is allowed, then start again.";
+
 export type LiveEvent = {
   type: string;
   reason?: string;
@@ -483,6 +488,12 @@ function createLiveVoice(options: LiveOptions) {
     if (state !== "idle") return;
     state = "starting";
     window.addEventListener("pagehide", end);
+    // Covers sign-in, the microphone prompt and network setup, so the call can never sit on
+    // "connecting" forever before the voice service is contacted.
+    deadline = setTimeout(
+      () => fail(STARTUP_TIMEOUT_MESSAGE),
+      STARTUP_TIMEOUT_MS,
+    );
     try {
       const startContext = await options.getStartContext();
       if (!starting()) return;
@@ -536,6 +547,7 @@ function createLiveVoice(options: LiveOptions) {
       const sdp = connection.localDescription?.sdp;
       if (!sdp) throw new Error("Missing voice session offer");
       socket = new WebSocket(options.url);
+      clearTimeout(deadline);
       deadline = setTimeout(() => fail("Voice session did not start"), 50_000);
       socket.onopen = () => {
         if (!starting()) return release();

@@ -124,6 +124,10 @@ function LifetimePricing() {
         </article>
       </section>
 
+      <p className="mt-6 text-center text-xs text-muted-foreground">
+        One-off payments in GBP. Any tax, such as UK VAT, is added at checkout.
+      </p>
+
       <p className="mt-10 text-center text-sm text-muted-foreground">
         Not sure yet?{" "}
         {user && !account.data ? (

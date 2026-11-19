@@ -11,16 +11,20 @@ import {
   type LiveExecutionContext,
   type LiveSocket,
 } from "@/lib/live-relay.server";
-import { INTERVIEW_MINUTES } from "@/lib/limits";
+import { INTERVIEW_MINUTES, OBJECT_REVEAL_MINUTES } from "@/lib/limits";
 
 const mocks = vi.hoisted(() => ({
   authenticate: vi.fn(),
   rpc: vi.fn(),
+  adminRpc: vi.fn(),
   from: vi.fn(),
   row: vi.fn(),
   connect: vi.fn(),
 }));
 
+vi.mock("@/integrations/supabase/client.server", () => ({
+  supabaseAdmin: { rpc: mocks.adminRpc },
+}));
 vi.mock("@/lib/request-auth.server", () => ({
   authenticateAccessToken: mocks.authenticate,
 }));
@@ -125,7 +129,10 @@ function gatewaySessionCreated(gateway: ReturnType<typeof fakeSocket>) {
 }
 
 function released() {
-  return mocks.rpc.mock.calls.some(([name]) => name === "release_interview_credit");
+  return (
+    mocks.adminRpc.mock.calls.some(([name]) => name === "release_interview_credit") ||
+    mocks.rpc.mock.calls.some(([name]) => name === "release_interview_credit")
+  );
 }
 
 describe("live interview resume, time cues and refunds", () => {
@@ -144,6 +151,7 @@ describe("live interview resume, time cues and refunds", () => {
       user: { id: userId, email: "student@example.com" },
       supabase: { rpc: mocks.rpc, from: mocks.from },
     });
+    mocks.adminRpc.mockResolvedValue({ data: true, error: null });
     mocks.rpc.mockImplementation((name: string) => {
       if (name === "consume_interview_credit") {
         return Promise.resolve({ data: { allowed: true, interviewId }, error: null });
@@ -328,6 +336,41 @@ describe("live interview resume, time cues and refunds", () => {
     });
   });
 
+  describe("the chart after a reconnect", () => {
+    const REVEAL_MS = OBJECT_REVEAL_MINUTES * 60_000;
+    const chartShown = (browser: ReturnType<typeof fakeSocket>) =>
+      browser.sent.filter(({ type }) => type === "app.interview.object").length;
+
+    it("keeps the chart at its original time instead of restarting the clock", async () => {
+      // Dropped and resumed 5 minutes in: the chart is due 4 minutes later, not 9.
+      const { browser, gateway } = await startCall(
+        appStart({ resumeInterviewId: resumedId, recap: "You: Rivers shape cities." }),
+      );
+      gatewaySessionCreated(gateway);
+      await vi.advanceTimersByTimeAsync(REVEAL_MS - 5 * 60_000 - 1000);
+      expect(chartShown(browser)).toBe(0);
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(chartShown(browser)).toBe(1);
+    });
+
+    it("never brings out a second chart when resumed after the reveal time", async () => {
+      mocks.row.mockResolvedValue({
+        data: interviewRow({ created_at: new Date(NOW - (REVEAL_MS + 60_000)).toISOString() }),
+        error: null,
+      });
+      const { browser, gateway } = await startCall(
+        appStart({ resumeInterviewId: resumedId, recap: "You: Rivers shape cities." }),
+      );
+      const start = gateway.sent.find((event) => event.type === "session.start") as {
+        session: { instructions: string };
+      };
+      expect(start.session.instructions).not.toContain("CHART LATER IN THE INTERVIEW");
+      gatewaySessionCreated(gateway);
+      await vi.advanceTimersByTimeAsync(REVEAL_MS);
+      expect(chartShown(browser)).toBe(0);
+    });
+  });
+
   describe("refunds use only what the server saw", () => {
     it("refunds when the voice session ends quickly with no student speech", async () => {
       const { browser, gateway } = await startCall();
@@ -338,9 +381,11 @@ describe("live interview resume, time cues and refunds", () => {
       browser.receive({ type: "session.close" });
       await flush();
 
-      expect(mocks.rpc).toHaveBeenCalledWith("release_interview_credit", {
+      expect(mocks.adminRpc).toHaveBeenCalledWith("release_interview_credit", {
         p_interview_id: interviewId,
+        p_user_id: userId,
       });
+      expect(mocks.rpc).not.toHaveBeenCalledWith("release_interview_credit", expect.anything());
     });
 
     it("does not refund once the student has spoken", async () => {
@@ -372,9 +417,11 @@ describe("live interview resume, time cues and refunds", () => {
       browser.receive({ type: "session.close" });
       await flush();
 
-      expect(mocks.rpc).toHaveBeenCalledWith("release_interview_credit", {
+      expect(mocks.adminRpc).toHaveBeenCalledWith("release_interview_credit", {
         p_interview_id: interviewId,
+        p_user_id: userId,
       });
+      expect(mocks.rpc).not.toHaveBeenCalledWith("release_interview_credit", expect.anything());
     });
   });
 });

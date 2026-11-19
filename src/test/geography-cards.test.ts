@@ -22,8 +22,13 @@ import {
 const mocks = vi.hoisted(() => ({
   authenticate: vi.fn(),
   rpc: vi.fn(),
+  adminRpc: vi.fn(),
   connect: vi.fn(),
   streamText: vi.fn(),
+}));
+
+vi.mock("@/integrations/supabase/client.server", () => ({
+  supabaseAdmin: { rpc: mocks.adminRpc },
 }));
 
 vi.mock("@/lib/request-auth.server", () => ({
@@ -159,13 +164,16 @@ async function backendSystem(h: Harness): Promise<string> {
   return (mocks.streamText.mock.calls[0]?.[0] as { system: string }).system;
 }
 
+const STUDENT_ID = "8d0f7a2e-1c4b-4c55-9a43-2b8f1c6e0d11";
+
 function signIn(email: string | null) {
   mocks.authenticate.mockResolvedValue(
-    email === null ? null : { user: { email }, supabase: { rpc: mocks.rpc } },
+    email === null ? null : { user: { id: STUDENT_ID, email }, supabase: { rpc: mocks.rpc } },
   );
 }
 
 beforeEach(() => {
+  mocks.adminRpc.mockResolvedValue({ data: true, error: null });
   vi.clearAllMocks();
   vi.spyOn(console, "log").mockImplementation(() => {});
   signIn("student@example.com");
@@ -349,8 +357,9 @@ describe("Dr River on topic cards in the live relay", () => {
     mocks.connect.mockRejectedValue(new Error("Voice startup failed for this test"));
     h.start();
     await vi.waitFor(() =>
-      expect(mocks.rpc).toHaveBeenCalledWith("release_interview_credit", {
+      expect(mocks.adminRpc).toHaveBeenCalledWith("release_interview_credit", {
         p_interview_id: interviewId,
+        p_user_id: STUDENT_ID,
       }),
     );
   });
@@ -359,7 +368,8 @@ describe("Dr River on topic cards in the live relay", () => {
     vi.stubEnv("PREVIEW_TESTER_EMAILS", TESTER);
     vi.stubEnv("NODE_ENV", "development");
     vi.stubEnv("MODE", "development");
-    for (const environment of ["sandbox", "live"]) {
+    // Test mode is refused outright for students, so only the live environment starts.
+    for (const environment of ["live"]) {
       vi.clearAllMocks();
       const h = await startAndGreet({
         environment,

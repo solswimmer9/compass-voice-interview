@@ -2,7 +2,7 @@
 
 The database is managed by Lovable (see `AGENTS.md`), so these are written as messages to paste into the Lovable editor. Nothing here has been applied. Send them in this order, one at a time, and check each one before the next.
 
-## 1. Close the free-interview refund hole (urgent)
+## 1. Close the free-interview refund hole (applied 19 November 2026)
 
 Any signed-in account, including the new guest accounts, can call `release_interview_credit` directly from the browser and get an interview's credit back. For a free interview this also resets the free allowance, so free interviews become unlimited.
 
@@ -50,7 +50,7 @@ Check afterwards:
 - Start an interview, talk for two minutes, end it, and confirm your remaining interview count did not go back up.
 - Start an interview and close the tab before the tutor speaks: the credit should come back (server log has no "could not be restored" error).
 
-## 2. Two free tries for guests
+## 2. Two free tries for guests (database change applied 19 November 2026)
 
 The app now lets visitors start as an anonymous guest. Until this change, a guest gets one try, not two.
 

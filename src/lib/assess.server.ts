@@ -30,6 +30,10 @@ const GATEWAY = "https://ai.gateway.lovable.dev/v1";
 const TEXT_MODEL = FEEDBACK_MODEL;
 const VIDEO_MODEL = VIDEO_FEEDBACK_MODEL;
 const MAX_VIDEO_BYTES = 20 * 1024 * 1024;
+/** A 20 MB video is about 27 MB as text, plus room for a long transcript. */
+export const MAX_REQUEST_BYTES = 28 * 1024 * 1024;
+/** Video formats the video feedback model accepts. */
+export const VIDEO_TYPES = new Set(["video/mp4", "video/webm", "video/quicktime", "video/mpeg"]);
 
 const SYSTEM = `You are an experienced Cambridge geography admissions tutor reviewing a practice interview.
 Assess the candidate's reasoning, not their knowledge alone. Use British English and Markdown with these sections:
@@ -79,6 +83,9 @@ export async function handleAssess(request: Request) {
     cardIds?: unknown;
     objectId?: unknown;
   };
+  // Refuse oversized requests before reading them, not after.
+  if (Number(request.headers.get("content-length") ?? 0) > MAX_REQUEST_BYTES)
+    return Response.json({ error: "Video must be under 20 MB" }, { status: 413 });
   try {
     body = await request.json();
   } catch {
@@ -103,9 +110,7 @@ export async function handleAssess(request: Request) {
     typeof body.transcript === "string" ? body.transcript.trim().slice(0, 40_000) : "";
   const video = typeof body.video === "string" ? body.video : "";
   const videoType =
-    typeof body.videoType === "string" && body.videoType.startsWith("video/")
-      ? body.videoType
-      : "video/mp4";
+    typeof body.videoType === "string" && body.videoType ? body.videoType.toLowerCase() : "video/mp4";
   const interviewId = typeof body.interviewId === "string" ? body.interviewId : "";
   // Object interview notes: approved objects for everyone, drafts' notes for testers only.
   const object = usableObjectById(body.objectId, ppe ? "ppe" : "geography", {
@@ -121,6 +126,11 @@ export async function handleAssess(request: Request) {
     .join("\n\n");
   if (!transcript && !video)
     return Response.json({ error: "Add a transcript or a video" }, { status: 400 });
+  if (video && !VIDEO_TYPES.has(videoType))
+    return Response.json(
+      { error: "Please upload an MP4, WebM, MOV or MPEG video" },
+      { status: 415 },
+    );
   if (video && video.length * 0.75 > MAX_VIDEO_BYTES)
     return Response.json({ error: "Video must be under 20 MB" }, { status: 413 });
   if (!preview && !/^[0-9a-f-]{36}$/i.test(interviewId))
