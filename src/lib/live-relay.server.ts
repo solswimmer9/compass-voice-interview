@@ -355,6 +355,7 @@ export function bindLiveConnection(
   let interviewCredit: { id: string; supabase: SupabaseClient<Database> } | undefined;
   let creditRelease: Promise<void> | undefined;
   let greetingRequested = false;
+  let greetingInstructionsId: string | undefined;
   let greetingCommand: { id: string; type: "instructions" | "commentary" } | undefined;
   let greetingTimer: ReturnType<typeof setTimeout> | undefined;
   let brief = GEOGRAPHY_BRIEF;
@@ -388,6 +389,7 @@ export function bindLiveConnection(
   function clearGreeting() {
     clearTimeout(greetingTimer);
     greetingCommand = undefined;
+    greetingInstructionsId = undefined;
   }
 
   function releaseUnusedCredit() {
@@ -512,12 +514,18 @@ export function bindLiveConnection(
     emit(objectForBrowser(object, `${name} has put this on the table`));
   }
 
+  /**
+   * Sends the opening and the "begin now" nudge back to back, once the student can hear.
+   * The gateway applies them in order, so waiting for the first acknowledgement only added
+   * about a second of silence before the tutor spoke.
+   */
   function requestGreeting() {
     const content = (
       config.openingInstructions ??
       "Start the conversation now in your configured language and role. Give a brief greeting suited to this app's purpose, ask one relevant opening question, then listen."
     ).trim();
     if (!content || !browserReady || !sessionID || greetingRequested || closing) return;
+    if (gateway?.readyState !== 1) return;
     greetingRequested = true;
     if (new TextEncoder().encode(content).length > 480) {
       emit({
@@ -526,7 +534,8 @@ export function bindLiveConnection(
       });
       return;
     }
-    greetingCommand = { id: crypto.randomUUID(), type: "instructions" };
+    greetingInstructionsId = crypto.randomUUID();
+    greetingCommand = { id: crypto.randomUUID(), type: "commentary" };
     greetingTimer = setTimeout(() => {
       clearGreeting();
       emit({
@@ -534,12 +543,20 @@ export function bindLiveConnection(
         error: { message: "The opening could not be confirmed" },
       });
     }, 10_000);
-    gateway?.send(
+    gateway.send(
       JSON.stringify({
         type: "session.instructions.append",
-        event_id: greetingCommand.id,
+        event_id: greetingInstructionsId,
         delegation_id: null,
         content,
+      }),
+    );
+    gateway.send(
+      JSON.stringify({
+        type: "session.commentary.append",
+        event_id: greetingCommand.id,
+        delegation_id: null,
+        content: "Begin the conversation now, following the instructions provided.",
       }),
     );
   }
@@ -719,24 +736,13 @@ export function bindLiveConnection(
         event.type === `session.${greetingCommand.type}.appended` &&
         event.client_event_id === greetingCommand.id
       ) {
-        if (greetingCommand.type === "instructions") {
-          greetingCommand = { id: crypto.randomUUID(), type: "commentary" };
-          gateway?.send(
-            JSON.stringify({
-              type: "session.commentary.append",
-              event_id: greetingCommand.id,
-              delegation_id: null,
-              content: "Begin the conversation now, following the instructions provided.",
-            }),
-          );
-        } else {
-          clearGreeting();
-          emit({ type: "app.greeting.accepted" });
-        }
+        clearGreeting();
+        emit({ type: "app.greeting.accepted" });
       } else if (
         greetingCommand &&
         event.type === "error" &&
-        event.error?.client_event_id === greetingCommand.id
+        (event.error?.client_event_id === greetingCommand.id ||
+          event.error?.client_event_id === greetingInstructionsId)
       ) {
         clearGreeting();
         emit({

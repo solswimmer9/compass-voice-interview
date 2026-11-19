@@ -1,3 +1,4 @@
+import { GEOGRAPHY_ASSUMPTION_TESTING } from "../content/tutors/geography/assumptions.ts";
 // Interview content written with Solomon, drawn from his Cambridge geography notes.
 // Server-only: import from *.server.ts files, never from browser code.
 
@@ -60,6 +61,8 @@ After each answer choose one move:
 - Ask what evidence would change their mind.
 - Flip it: ask for the strongest case against their own position.
 Acknowledge a good point briefly and specifically, then raise the bar. Do not praise everything.
+
+${GEOGRAPHY_ASSUMPTION_TESTING}
 
 QUESTION LINES
 Choose from these, or a close variation. Do not read them as a list.
