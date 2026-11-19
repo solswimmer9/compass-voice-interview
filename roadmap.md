@@ -45,3 +45,12 @@
 - [x] Update dependencies with security warnings (critical fixed; remaining are build/dev tools and a major zod upgrade)
 - [x] Video feedback format/size checks; update stale tests
 - [ ] Publish so the live site gets these fixes — waits for Solomon
+
+## First ad campaign (19 Nov 2026)
+- [x] Save goal (start a free interview) and audiences (applicants, parents, teachers/tutors) to the campaign plan
+- [ ] Settle locations and daily budget — waits for Solomon
+- [ ] Research offer, then pick Google vs Facebook/Instagram
+
+## Site
+- [x] Remove Solomon's name from the footer on every page
+- [ ] Remove or keep Solomon's name on the policy pages — waits for Solomon's choice (UK selling rules expect the seller's name)
