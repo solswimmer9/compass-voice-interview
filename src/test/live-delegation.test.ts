@@ -95,7 +95,14 @@ async function startInterview(extra: Record<string, unknown> = {}) {
     environment: "live",
     ...extra,
   });
-  for (let i = 0; i < 200 && gateway.sent.length === 0; i++) await vi.advanceTimersByTimeAsync(0);
+  // Start-up can load content modules for real, so wait for the session rather than a tick count.
+  await vi.waitFor(
+    async () => {
+      await vi.advanceTimersByTimeAsync(0);
+      expect(gateway.sent.length).toBeGreaterThan(0);
+    },
+    { timeout: 5_000, interval: 5 },
+  );
   gateway.receive({ type: "gateway.session.created", session: { id: "session-1" } });
   const commentary = () => gateway.sent.filter(({ type }) => type === "session.commentary.append");
   return {
