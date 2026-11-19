@@ -28,4 +28,4 @@
 - [x] Rename PPE tutor to Prof Matt
 - [x] Give Prof Matt a separate Live voice while preserving Dr River's voice; verify tutor-specific startup payloads.
 - [x] Speed up the interview connection: tutor starts speaking about a second sooner after audio connects.
-- [ ] Make Dr River (geography) sharper at testing assumptions hidden in students' answers.
+- [x] Make Dr River (geography) sharper at testing assumptions hidden in students' answers.
