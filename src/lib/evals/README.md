@@ -1,7 +1,15 @@
-# Evaluation kit (not connected yet)
+# Evaluation kit
 
-Pure, tested building blocks for architecture sections 12 (Evaluation) and 14 (Monitoring).
-Nothing here calls a model or the network, and nothing imports it yet.
+Building blocks for architecture sections 12 (Evaluation) and 14 (Monitoring), now in use:
+
+- **Every real interview** is scored when it ends: the relay logs an `interview.metrics` line
+  (talk share, long and leading tutor turns, references back, gaps, which thresholds were
+  missed). Numbers only, never what was said.
+- **Scripted students** run with `bun run evals` (`cli.ts`, logic in `runner.ts`): each tutor's
+  real student prompt against all ten students in text mode, then metrics, thresholds, the
+  judge and a comparison with the previous report in `eval-results/`. It needs
+  `LOVABLE_API_KEY`; `bun run evals --dry-run` checks the pipeline with canned replies and
+  runs in CI. Options: `--tutor=geography|ppe|all`, `--students=strong,eal`, `--exchanges=6`.
 
 - `metrics.ts`: `groupTurns` merges relay transcript deltas into timed turns;
   `interviewMetrics` computes tutor talk share, long turns, multi-question turns,
@@ -13,10 +21,11 @@ Nothing here calls a model or the network, and nothing imports it yet.
 - `judge.ts`: `buildJudgePrompt` and `judgeVerdictSchema` (zod) for a judge model, plus
   `COMMITMENTS` and `EVAL_KIT_VERSION`. The model call is not made here.
 
-## Not in CI yet
+## Limits
 
-Simulations need the gateway key, so only the unit tests (`src/test/evals-metrics.test.ts`)
-run in CI. The section 12 list asks for at least 12 student types; this kit has ten.
+Real simulations need the gateway key, so CI runs only the unit tests and the dry run. Text
+mode stands in for the voice model: it tests the prompt, not the voice. The section 12 list
+asks for at least 12 student types; this kit has ten.
 
 ## How a runner would use it
 

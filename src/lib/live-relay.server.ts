@@ -12,7 +12,7 @@ import {
 } from "./interview-briefing.ts";
 import { readingById, readingsFor } from "./readings.ts";
 import { INTERVIEW_MINUTES, OBJECT_REVEAL_MINUTES } from "./limits.ts";
-import { groupTurns } from "./evals/metrics.ts";
+import { checkThresholds, groupTurns, interviewMetrics } from "./evals/metrics.ts";
 import { BACKEND_MODEL, FEEDBACK_MODEL, LIVE_MODEL } from "./models.ts";
 import { buildRunManifest, DIRECTOR_VERSION } from "./interview/manifest.ts";
 import { FEEDBACK_PIPELINE_VERSION } from "./feedback/pipeline.ts";
@@ -185,7 +185,8 @@ ${readingsFor("geography")
   )
   .join("\n")}`;
 
-const conversationInstructions = `${DR_RIVER_BRIEFING}
+/** The live instructions every geography student gets (the fixed Dr River briefing). */
+export const conversationInstructions = `${DR_RIVER_BRIEFING}
 
 ${NOTES_CONTEXT}
 
@@ -762,8 +763,36 @@ export function bindLiveConnection(
     );
   }
 
+  /**
+   * Scores the finished call with the evaluation metrics (talk share, long and leading tutor
+   * turns, references to the student's answer, gaps). Numbers and turn numbers only.
+   */
+  function logInterviewMetrics() {
+    const spoken = transcripts.filter(({ listeningSound }) => !listeningSound);
+    if (!runInfo || !spoken.some(({ role }) => role === "user")) return;
+    try {
+      const metrics = interviewMetrics(groupTurns(spoken));
+      const report = checkThresholds(metrics);
+      console.log(
+        JSON.stringify({
+          event: "interview.metrics",
+          interviewId: runInfo.interviewId,
+          tutorId: runInfo.tutorId,
+          ...metrics,
+          thresholdsPassed: report.passed,
+          failedThresholds: report.results
+            .filter(({ pass }) => pass === false)
+            .map(({ measure }) => measure),
+        }),
+      );
+    } catch (error) {
+      console.error("Interview metrics failed", error);
+    }
+  }
+
   function finish() {
     if (finished) return;
+    logInterviewMetrics();
     releaseUnusedCredit();
     finished = closing = true;
     clearTimeCues();

@@ -286,6 +286,7 @@ describe("live delegation", () => {
 });
 
 describe("turn analyst and director in the live relay", () => {
+  let latestInterview: Awaited<ReturnType<typeof startInterview>> | undefined;
   const analystReply = JSON.stringify({
     turn: 2,
     phase: "opening",
@@ -326,6 +327,7 @@ describe("turn analyst and director in the live relay", () => {
     });
     mocks.authenticate.mockResolvedValue({ user: { email }, supabase: { rpc } });
     const interview = await startInterview();
+    latestInterview = interview;
     interview.say("Who owns the outdoors?", "assistant");
     interview.say("Whoever paid for the land, because they bought it.");
     // The tutor starts replying, so the student's turn has ended.
@@ -360,5 +362,22 @@ describe("turn analyst and director in the live relay", () => {
       .find((line) => line.includes('"interview.turn"'));
     expect(logged).toContain('"steering":false');
     expect(logged).not.toContain("Whoever paid");
+  });
+
+  it("scores the finished interview with the evaluation metrics, without what was said", async () => {
+    await exchange("student@example.com");
+    const interview = latestInterview!;
+    // The voice gateway hanging up finishes the call.
+    const onClose = vi.mocked(interview.gateway.live.onClose).mock.calls[0]?.[0] as () => void;
+    onClose();
+    const lines = vi.mocked(console.log).mock.calls.map(([line]) => String(line));
+    const metrics = lines.find((line) => line.includes('"interview.metrics"'));
+    expect(metrics).toBeDefined();
+    expect(JSON.parse(metrics!)).toMatchObject({
+      tutorId: "geography",
+      studentTurnCount: 1,
+      tutorTurnCount: 2,
+    });
+    expect(metrics).not.toContain("Whoever paid");
   });
 });
