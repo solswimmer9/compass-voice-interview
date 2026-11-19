@@ -13,6 +13,10 @@ import {
 import { readingById, readingsFor } from "./readings.ts";
 import { INTERVIEW_MINUTES, OBJECT_REVEAL_MINUTES } from "./limits.ts";
 import { groupTurns } from "./evals/metrics.ts";
+import { BACKEND_MODEL, FEEDBACK_MODEL, LIVE_MODEL } from "./models.ts";
+import { buildRunManifest, DIRECTOR_VERSION } from "./interview/manifest.ts";
+import { FEEDBACK_PIPELINE_VERSION } from "./feedback/pipeline.ts";
+import { PEDAGOGY_VERSION } from "../content/index.ts";
 import { GEOGRAPHY_CRITERIA, PPE_CRITERIA } from "./feedback/criteria.ts";
 import { createLiveDirector, type LiveDirector } from "./interview/live-director.ts";
 import { authenticateAccessToken } from "./request-auth.server.ts";
@@ -48,8 +52,8 @@ export type LiveConfig = {
 
 const liveSettings = {
   baseURL: "https://ai.gateway.lovable.dev/v1",
-  liveModel: "openai/gpt-live-1",
-  backendModel: "openai/gpt-6-astra",
+  liveModel: LIVE_MODEL,
+  backendModel: BACKEND_MODEL,
 };
 
 /** Silence after the student's last words before the backend is asked (or re-asked). */
@@ -425,6 +429,18 @@ export function bindLiveConnection(
   const transcripts: Transcript[] = [];
   // Turn analyst and phase director: shadow mode for everyone, steering notes for testers.
   let liveDirector: LiveDirector | undefined;
+  // What produced this interview, logged once as its run manifest when the session starts.
+  let runInfo:
+    | {
+        interviewId: string;
+        tutorId: TutorId;
+        tutorVersion: string;
+        pedagogyVersion: string;
+        cardIds: string[];
+        readingId?: string | undefined;
+        objectId?: string | undefined;
+      }
+    | undefined;
   const delegations = new Set<string>();
 
   function emit(event: object) {
@@ -982,6 +998,48 @@ export function bindLiveConnection(
     }
   }
 
+  /**
+   * Logs the run manifest: tutor pack and versions, cards, models and a hash of the exact
+   * instructions sent, so two interviews can be compared. No transcript or user identifiers.
+   */
+  async function logRunManifest(finalInstructions: string) {
+    if (!runInfo) return;
+    const digest = await crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(finalInstructions),
+    );
+    const promptHash = [...new Uint8Array(digest)]
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("");
+    const manifest = buildRunManifest({
+      interviewId: runInfo.interviewId,
+      session: {
+        liveInstructions: "",
+        opening: "",
+        backendContext: "",
+        promptHash,
+        tutorId: runInfo.tutorId,
+        tutorVersion: runInfo.tutorVersion,
+        pedagogyVersion: runInfo.pedagogyVersion,
+        cardIds: runInfo.cardIds,
+        ...(runInfo.readingId ? { readingId: runInfo.readingId } : {}),
+      },
+      models: { live: config.liveModel, analyst: config.backendModel, feedback: FEEDBACK_MODEL },
+      directorVersion: DIRECTOR_VERSION,
+      feedbackPipelineVersion: FEEDBACK_PIPELINE_VERSION,
+      now: new Date(),
+    });
+    console.log(
+      JSON.stringify({
+        event: "interview.manifest",
+        ...manifest,
+        ...(runInfo.objectId ? { objectId: runInfo.objectId } : {}),
+        resumed: resumeRecap !== undefined,
+        steering: runInfo.interviewId === "preview",
+      }),
+    );
+  }
+
   async function startSession(sdp: string) {
     if (closing || browser.readyState !== 1) return;
     clearTimeout(startTimer);
@@ -1009,15 +1067,15 @@ export function bindLiveConnection(
       emit({ type: "app.error", error: { message: "Voice gateway connection failed" } });
       stop();
     });
+    const sessionInstructions =
+      resumeRecap === undefined ? instructions : `${instructions}\n\n${resumeContext(resumeRecap)}`;
+    void logRunManifest(sessionInstructions).catch(() => undefined);
     gateway.send(
       JSON.stringify({
         type: "session.start",
         session: {
           model: config.liveModel,
-          instructions:
-            resumeRecap === undefined
-              ? instructions
-              : `${instructions}\n\n${resumeContext(resumeRecap)}`,
+          instructions: sessionInstructions,
           audio: { output: { voice } },
           delegation: { type: "client" },
         },
@@ -1095,6 +1153,14 @@ export function bindLiveConnection(
                 ...(object ? { objectId: object.id } : {}),
                 ...(resume ? { resumed: true } : {}),
               });
+              runInfo = {
+                interviewId,
+                tutorId: PPE_TUTOR_ID,
+                tutorVersion,
+                pedagogyVersion,
+                cardIds,
+                objectId: object?.id,
+              };
               startDirector({
                 tutorId: PPE_TUTOR_ID,
                 steer: interviewId === "preview",
@@ -1166,6 +1232,16 @@ export function bindLiveConnection(
               ...(object ? { objectId: object.id } : {}),
               ...(resume ? { resumed: true } : {}),
             });
+            runInfo = {
+              interviewId,
+              tutorId: GEOGRAPHY_TUTOR_ID,
+              // Students are on the fixed briefing; testers on approved topic cards.
+              tutorVersion: cardSession?.tutorVersion ?? "fixed-briefing",
+              pedagogyVersion: cardSession?.pedagogyVersion ?? PEDAGOGY_VERSION,
+              cardIds: cardSession?.cardIds ?? [],
+              readingId: reading?.id,
+              objectId: object?.id,
+            };
             startDirector({
               tutorId: GEOGRAPHY_TUTOR_ID,
               // Testers only ("preview" is the tester interview id); everyone else is shadow mode.

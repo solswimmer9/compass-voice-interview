@@ -282,7 +282,21 @@ describe("Dr River on topic cards in the live relay", () => {
       expect(h.events).toContainEqual({ type: "app.interview.started", interviewId });
       if (turn === 0) expect(await backendSystem(h)).toBe(LEGACY_BACKEND_SYSTEM);
     }
-    expect(console.log).not.toHaveBeenCalled();
+    // Students get no card session. The only log line is the run manifest, which records the
+    // fixed briefing by version and hash and carries nothing personal.
+    const lines = vi.mocked(console.log).mock.calls.map(([line]) => JSON.parse(String(line)));
+    expect(lines.map(({ event }) => event)).not.toContain("interview.session");
+    expect(lines.length).toBeGreaterThan(0);
+    for (const line of lines) {
+      expect(line).toMatchObject({
+        event: "interview.manifest",
+        interviewId,
+        pack: { id: "geography", version: "fixed-briefing" },
+        cardIds: [],
+        steering: false,
+      });
+      expect(line.promptHash).toMatch(/^[0-9a-f]{64}$/);
+    }
   });
 
   it("keeps a student's reading interview on today's exact prompt and greeting", async () => {

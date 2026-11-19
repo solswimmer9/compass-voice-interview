@@ -1,4 +1,5 @@
 import { createOpenAI } from "@ai-sdk/openai";
+import { FEEDBACK_MODEL, VIDEO_FEEDBACK_MODEL } from "./models.ts";
 import { generateText, streamText, type ModelMessage } from "ai";
 import process from "node:process";
 import { createLovableAiGatewayProvider } from "./ai/gateway-helpers.ts";
@@ -26,8 +27,8 @@ import type { FeedbackDeps } from "./feedback/pipeline.ts";
 import { createMapAwareLimiter } from "./feedback/map-aware-limit.ts";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1";
-const TEXT_MODEL = "openai/gpt-6-astra";
-const VIDEO_MODEL = "google/gemini-3.8-flash";
+const TEXT_MODEL = FEEDBACK_MODEL;
+const VIDEO_MODEL = VIDEO_FEEDBACK_MODEL;
 const MAX_VIDEO_BYTES = 20 * 1024 * 1024;
 
 const SYSTEM = `You are an experienced Cambridge geography admissions tutor reviewing a practice interview.
