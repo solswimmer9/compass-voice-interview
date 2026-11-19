@@ -1,4 +1,7 @@
 export const FREE_INTERVIEWS = 1;
+// Guests (anonymous accounts, no sign-in) get this many tries before they must sign in.
+// Enforced by consume_interview_credit in the database; this copy is for display only.
+export const GUEST_INTERVIEWS = 2;
 export const INTERVIEW_PACK = {
   productId: "interview_pack_2",
   priceId: "interview_pack_2_gbp",

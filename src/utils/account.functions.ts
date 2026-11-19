@@ -1,7 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { FREE_INTERVIEWS, LIFETIME_ACCESS } from "@/lib/offer";
+import { FREE_INTERVIEWS, GUEST_INTERVIEWS, LIFETIME_ACCESS } from "@/lib/offer";
+import { isServerTester } from "@/lib/testers";
 
 const environmentSchema = z.enum(["sandbox", "live"]);
 
@@ -42,13 +43,21 @@ export const getAccountSnapshot = createServerFn({ method: "GET" })
     const lifetime = (purchases.data ?? []).some(
       (purchase) => purchase.product_id === LIFETIME_ACCESS.productId,
     );
+    // Guests are anonymous accounts; testers are listed in PREVIEW_TESTER_EMAILS. Both are
+    // decided here on the server so the browser shows the same thing the relay will enforce.
+    const guest = context.claims["is_anonymous"] === true;
+    const tester = !guest && isServerTester(context.claims["email"]);
+    const freeAllowance = guest ? GUEST_INTERVIEWS : FREE_INTERVIEWS;
+    const freeRemaining = Math.max(0, freeAllowance - (freeSessions.count ?? 0));
     return {
       profile: profile.data,
       lifetime,
+      guest,
+      tester,
       purchases: purchases.data ?? [],
-      freeRemaining: Math.max(0, FREE_INTERVIEWS - (freeSessions.count ?? 0)),
+      freeRemaining,
       paidRemaining,
-      totalRemaining: Math.max(0, FREE_INTERVIEWS - (freeSessions.count ?? 0)) + paidRemaining,
+      totalRemaining: freeRemaining + paidRemaining,
     };
   });
 

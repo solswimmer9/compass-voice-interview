@@ -14,6 +14,7 @@ import { WaitingRoom } from "@/components/WaitingRoom";
 import { tutorKey } from "@/lib/tutor-theme";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import { INTERVIEW_MINUTES } from "@/lib/limits";
+import { GUEST_INTERVIEWS } from "@/lib/offer";
 import { useAccountSnapshot } from "@/hooks/useAccountSnapshot";
 import { isPreviewBrowser } from "@/lib/preview";
 import { appendTranscriptFragment, type Line } from "@/lib/transcript";
@@ -171,21 +172,49 @@ function InterviewRoom() {
     call.start();
   };
 
+  // Tester accounts (PREVIEW_TESTER_EMAILS, checked on the server) are never out of interviews.
+  const unlimited = preview || Boolean(account.data?.tester);
+  const outOfInterviews = !unlimited && account.data?.totalRemaining === 0;
+  // A guest who has used their free tries must sign in; anyone else with none left must buy more.
+  const guestUsedUp = !account.user && Boolean(account.guest) && outOfInterviews;
+  const authSearch = {
+    tutor: ppe ? ("ppe" as const) : ("geography" as const),
+    ...(objectMode ? { mode: "object" as const } : {}),
+  };
+
+  // Not signed in: start as a guest (an anonymous account), so the free tries need no sign-in.
+  // The database still enforces how many tries a guest gets. If guest sessions are unavailable,
+  // fall back to the sign-in page as before.
+  const [startingGuest, setStartingGuest] = useState(false);
+  const startInterview = async () => {
+    if (!account.user && !account.guest) {
+      setStartingGuest(true);
+      const { error } = await supabase.auth.signInAnonymously();
+      setStartingGuest(false);
+      if (error) {
+        void navigate({ to: "/auth", search: authSearch });
+        return;
+      }
+    }
+    start();
+  };
+
   const interviewId = call.interviewId;
   const refetchAccount = account.refetch;
   useEffect(() => {
     if (interviewId && interviewId !== "preview") void refetchAccount();
   }, [interviewId, refetchAccount]);
 
-  // "Start interview" on the subject page lands here with start=true: sign in first if needed,
-  // stay on this page (showing "Get more interviews") when there are none left, else connect.
+  // "Start interview" on the subject page lands here with start=true: a guest who has used their
+  // free tries signs in first, anyone with none left stays here (showing "Get more interviews"),
+  // everyone else connects (starting a guest session if they are not signed in).
   const autoStart = search.start === true;
   const autoStarted = useRef(false);
   useEffect(() => {
     if (!autoStart || autoStarted.current || account.loading) return;
     autoStarted.current = true;
     const { start: _start, ...choice } = search;
-    if (!account.user) {
+    if (guestUsedUp) {
       void navigate({
         to: "/auth",
         search: {
@@ -197,11 +226,11 @@ function InterviewRoom() {
       return;
     }
     void navigate({ to: "/interview", search: choice, replace: true });
-    if (!isPreviewBrowser() && account.data?.totalRemaining === 0) return;
-    start();
-    // start() is recreated every render; this should only fire when a pick arrives.
+    if (outOfInterviews && !isPreviewBrowser()) return;
+    void startInterview();
+    // startInterview() is recreated every render; this should only fire when a pick arrives.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoStart, account.loading, account.user, account.data, search, navigate]);
+  }, [autoStart, account.loading, guestUsedUp, outOfInterviews, search, navigate]);
 
   // When the call ends with something said, go straight to the feedback letter.
   const idle = call.status === "idle" || call.status === "closed";
@@ -281,18 +310,20 @@ function InterviewRoom() {
           )}
           {!lines.length && (
             <div className="mt-8 flex flex-col items-center gap-4">
-              {!account.user && !account.loading ? (
-                <Link
-                  to="/auth"
-                  search={{
-                    tutor: ppe ? ("ppe" as const) : ("geography" as const),
-                    ...(objectMode ? { mode: "object" as const } : {}),
-                  }}
-                  className="rounded-full bg-primary px-7 py-3 font-medium text-primary-foreground"
-                >
-                  Sign in to start
-                </Link>
-              ) : !preview && account.data?.totalRemaining === 0 ? (
+              {guestUsedUp ? (
+                <>
+                  <p className="text-muted-foreground">
+                    You have used your free tries. Sign in to keep practising.
+                  </p>
+                  <Link
+                    to="/auth"
+                    search={authSearch}
+                    className="rounded-full bg-primary px-7 py-3 font-medium text-primary-foreground"
+                  >
+                    Sign in to continue
+                  </Link>
+                </>
+              ) : outOfInterviews ? (
                 <>
                   <p className="text-muted-foreground">You have used all your interviews.</p>
                   <Link
@@ -304,12 +335,20 @@ function InterviewRoom() {
                 </>
               ) : (
                 <button
-                  onClick={start}
-                  disabled={!preview && account.loading}
+                  onClick={() => void startInterview()}
+                  disabled={startingGuest || (!preview && account.loading)}
                   className="rounded-full bg-primary px-7 py-3 font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
                 >
                   {call.error ? "Try again" : "Start interview"}
                 </button>
+              )}
+              {!account.user && !account.loading && !guestUsedUp && (
+                <p className="text-sm text-muted-foreground">
+                  {GUEST_INTERVIEWS} free tries, no sign-in needed.{" "}
+                  <Link to="/auth" search={authSearch} className="underline">
+                    Sign in
+                  </Link>
+                </p>
               )}
               <Link to="/subjects" className="text-sm text-muted-foreground underline">
                 Change subject

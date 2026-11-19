@@ -265,6 +265,28 @@ describe("PPE interviews", () => {
     expect(mocks.connect).not.toHaveBeenCalled();
   });
 
+  it("tells a guest whose free tries are used up to sign in", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
+    mocks.authenticate.mockResolvedValue({
+      user: { is_anonymous: true },
+      supabase: { rpc: mocks.rpc },
+    });
+    mocks.rpc.mockResolvedValue({ data: { allowed: false }, error: null });
+    const { browser, send } = bound();
+
+    send(startPpe(browser));
+
+    await vi.waitFor(() =>
+      expect(browser.events).toContainEqual(
+        expect.objectContaining({
+          type: "app.error",
+          error: { message: expect.stringMatching(/free tries.*Sign in/) },
+        }),
+      ),
+    );
+    expect(mocks.connect).not.toHaveBeenCalled();
+  });
+
   it("refuses PPE without sign-in", async () => {
     vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
     mocks.authenticate.mockResolvedValue(null);

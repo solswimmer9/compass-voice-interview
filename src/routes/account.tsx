@@ -68,7 +68,14 @@ function AccountPage() {
         <div className="mt-8 space-y-8">
           <section className="rounded-md border bg-card p-6">
             <p className="text-sm text-muted-foreground">{user.email}</p>
-            {data?.lifetime ? (
+            {data?.tester ? (
+              <>
+                <p className="mt-3 font-serif text-3xl font-semibold">Unlimited testing</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  This is a tester account, so interviews and feedback are never used up
+                </p>
+              </>
+            ) : data?.lifetime ? (
               <>
                 <p className="mt-3 font-serif text-3xl font-semibold">Lifetime access</p>
                 <p className="mt-2 text-sm text-muted-foreground">
@@ -86,7 +93,7 @@ function AccountPage() {
                 </p>
               </>
             )}
-            {data?.lifetime || (data?.totalRemaining ?? 0) > 0 ? (
+            {data?.tester || data?.lifetime || (data?.totalRemaining ?? 0) > 0 ? (
               <Link
                 to="/subjects"
                 className="mt-5 inline-flex rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground"
