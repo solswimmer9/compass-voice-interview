@@ -9,6 +9,7 @@ import { OBJECT_REVEAL_MINUTES } from "@/lib/limits";
 const mocks = vi.hoisted(() => ({
   authenticate: vi.fn(),
   rpc: vi.fn(),
+  adminRpc: vi.fn(),
   connect: vi.fn(),
 }));
 
@@ -23,6 +24,9 @@ vi.mock("@/content/objects/urban-rural-share", async (importOriginal) => {
   return { default: { ...real.default, status: "draft", reviewedBy: "", reviewedAt: "" } };
 });
 
+vi.mock("@/integrations/supabase/client.server", () => ({
+  supabaseAdmin: { rpc: mocks.adminRpc },
+}));
 vi.mock("@/lib/request-auth.server", () => ({
   authenticateAccessToken: mocks.authenticate,
 }));
@@ -79,9 +83,10 @@ describe("Lovable live interview access", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.authenticate.mockResolvedValue({
-      user: { email: "owner@example.com" },
+      user: { id: "8d0f7a2e-1c4b-4c55-9a43-2b8f1c6e0d11", email: "owner@example.com" },
       supabase: { rpc: mocks.rpc },
     });
+    mocks.adminRpc.mockResolvedValue({ data: true, error: null });
     mocks.rpc.mockImplementation((name: string) => {
       if (name === "consume_interview_credit") {
         return Promise.resolve({ data: { allowed: true, interviewId }, error: null });
@@ -111,10 +116,12 @@ describe("Lovable live interview access", () => {
     browser.start();
 
     await vi.waitFor(() =>
-      expect(mocks.rpc).toHaveBeenCalledWith("release_interview_credit", {
+      expect(mocks.adminRpc).toHaveBeenCalledWith("release_interview_credit", {
         p_interview_id: interviewId,
+        p_user_id: "8d0f7a2e-1c4b-4c55-9a43-2b8f1c6e0d11",
       }),
     );
+    expect(mocks.rpc).not.toHaveBeenCalledWith("release_interview_credit", expect.anything());
     expect(browser.events).toContainEqual(
       expect.objectContaining({
         type: "app.error",
@@ -189,7 +196,7 @@ describe("PPE interviews", () => {
     });
   }
 
-  function bound() {
+  function bound(visitor?: string) {
     let handler: ((data: unknown) => void) | undefined;
     const browser = browserSocket();
     const socket: LiveSocket = {
@@ -198,7 +205,7 @@ describe("PPE interviews", () => {
         handler = h;
       },
     };
-    bindLiveConnection(socket, config, executionContext(), mocks.connect);
+    bindLiveConnection(socket, config, executionContext(), mocks.connect, visitor);
     return { browser, send: (data: string) => handler?.(data) };
   }
 
@@ -263,6 +270,65 @@ describe("PPE interviews", () => {
       ),
     );
     expect(mocks.connect).not.toHaveBeenCalled();
+  });
+
+  it("tells a guest whose free tries are used up to sign in", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
+    mocks.authenticate.mockResolvedValue({
+      user: { is_anonymous: true },
+      supabase: { rpc: mocks.rpc },
+    });
+    mocks.rpc.mockResolvedValue({ data: { allowed: false }, error: null });
+    const { browser, send } = bound();
+
+    send(startPpe(browser));
+
+    await vi.waitFor(() =>
+      expect(browser.events).toContainEqual(
+        expect.objectContaining({
+          type: "app.error",
+          error: { message: expect.stringMatching(/free tries.*Sign in/) },
+        }),
+      ),
+    );
+    expect(mocks.connect).not.toHaveBeenCalled();
+  });
+
+  it("limits how many free tries one connection can start as a guest", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
+    mocks.authenticate.mockResolvedValue({
+      user: { is_anonymous: true },
+      supabase: { rpc: mocks.rpc },
+    });
+    const errors: string[] = [];
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const { browser, send } = bound("203.0.113.7");
+      send(startPpe(browser));
+      await vi.waitFor(() =>
+        expect(browser.events.some((event) => event["type"] === "app.error")).toBe(true),
+      );
+      const error = browser.events.find((event) => event["type"] === "app.error");
+      errors.push((error?.["error"] as { message: string }).message);
+    }
+    // Two guest starts an hour are allowed through to the credit check; the third is refused.
+    expect(errors[2]).toMatch(/limit for free tries/);
+    const creditChecks = mocks.rpc.mock.calls.filter(
+      ([name]) => name === "consume_interview_credit",
+    );
+    expect(creditChecks).toHaveLength(2);
+  });
+
+  it("never applies the guest limit to signed-in accounts on a shared connection", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const { browser, send } = bound("203.0.113.8");
+      send(startPpe(browser));
+      await vi.waitFor(() =>
+        expect(browser.events.some((event) => event["type"] === "app.error")).toBe(true),
+      );
+      const error = browser.events.find((event) => event["type"] === "app.error");
+      expect((error?.["error"] as { message: string }).message).not.toMatch(/limit/);
+    }
   });
 
   it("refuses PPE without sign-in", async () => {
@@ -672,5 +738,78 @@ describe("Charts partway through a normal interview", () => {
     await vi.waitFor(() => expect(sent).toHaveLength(1));
     const session = sent[0]?.["session"] as { instructions: string };
     expect(session.instructions).not.toContain("CHART LATER IN THE INTERVIEW");
+  });
+});
+
+describe("credits and test mode", () => {
+  afterEach(() => vi.unstubAllEnvs());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.adminRpc.mockResolvedValue({ data: true, error: null });
+    mocks.authenticate.mockResolvedValue({
+      user: { id: "8d0f7a2e-1c4b-4c55-9a43-2b8f1c6e0d11", email: "student@example.com" },
+      supabase: { rpc: mocks.rpc },
+    });
+  });
+
+  function startWith(environment: string) {
+    let onMessage: ((data: unknown) => void) | undefined;
+    const events: Array<Record<string, unknown>> = [];
+    const socket: LiveSocket = {
+      readyState: 1,
+      send: (data) => void events.push(JSON.parse(data) as Record<string, unknown>),
+      close: vi.fn(),
+      onMessage: (handler) => void (onMessage = handler),
+      onClose: vi.fn(),
+      onError: vi.fn(),
+    };
+    bindLiveConnection(socket, config, executionContext(), mocks.connect);
+    const start = {
+      type: "app.start",
+      sdp: "test-offer",
+      openingTurn: 1,
+      accessToken: "valid-access-token",
+      environment,
+    };
+    return { events, socket, send: (event: object) => onMessage?.(JSON.stringify(event)), start };
+  }
+
+  it("refuses a test-mode interview for a student without using any credit", async () => {
+    const call = startWith("sandbox");
+    call.send(call.start);
+    await vi.waitFor(() =>
+      expect(call.events).toContainEqual(expect.objectContaining({ type: "app.error" })),
+    );
+    expect(mocks.rpc).not.toHaveBeenCalled();
+    expect(mocks.connect).not.toHaveBeenCalled();
+  });
+
+  it("still lets a tester use test mode", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "student@example.com");
+    mocks.connect.mockRejectedValue(new Error("stop here"));
+    const call = startWith("sandbox");
+    call.send(call.start);
+    await vi.waitFor(() => expect(mocks.connect).toHaveBeenCalled());
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+
+  it("gives the credit back when the student leaves while it is being taken", async () => {
+    let resolveCredit: (value: unknown) => void = () => {};
+    mocks.rpc.mockImplementation(
+      () => new Promise((resolve) => (resolveCredit = resolve)),
+    );
+    const call = startWith("live");
+    const onClose = vi.mocked(call.socket.onClose);
+    call.send(call.start);
+    await vi.waitFor(() => expect(mocks.rpc).toHaveBeenCalledWith("consume_interview_credit", expect.anything()));
+    (onClose.mock.calls[0]?.[0] as () => void)();
+    resolveCredit({ data: { allowed: true, interviewId }, error: null });
+    await vi.waitFor(() =>
+      expect(mocks.adminRpc).toHaveBeenCalledWith("release_interview_credit", {
+        p_interview_id: interviewId,
+        p_user_id: "8d0f7a2e-1c4b-4c55-9a43-2b8f1c6e0d11",
+      }),
+    );
+    expect(mocks.connect).not.toHaveBeenCalled();
   });
 });

@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -24,12 +24,16 @@ function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [validRecovery, setValidRecovery] = useState(false);
+  const [invalidLink, setInvalidLink] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.hash.replace(/^#/, ""));
     if (params.get("type") === "recovery") setValidRecovery(true);
-    else setMessage("This reset link is invalid or incomplete. Request a new one from sign in.");
+    else {
+      setInvalidLink(true);
+      setMessage("This reset link is invalid or incomplete. Request a new one from sign in.");
+    }
   }, []);
 
   const submit = async (event: FormEvent) => {
@@ -68,6 +72,11 @@ function ResetPasswordPage() {
         <p role="status" className="mt-5 text-sm text-muted-foreground">
           {message}
         </p>
+      )}
+      {invalidLink && (
+        <Link to="/auth" className="mt-3 text-sm font-medium underline underline-offset-4">
+          Go to sign in to request a new link
+        </Link>
       )}
     </main>
   );

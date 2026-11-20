@@ -12,7 +12,7 @@ import {
   canUseGroundedFeedback,
   groundedInput,
   parseModelJson,
-  runTesterFeedback,
+  runCheckedFeedback,
 } from "@/lib/feedback/grounded.server";
 import { citedTurns, runGroundedFeedback, type FeedbackDeps } from "@/lib/feedback/pipeline";
 import { parseTranscript } from "@/lib/feedback/transcript";
@@ -79,7 +79,7 @@ function deps(json: unknown, text: string | (() => Promise<string>)): FeedbackDe
 
 async function pipelineResult(writer: string, json: unknown = OBSERVATIONS) {
   return runGroundedFeedback(
-    groundedInput({ transcript: TRANSCRIPT, ppe: false }),
+    groundedInput({ transcript: TRANSCRIPT, ppe: false, includeDrafts: false }),
     deps(json, writer),
   );
 }
@@ -162,7 +162,7 @@ describe("renderGroundedFeedback", () => {
       },
       generateText: async () => WRITER_REPORT,
     };
-    const input = groundedInput({ transcript: TRANSCRIPT, ppe: false });
+    const input = groundedInput({ transcript: TRANSCRIPT, ppe: false, includeDrafts: false });
     expect(renderGroundedFeedback(await runGroundedFeedback(input, failing), TURNS)).toEqual({
       failure: "analyst failed",
     });
@@ -181,11 +181,11 @@ describe("renderGroundedFeedback", () => {
   });
 });
 
-describe("runTesterFeedback", () => {
-  const req = { transcript: TRANSCRIPT, ppe: false, interviewId: "preview" };
+describe("runCheckedFeedback", () => {
+  const req = { transcript: TRANSCRIPT, ppe: false, interviewId: "preview", includeDrafts: false };
 
   it("returns checked text on success", async () => {
-    const out = await runTesterFeedback(req, deps(OBSERVATIONS, WRITER_REPORT));
+    const out = await runCheckedFeedback(req, deps(OBSERVATIONS, WRITER_REPORT));
     expect(out.ok).toBe(true);
     if (out.ok) expect(out.text).toContain("(turn 6)");
   });
@@ -193,14 +193,14 @@ describe("runTesterFeedback", () => {
   it("falls back on a timeout and cancels the model calls", async () => {
     const abort = vi.fn();
     const hanging = deps(OBSERVATIONS, () => new Promise<string>(() => {}));
-    const out = await runTesterFeedback(req, hanging, { timeoutMs: 20, abort });
+    const out = await runCheckedFeedback(req, hanging, { timeoutMs: 20, abort });
     expect(out).toEqual({ ok: false, reason: "timeout" });
     expect(abort).toHaveBeenCalled();
   });
 
   it("falls back, never throws, when the analyst returns garbage", async () => {
     for (const junk of [null, "not json", { observations: "x" }, [{ kind: "strength" }]]) {
-      const out = await runTesterFeedback(req, deps(junk, WRITER_REPORT));
+      const out = await runCheckedFeedback(req, deps(junk, WRITER_REPORT));
       expect(out.ok).toBe(false);
     }
   });
@@ -213,7 +213,7 @@ describe("runTesterFeedback", () => {
       "Next time, name one cost of defences when you propose them.",
       `Next time, name one cost of defences when you propose them. ${padding}`,
     );
-    const out = await runTesterFeedback(req, deps(OBSERVATIONS, long));
+    const out = await runCheckedFeedback(req, deps(OBSERVATIONS, long));
     expect(out.ok).toBe(true);
     if (out.ok) {
       expect(out.truncated).toBe(true);
@@ -227,15 +227,43 @@ describe("runTesterFeedback", () => {
       transcript: transcriptFor("Prof Matt"),
       ppe: true,
       cardIds: ["bag-charge"],
+      includeDrafts: true,
     });
     expect(input.tutorName).toBe("Prof Matt");
     expect(input.criteria.map((c) => c.id)).toContain("facts-values");
     expect(input.backendContext).toContain("[bag-charge]");
-    const out = await runTesterFeedback(
-      { transcript: transcriptFor("Prof Matt"), ppe: true },
+    const out = await runCheckedFeedback(
+      { transcript: transcriptFor("Prof Matt"), ppe: true, includeDrafts: true },
       deps(OBSERVATIONS, WRITER_REPORT),
     );
     expect(out.ok).toBe(true);
+  });
+
+  it("never gives a student draft PPE notes, only approved ones", () => {
+    const input = groundedInput({
+      transcript: transcriptFor("Prof Matt"),
+      ppe: true,
+      cardIds: ["bag-charge", "fairness-three-principles"],
+      includeDrafts: false,
+    });
+    expect(input.backendContext).not.toContain("[bag-charge]");
+    expect(input.backendContext).toContain("[fairness-three-principles]");
+  });
+
+  it("adds object interview notes for the analyst when a chart was shown", () => {
+    const notes = "OBJECT INTERVIEW NOTES\nWhat it showed: turnout by age";
+    for (const ppe of [false, true]) {
+      const input = groundedInput({
+        transcript: TRANSCRIPT,
+        ppe,
+        includeDrafts: false,
+        objectContext: notes,
+      });
+      expect(input.backendContext).toContain(notes);
+    }
+    expect(
+      groundedInput({ transcript: TRANSCRIPT, ppe: false, includeDrafts: false }).backendContext,
+    ).not.toContain("OBJECT INTERVIEW NOTES");
   });
 });
 
@@ -379,7 +407,7 @@ ${line}
 - You said "${Q3}" [T6] without asking who pays.`;
   async function shown2(line: string): Promise<string | null> {
     const result = await runGroundedFeedback(
-      groundedInput({ transcript: transcript2, ppe: false }),
+      groundedInput({ transcript: transcript2, ppe: false, includeDrafts: false }),
       deps(obs2, report2(line)),
     );
     const out = renderGroundedFeedback(result, turns2);
@@ -429,7 +457,7 @@ ${line}
 
   it("falls back when dropping lines leaves fewer than two verified quotations", async () => {
     const result = await runGroundedFeedback(
-      groundedInput({ transcript: transcript2, ppe: false }),
+      groundedInput({ transcript: transcript2, ppe: false, includeDrafts: false }),
       deps(
         obs2,
         `## Strengths in reasoning\n- You said "${Q1}" [T2].\n- You said ‘Some say it’s about defence. Rivers always win.’ [T4]`,

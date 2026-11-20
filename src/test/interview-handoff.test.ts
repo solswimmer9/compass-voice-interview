@@ -1,25 +1,31 @@
 import { describe, expect, it } from "vitest";
 import { autoStartAction, shouldHandOffToFeedback } from "@/lib/interview-handoff";
 
-const base = { accountLoading: false, signedIn: true, totalRemaining: 1, previewBrowser: false };
+const base = {
+  accountLoading: false,
+  guestUsedUp: false,
+  outOfInterviews: false,
+  previewBrowser: false,
+};
 
 describe("interview start", () => {
   it("waits for the account before deciding", () => {
-    expect(autoStartAction({ ...base, accountLoading: true, signedIn: false })).toBe("wait");
+    expect(autoStartAction({ ...base, accountLoading: true, guestUsedUp: true })).toBe("wait");
   });
-  it("sends a signed-out visitor to sign in", () => {
-    expect(autoStartAction({ ...base, signedIn: false })).toBe("sign-in");
-  });
-  it("stays put with no interviews left", () => {
-    expect(autoStartAction({ ...base, totalRemaining: 0 })).toBe("out-of-credits");
-  });
-  it("starts when signed in with interviews left, or when the count has not arrived", () => {
+  it("starts for a signed-out visitor or a signed-in student with interviews left", () => {
     expect(autoStartAction(base)).toBe("start");
-    expect(autoStartAction({ ...base, totalRemaining: undefined })).toBe("start");
   });
-  it("lets the preview browser hint show the room, never the sign-in step", () => {
-    expect(autoStartAction({ ...base, totalRemaining: 0, previewBrowser: true })).toBe("start");
-    expect(autoStartAction({ ...base, signedIn: false, previewBrowser: true })).toBe("sign-in");
+  it("sends a guest who has used their free tries to sign in", () => {
+    expect(autoStartAction({ ...base, guestUsedUp: true, outOfInterviews: true })).toBe("sign-in");
+  });
+  it("stays put, offering to buy more, when a student has none left", () => {
+    expect(autoStartAction({ ...base, outOfInterviews: true })).toBe("out-of-interviews");
+  });
+  it("lets the preview browser hint show the room, never skip the sign-in step", () => {
+    expect(autoStartAction({ ...base, outOfInterviews: true, previewBrowser: true })).toBe("start");
+    expect(
+      autoStartAction({ ...base, guestUsedUp: true, outOfInterviews: true, previewBrowser: true }),
+    ).toBe("sign-in");
   });
 });
 
@@ -28,6 +34,7 @@ describe("interview finish", () => {
     callStatus: "closed",
     alreadyHandedOff: false,
     startedHere: true,
+    canReconnect: false,
     lineCount: 4,
     interviewId: "abc",
   };
@@ -38,6 +45,7 @@ describe("interview finish", () => {
     ["still connected", { callStatus: "connected" }],
     ["already handed off", { alreadyHandedOff: true }],
     ["not started on this page", { startedHere: false }],
+    ["the call dropped and can be resumed", { canReconnect: true }],
     ["nothing said", { lineCount: 0 }],
     ["no interview id", { interviewId: null }],
   ])("does not hand off when %s", (_name, override) => {

@@ -1,8 +1,8 @@
-// Evidence-checked feedback for tester accounts. Server-only.
+// Evidence-checked feedback for every account. Server-only.
 //
 // The caller (assess.server.ts) has already applied every access rule before calling this, and
-// supplies the model calls. Anything short of a fully checked report returns null, and the
-// caller then gives today's feedback instead, with no error shown.
+// supplies the model calls. Anything short of a fully checked report returns a reason, and the
+// caller then gives the single-call feedback instead, with no error shown.
 import { NOTES_CONTEXT, REASONING_GUIDE } from "../interview-briefing.ts";
 import { ppeFeedbackContext, ppeTutor } from "../ppe.server.ts";
 import { GEOGRAPHY_CRITERIA, PPE_CRITERIA } from "./criteria";
@@ -21,6 +21,10 @@ export type GroundedRequest = {
   ppe: boolean;
   cardIds?: unknown;
   interviewId?: string;
+  /** Draft PPE notes are for tester accounts only. Students get approved notes only. */
+  includeDrafts: boolean;
+  /** Object interview notes for the analyst, when the student was shown a chart. */
+  objectContext?: string;
 };
 
 export type GroundedOutcome =
@@ -45,13 +49,15 @@ export function canUseGroundedFeedback(args: {
 }
 
 /**
- * Tester-only subject inputs. Testers may draw on draft PPE notes, as on today's tester path.
+ * Subject inputs. Draft PPE notes only when `includeDrafts` (tester accounts), as on the
+ * single-call path.
  *
- * This hard-codes `includeDrafts: true`, so it must only be reached for a server-verified tester:
- * `handleAssess` calls it only when `preview` (from `isServerTester`) is true. Never call it
- * from a path a student can reach. `src/test/grounded-gate.test.ts` guards both halves.
+ * Callers must pass `includeDrafts: true` only for a server-verified tester: `handleAssess`
+ * derives it from `isServerTester`. Never derive it from anything a student controls.
+ * `src/test/grounded-gate.test.ts` guards this.
  */
 export function groundedInput(req: GroundedRequest): FeedbackInput {
+  const withObject = (context: string) => [context, req.objectContext].filter(Boolean).join("\n\n");
   if (req.ppe) {
     const tutor = ppeTutor();
     return {
@@ -59,7 +65,9 @@ export function groundedInput(req: GroundedRequest): FeedbackInput {
       tutorName: tutor.persona.name,
       criteria: PPE_CRITERIA,
       reasoningGuide: tutor.reasoningGuide,
-      backendContext: ppeFeedbackContext(req.cardIds, { includeDrafts: true }),
+      backendContext: withObject(
+        ppeFeedbackContext(req.cardIds, { includeDrafts: req.includeDrafts }),
+      ),
       ...(req.interviewId ? { interviewId: req.interviewId } : {}),
     };
   }
@@ -68,7 +76,7 @@ export function groundedInput(req: GroundedRequest): FeedbackInput {
     tutorName: "Dr River",
     criteria: GEOGRAPHY_CRITERIA,
     reasoningGuide: REASONING_GUIDE,
-    backendContext: NOTES_CONTEXT,
+    backendContext: withObject(NOTES_CONTEXT),
     ...(req.interviewId ? { interviewId: req.interviewId } : {}),
   };
 }
@@ -78,7 +86,7 @@ export function groundedInput(req: GroundedRequest): FeedbackInput {
  * reason for falling back. Never throws. `abort` is called on timeout so in-flight model calls
  * can be cancelled.
  */
-export async function runTesterFeedback(
+export async function runCheckedFeedback(
   req: GroundedRequest,
   deps: FeedbackDeps,
   options: { timeoutMs?: number; abort?: () => void } = {},

@@ -71,8 +71,9 @@ function TermsPage() {
       </p>
       <h2>Payments</h2>
       <p>
-        Payments are taken securely by our payment processor, Stripe. Prices are shown in GBP and
-        include any applicable tax. Refunds are covered by our Refund Policy. Our offers are one-off
+        Payments are taken securely by our payment processor, Stripe. Prices are shown in GBP. Any
+        applicable tax, such as UK VAT, is added at checkout, and you see the full total before you
+        pay. Refunds are covered by our Refund Policy. Our offers are one-off
         payments, not subscriptions.
       </p>
       <h2>Availability</h2>
