@@ -44,7 +44,13 @@ export function canUseGroundedFeedback(args: {
   return turns.filter((t) => t.role === "user").length >= MIN_STUDENT_TURNS;
 }
 
-/** Tester-only subject inputs. Testers may draw on draft PPE notes, as on today's tester path. */
+/**
+ * Tester-only subject inputs. Testers may draw on draft PPE notes, as on today's tester path.
+ *
+ * This hard-codes `includeDrafts: true`, so it must only be reached for a server-verified tester:
+ * `handleAssess` calls it only when `preview` (from `isServerTester`) is true. Never call it
+ * from a path a student can reach. `src/test/grounded-gate.test.ts` guards both halves.
+ */
 export function groundedInput(req: GroundedRequest): FeedbackInput {
   if (req.ppe) {
     const tutor = ppeTutor();
