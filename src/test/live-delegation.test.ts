@@ -142,20 +142,31 @@ describe("backend transcript", () => {
     ]);
   });
 
+  it("keeps a whole 20-minute interview, so early points stay in view", () => {
+    const turns = Array.from({ length: 70 }, (_, i) =>
+      delta(i % 2 ? "user" : "assistant", `turn ${i}`),
+    );
+    const messages = backendTranscript(turns);
+    expect(messages).toHaveLength(70);
+    expect(messages[0]).toEqual({ role: "assistant", content: "turn 0" });
+    expect(messages.some(({ content }) => String(content).includes("omitted"))).toBe(false);
+  });
+
   it("keeps only the recent turns and says that earlier ones are omitted", () => {
-    const turns = Array.from({ length: 30 }, (_, i) =>
+    const total = BACKEND_HISTORY_TURNS + 18;
+    const turns = Array.from({ length: total }, (_, i) =>
       delta(i % 2 ? "user" : "assistant", `turn ${i}`),
     );
     const messages = backendTranscript(turns);
     expect(messages).toHaveLength(BACKEND_HISTORY_TURNS + 1);
     expect(messages[0]).toEqual({
       role: "user",
-      content: `[Earlier discussion omitted: ${30 - BACKEND_HISTORY_TURNS} turns.]`,
+      content: "[Earlier discussion omitted: 18 turns.]",
     });
-    expect(messages.at(-1)).toEqual({ role: "user", content: "turn 29" });
+    expect(messages.at(-1)).toEqual({ role: "user", content: `turn ${total - 1}` });
 
     // When the first kept turn is the student's, the note joins it to keep roles alternating.
-    const fromStudent = backendTranscript(turns.slice(0, 29));
+    const fromStudent = backendTranscript(turns.slice(0, total - 1));
     expect(fromStudent[0]).toEqual({
       role: "user",
       content: "[Earlier discussion omitted: 17 turns.]\nturn 17",
