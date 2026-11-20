@@ -1,17 +1,19 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import {
   hasChosenSubject,
   parseInterviewChoice,
   takeChoiceAfterSignIn,
 } from "@/lib/interview-choice";
-import { FlippingWord } from "@/components/FlippingWord";
-import { DotPattern } from "@/components/ui/dot-pattern";
-import { SiteNav } from "@/components/SiteNav";
-import { INTERVIEW_MINUTES } from "@/lib/limits";
+import { useAuth } from "@/components/AuthProvider";
+import { INTERVIEW_MINUTES, OBJECT_REVEAL_MINUTES } from "@/lib/limits";
+import { SUBJECTS } from "@/lib/subjects";
 import { useAccountSnapshot } from "@/hooks/useAccountSnapshot";
-
-const HEADLINE_WORDS = ["democratise", "open up", "demystify", "widen access to"];
+import graduate from "@/assets/home/graduate.webp";
+import blackboard from "@/assets/home/blackboard.webp";
+import reader from "@/assets/home/reader.webp";
+import writer from "@/assets/home/writer.webp";
+import caps from "@/assets/home/caps.webp";
 
 export const Route = createFileRoute("/")({
   // The interview used to live on this page (/?tutor=ppe&start=true, /?reading=...). Old links
@@ -25,13 +27,13 @@ export const Route = createFileRoute("/")({
   },
   head: () => ({
     meta: [
-      { title: "We are here to democratise Oxbridge" },
+      { title: "Compass · Education, grounded in context" },
       {
         name: "description",
         content:
           "Practise your Oxbridge interview out loud with an AI tutor who challenges your reasoning like a real interviewer.",
       },
-      { property: "og:title", content: "We are here to democratise Oxbridge" },
+      { property: "og:title", content: "Compass · Education, grounded in context" },
       {
         property: "og:description",
         content:
@@ -44,8 +46,147 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
+const serif = "font-instrument font-normal";
+const mono = "font-jbmono";
+const hairline = "border-[#d6d6d2]";
+
+/** The Meridian rose: nested squares, each a little smaller and more turned, breathing in a
+ * wave while the whole set turns slowly. Decoration only. */
+function Rose() {
+  const squares = Array.from({ length: 26 }, (_, i) => ({
+    "--w": `${560 - i * 18}px`,
+    "--r": `${i * 7}deg`,
+    animationDelay: `${(-i * 0.22).toFixed(2)}s`,
+  }));
+  return (
+    <div aria-hidden="true" className="rose-turn absolute inset-0">
+      {squares.map((style, i) => (
+        <div key={i} className="rose-sq" style={style as CSSProperties} />
+      ))}
+    </div>
+  );
+}
+
+function SketchCard({
+  src,
+  alt,
+  className,
+  bob,
+  height,
+}: {
+  src: string;
+  alt: string;
+  className: string;
+  bob: string;
+  height: number;
+}) {
+  return (
+    <div className={className}>
+      <div
+        className={`${bob} rounded-xl bg-white p-2.5 shadow-[0_24px_50px_-24px_rgba(0,0,0,0.35)]`}
+      >
+        <img
+          src={src}
+          alt={alt}
+          style={{ height }}
+          className="block w-full rounded-md object-cover grayscale"
+        />
+      </div>
+    </div>
+  );
+}
+
+const STEPS = [
+  {
+    n: "01",
+    title: "Pick a subject",
+    body: "PPE with Prof Matt, or Geography with Dr River.",
+    img: writer,
+    alt: "Sketch of a student writing",
+    blend: true,
+  },
+  {
+    n: "02",
+    title: "Talk it through",
+    body: `Up to ${INTERVIEW_MINUTES} minutes, out loud, with a chart to reason about around minute ${OBJECT_REVEAL_MINUTES}.`,
+    img: blackboard,
+    alt: "Sketch of a student working an equation at a blackboard",
+    blend: false,
+  },
+  {
+    n: "03",
+    title: "Read your letter",
+    body: "Your tutor writes back on where your reasoning held and where it slipped.",
+    img: reader,
+    alt: "Sketch of a student reading",
+    blend: false,
+  },
+];
+
+const FAQS = [
+  {
+    q: "Is Compass part of Oxford or Cambridge?",
+    a: "No. Compass was built by Cambridge students but is not affiliated with either university. The tutors are AI, and AI can make mistakes.",
+  },
+  {
+    q: "How long is an interview?",
+    a: `Up to ${INTERVIEW_MINUTES} minutes, spoken out loud in your browser. Around minute ${OBJECT_REVEAL_MINUTES} your tutor puts a chart in front of you to reason about.`,
+  },
+  {
+    q: "What do I get afterwards?",
+    a: "A letter from your tutor on where your reasoning held and where it slipped, quoting what you actually said.",
+  },
+  {
+    q: "Can my school buy places for students?",
+    a: "Yes. A school buys a bundle and each student claims a place with their own account. Teachers do not see students' reports.",
+  },
+];
+
+function Faq() {
+  const [open, setOpen] = useState(0);
+  return (
+    <div className="max-w-[880px]">
+      <h2 id="questions" className={`reveal ${serif} mb-8 text-[clamp(36px,4vw,56px)]`}>
+        Questions
+      </h2>
+      <div className="border-t border-[#cfcfcb]">
+        {FAQS.map((f, i) => {
+          const isOpen = open === i;
+          return (
+            <div key={f.q} className="border-b border-[#cfcfcb]">
+              <h3>
+                <button
+                  type="button"
+                  aria-expanded={isOpen}
+                  aria-controls={`faq-${i}`}
+                  onClick={() => setOpen(isOpen ? -1 : i)}
+                  className={`${serif} flex w-full items-center justify-between gap-5 px-2 py-5 text-left text-[26px] text-[#161616] transition-colors hover:bg-white`}
+                >
+                  {f.q}
+                  <span aria-hidden="true" className={`${mono} text-base text-[#5a5a57]`}>
+                    {isOpen ? "−" : "+"}
+                  </span>
+                </button>
+              </h3>
+              {isOpen && (
+                <p
+                  id={`faq-${i}`}
+                  className="max-w-[680px] px-2 pb-6 text-[15px] leading-[1.7] text-[#4a4a48]"
+                >
+                  {f.a}
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function Home() {
   const account = useAccountSnapshot();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   // Back from a sign-in that left the site (Google, email confirmation) with a subject chosen:
@@ -59,66 +200,221 @@ function Home() {
     }
   }, [signedIn, navigate]);
 
+  const cell = `cell border-b border-r ${hairline} px-[18px] py-6 text-sm`;
+
   return (
-    <div className="relative min-h-[100svh] overflow-hidden">
-      <DotPattern className="h-[100svh] [mask-image:radial-gradient(520px_circle_at_center,white,transparent)]" />
-      <SiteNav />
-      <main className="relative z-10 mx-auto flex min-h-[85svh] max-w-2xl flex-col justify-center px-6 py-16 text-center">
-        <h1
-          aria-label="We are here to democratise Oxbridge"
-          className="text-4xl font-medium leading-tight tracking-tighter sm:text-6xl"
-        >
-          <span aria-hidden="true" className="block">
-            We are here to
-          </span>
-          <span aria-hidden="true" className="block">
-            <FlippingWord words={HEADLINE_WORDS} />
-          </span>
-          <span aria-hidden="true" className="block">
-            Oxbridge
-          </span>
-        </h1>
-        <div className="mx-auto mt-6 max-w-xl bg-background shadow-[0_0_20px_16px_var(--background)]">
-          <p className="text-lg font-medium">
-            Built by Cambridge students for applicants, based on real context.
-          </p>
-          <p className="mt-3 text-foreground/90">
-            Practise out loud with an AI tutor for your subject, who will challenge your reasoning
-            like a real interviewer.
-          </p>
+    <div className="meridian min-h-[100svh] bg-[#ededeb] font-tight text-[#161616]">
+      <div className="mx-auto max-w-[1320px] px-3 pt-4 sm:px-6">
+        {/* 1. The framed opening: nav, the rose with the sketch cards, the promise. */}
+        <div className="overflow-hidden rounded-[14px] bg-[#f7f7f5]">
+          <header className="flex flex-wrap items-center justify-between gap-5 px-6 py-[18px] text-[13px] sm:px-8">
+            <Link to="/" className={`${serif} text-[26px] italic`} aria-label="Compass home">
+              Compass
+            </Link>
+            <nav aria-label="Main" className="flex flex-wrap gap-x-7 gap-y-2">
+              <Link to="/subjects" className="hover:underline">
+                Subjects
+              </Link>
+              <Link to="/readings" search={{ subject: "ppe" }} className="hover:underline">
+                Readings
+              </Link>
+              <Link to="/schools" className="hover:underline">
+                For schools
+              </Link>
+              <Link to="/pricing" className="hover:underline">
+                Pricing
+              </Link>
+              {user ? (
+                <Link to="/account" className="hover:underline">
+                  Your account
+                </Link>
+              ) : (
+                <Link to="/auth" className="hover:underline">
+                  Sign in
+                </Link>
+              )}
+            </nav>
+            <Link
+              to="/subjects"
+              className="rounded bg-[#161616] px-4 py-2.5 text-[#f7f7f5] transition-colors hover:bg-[#3a3a3a]"
+            >
+              Start practising
+            </Link>
+          </header>
+
+          <section className="px-4 pb-20 pt-2.5 text-center sm:px-8">
+            <div className="relative h-[350px] overflow-hidden sm:h-[560px]">
+              <div className="rose-stage absolute left-1/2 top-0 -ml-[450px] h-[560px] w-[900px]">
+                <Rose />
+                <SketchCard
+                  src={blackboard}
+                  alt="Sketch of a student working an equation on a blackboard"
+                  className="fan-l absolute left-1/2 top-[130px] -ml-[300px] w-[220px]"
+                  bob="bob-2"
+                  height={220}
+                />
+                <SketchCard
+                  src={reader}
+                  alt="Sketch of a student reading at a desk"
+                  className="fan-r absolute left-1/2 top-[130px] ml-[80px] w-[220px]"
+                  bob="bob-3"
+                  height={220}
+                />
+                <SketchCard
+                  src={graduate}
+                  alt="Sketch of a graduate in cap and gown"
+                  className="fan-c absolute left-1/2 top-[100px] z-[2] -ml-[125px] w-[250px]"
+                  bob="bob"
+                  height={270}
+                />
+              </div>
+            </div>
+            <h1
+              className={`rise ${serif} m-0 text-[clamp(44px,6.4vw,96px)] leading-[0.98] tracking-[-0.02em]`}
+              style={{ animationDelay: "0.5s" }}
+            >
+              Education, grounded in context.
+              <br />
+              <em>Potential, released.</em>
+            </h1>
+            <p
+              className="rise mx-auto mt-5 max-w-[520px] text-base leading-relaxed text-[#4a4a48]"
+              style={{ animationDelay: "0.65s" }}
+            >
+              Spoken Oxbridge interview practice, built by Cambridge students. Talk for up to{" "}
+              {INTERVIEW_MINUTES} minutes with a tutor who follows your reasoning, then read their
+              letter.
+            </p>
+            <div
+              className={`mx-auto mt-11 grid max-w-[720px] grid-cols-1 border-l border-t text-left sm:grid-cols-3 ${hairline}`}
+            >
+              {SUBJECTS.map((s, i) => (
+                <Link
+                  key={s.id}
+                  to="/interview"
+                  search={{ tutor: s.id, start: true as const }}
+                  className={`${cell} flex justify-between`}
+                  style={{ animationDelay: `${0.7 + i * 0.08}s` }}
+                >
+                  <span>
+                    {s.name} · {s.tutor}
+                  </span>
+                  <span className="arr" aria-hidden="true">
+                    →
+                  </span>
+                </Link>
+              ))}
+              <Link
+                to="/readings"
+                search={{ subject: "ppe" }}
+                className={`${cell} flex justify-between`}
+                style={{ animationDelay: "0.86s" }}
+              >
+                <span>Readings</span>
+                <span className="arr" aria-hidden="true">
+                  →
+                </span>
+              </Link>
+              {[
+                `${INTERVIEW_MINUTES} MIN · SPOKEN`,
+                `CHART · MINUTE ${OBJECT_REVEAL_MINUTES}`,
+                "LETTER · AFTER",
+              ].map((label, i) => (
+                <div
+                  key={label}
+                  className={`${cell} ${mono} text-xs text-[#4a4a48]`}
+                  style={{ animationDelay: `${0.94 + i * 0.08}s` }}
+                >
+                  {label}
+                </div>
+              ))}
+            </div>
+          </section>
         </div>
-        <div className="mt-8">
-          <Link
-            to="/subjects"
-            className="inline-flex rounded-full bg-primary px-7 py-3 font-medium text-primary-foreground transition hover:opacity-90"
+
+        {/* 2. How it works: three sketch cards. */}
+        <section className="px-2 pb-10 pt-28">
+          <p className={`${mono} text-xs text-[#5a5a57]`}>HOW IT WORKS</p>
+          <h2
+            className={`reveal ${serif} mb-14 mt-3.5 max-w-[760px] text-[clamp(38px,4.6vw,66px)] leading-none tracking-[-0.02em]`}
           >
-            Start practising
-          </Link>
-        </div>
-        <ol className="mt-12 grid gap-3 text-left text-sm sm:grid-cols-3">
-          <li className="rounded-md border bg-card p-3">
-            <span className="font-medium">1. Pick a subject.</span>{" "}
-            <span className="text-muted-foreground">
-              PPE with Prof Matt or Geography with Dr River.
-            </span>
-          </li>
-          <li className="rounded-md border bg-card p-3">
-            <span className="font-medium">2. Talk.</span>{" "}
-            <span className="text-muted-foreground">
-              Up to {INTERVIEW_MINUTES} minutes, out loud, with a chart to reason about.
-            </span>
-          </li>
-          <li className="rounded-md border bg-card p-3">
-            <span className="font-medium">3. Get your letter.</span>{" "}
-            <span className="text-muted-foreground">
-              Your tutor writes back on where your reasoning held and where it slipped.
-            </span>
-          </li>
-        </ol>
-      </main>
-      <footer className="relative z-10 mx-auto max-w-2xl px-6 pb-10 text-center text-xs text-muted-foreground">
-        Not affiliated with Oxford or Cambridge. AI can make mistakes.
-      </footer>
+            {INTERVIEW_MINUTES} minutes, out loud, with someone who will not let a lazy answer pass.
+          </h2>
+          <ol className="grid gap-6 sm:grid-cols-3">
+            {STEPS.map((step) => (
+              <li key={step.n} className="lift reveal rounded-[14px] bg-[#f7f7f5] p-3.5 pb-7">
+                <img
+                  src={step.img}
+                  alt={step.alt}
+                  className={`block h-[250px] w-full rounded-lg object-cover grayscale ${step.blend ? "mix-blend-multiply" : ""}`}
+                />
+                <p className={`${mono} mx-2.5 mb-1.5 mt-5 text-xs text-[#5a5a57]`}>{step.n}</p>
+                <h3 className={`${serif} mx-2.5 text-[32px]`}>{step.title}</h3>
+                <p className="mx-2.5 mt-2 text-[15px] leading-relaxed text-[#4a4a48]">
+                  {step.body}
+                </p>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        {/* 3. The letter. */}
+        <section className="flex flex-wrap items-center gap-12 px-2 py-20">
+          <div className="reveal flex-[1_1_420px] rounded-[14px] bg-[#f7f7f5] p-6">
+            <img
+              src={caps}
+              alt="Sketch of graduates throwing their caps into the air"
+              className="block w-full mix-blend-multiply grayscale"
+            />
+          </div>
+          <div className="flex-[1_1_420px]">
+            <h2
+              className={`reveal ${serif} text-[clamp(40px,4.6vw,68px)] leading-none tracking-[-0.02em]`}
+            >
+              The interview is the practice.
+              <br />
+              <em>The letter is the lesson.</em>
+            </h2>
+            <Link
+              to="/subjects"
+              className="mt-9 inline-block rounded bg-[#161616] px-[22px] py-3.5 text-sm text-[#f7f7f5] transition-colors hover:bg-[#3a3a3a]"
+            >
+              Begin an interview
+            </Link>
+          </div>
+        </section>
+
+        {/* 4. Directory and questions. */}
+        <section className="px-2 pb-28 pt-20">
+          <div className="mb-24 grid border-l border-t border-[#cfcfcb] sm:grid-cols-2 lg:grid-cols-4">
+            {(
+              [
+                { label: "MEET THE TUTORS", title: "Prof Matt & Dr River", to: "/subjects" },
+                { label: "SUBJECTS", title: "PPE & Geography", to: "/subjects" },
+                { label: "APPLICANTS", title: "Pricing and access", to: "/pricing" },
+                { label: "SCHOOLS", title: "Places for your sixth form", to: "/schools" },
+              ] as const
+            ).map((tile) => (
+              <Link
+                key={tile.label}
+                to={tile.to}
+                className="cell block border-b border-r border-[#cfcfcb] px-[22px] pb-8 pt-7"
+              >
+                <span className={`${mono} block text-[11px] text-[#5a5a57]`}>{tile.label}</span>
+                <span className={`${serif} mt-2 block text-[30px]`}>{tile.title}</span>
+              </Link>
+            ))}
+          </div>
+          <Faq />
+        </section>
+
+        <footer className="flex flex-wrap items-center justify-between gap-5 border-t border-[#cfcfcb] px-2 pb-10 pt-7 text-xs text-[#4a4a48]">
+          <span className={`${serif} text-[22px] italic text-[#161616]`}>Compass</span>
+          <span className={mono}>
+            NOT AFFILIATED WITH OXFORD OR CAMBRIDGE · AI CAN MAKE MISTAKES
+          </span>
+        </footer>
+      </div>
     </div>
   );
 }

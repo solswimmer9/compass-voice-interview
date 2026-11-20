@@ -32,6 +32,9 @@
 @theme inline {
   --font-serif: "Inter", system-ui, sans-serif;
   --font-sans: "Inter", system-ui, sans-serif;
+  --font-instrument: "Instrument Serif", Georgia, "Times New Roman", serif;
+  --font-tight: "Inter Tight", "Inter", system-ui, sans-serif;
+  --font-jbmono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -210,5 +213,166 @@
 @media (prefers-reduced-motion: reduce) {
   .caption-word {
     animation: none;
+  }
+}
+
+/* Homepage, Grey Meridian (src/routes/index.tsx): the turning rose of squares, the fanned
+   sketch cards, the hairline subject grid and scroll reveals. Scoped under .meridian. */
+@keyframes meridian-breathe {
+  0%,
+  100% {
+    transform: rotate(var(--r));
+  }
+  50% {
+    transform: rotate(calc(var(--r) + 32deg));
+  }
+}
+@keyframes meridian-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes meridian-fan-l {
+  from {
+    opacity: 0;
+    transform: translate(120px, 20px) rotate(0deg);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(-9deg);
+  }
+}
+@keyframes meridian-fan-r {
+  from {
+    opacity: 0;
+    transform: translate(-120px, 20px) rotate(0deg);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(7deg);
+  }
+}
+@keyframes meridian-fan-c {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes meridian-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+@keyframes meridian-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes meridian-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.meridian .rose-sq {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--w);
+  height: var(--w);
+  margin-left: calc(var(--w) / -2);
+  margin-top: calc(var(--w) / -2);
+  border: 1px solid rgb(22 22 22 / 0.28);
+  border-radius: 2px;
+  animation: meridian-breathe 9s ease-in-out infinite;
+}
+.meridian .rose-turn {
+  animation: meridian-turn 140s linear infinite;
+}
+.meridian .fan-l {
+  animation: meridian-fan-l 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s both;
+}
+.meridian .fan-r {
+  animation: meridian-fan-r 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s both;
+}
+.meridian .fan-c {
+  animation: meridian-fan-c 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.1s both;
+}
+.meridian .bob {
+  animation: meridian-bob 6s ease-in-out infinite;
+}
+.meridian .bob-2 {
+  animation: meridian-bob 7s ease-in-out -2s infinite;
+}
+.meridian .bob-3 {
+  animation: meridian-bob 8s ease-in-out -4s infinite;
+}
+.meridian .rise {
+  animation: meridian-rise 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.meridian .cell {
+  animation: meridian-fade 0.8s ease both;
+  transition: background-color 0.3s;
+}
+.meridian .cell:hover {
+  background-color: #fff;
+}
+.meridian .cell .arr {
+  display: inline-block;
+  opacity: 0;
+  transition:
+    transform 0.3s,
+    opacity 0.3s;
+}
+.meridian .cell:hover .arr,
+.meridian .cell:focus-visible .arr {
+  opacity: 1;
+  transform: translateX(4px);
+}
+.meridian .lift {
+  transition:
+    transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.5s;
+}
+.meridian .lift:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 30px 60px -24px rgb(0 0 0 / 0.22);
+}
+/* The rose and cards are drawn for a 900px stage; shrink the stage on phones. */
+.meridian .rose-stage {
+  transform-origin: top center;
+}
+@media (max-width: 640px) {
+  .meridian .rose-stage {
+    transform: scale(0.62);
+  }
+}
+@supports (animation-timeline: view()) {
+  .meridian .reveal {
+    animation: meridian-rise linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 25%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .meridian *,
+  .meridian .reveal {
+    animation: none !important;
+    transition: none !important;
   }
 }
