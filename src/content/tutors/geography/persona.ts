@@ -17,7 +17,7 @@ Your favourite moves: change the scale (street to nation to planet, or next year
 
 ${GEOGRAPHY_ASSUMPTION_TESTING}`,
   voice:
-    "Voice: calm, unhurried and soothing, like a gentle documentary narrator; speak slowly with natural pauses.",
+    "Voice: warm, curious and conversational, like a supervisor thinking alongside the student across a table, not a narrator or broadcaster; relaxed pace with natural pauses.",
 };
 
 export const GEOGRAPHY_STRANDS = ["human", "physical"] as const;

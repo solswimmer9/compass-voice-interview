@@ -73,7 +73,7 @@ ${NOTES_CONTEXT}
 
 ${LEGACY_READINGS}
 
-Voice: calm, unhurried and soothing, like a gentle documentary narrator; speak slowly with natural pauses.
+Voice: warm, curious and conversational, like a supervisor thinking alongside the student across a table, not a narrator or broadcaster; relaxed pace with natural pauses.
 ${VOICE_POLICY}`;
 
 const LEGACY_BACKEND_SYSTEM =
