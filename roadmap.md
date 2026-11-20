@@ -48,9 +48,9 @@
 
 ## First ad campaign (19 Nov 2026)
 - [x] Save goal (start a free interview) and audiences (applicants, parents, teachers/tutors) to the campaign plan
-- [ ] Settle locations and daily budget — waits for Solomon
-- [ ] Research offer, then pick Google vs Facebook/Instagram
+- [x] Locations: United Kingdom, English (default after question skipped)
+- [x] Campaign put on hold: Solomon doesn't want to run ads right now (budget, research and channel choice resume only if he asks)
 
 ## Site
 - [x] Remove Solomon's name from the footer on every page
-- [ ] Remove or keep Solomon's name on the policy pages — waits for Solomon's choice (UK selling rules expect the seller's name)
+- [x] Keep Solomon's name on the policy pages (default after question skipped; UK selling rules expect the seller's name)
