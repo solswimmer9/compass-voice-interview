@@ -1,18 +1,19 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import {
   hasChosenSubject,
   parseInterviewChoice,
   takeChoiceAfterSignIn,
 } from "@/lib/interview-choice";
-import { FlippingWord } from "@/components/FlippingWord";
-import { SiteNav } from "@/components/SiteNav";
-import { SiteFooter } from "@/components/SiteFooter";
+import { useAuth } from "@/components/AuthProvider";
 import { INTERVIEW_MINUTES, OBJECT_REVEAL_MINUTES } from "@/lib/limits";
 import { SUBJECTS } from "@/lib/subjects";
 import { useAccountSnapshot } from "@/hooks/useAccountSnapshot";
-
-const HEADLINE_WORDS = ["democratise", "open up", "demystify", "widen access to"];
+import graduate from "@/assets/home/graduate.webp";
+import blackboard from "@/assets/home/blackboard.webp";
+import reader from "@/assets/home/reader.webp";
+import writer from "@/assets/home/writer.webp";
+import caps from "@/assets/home/caps.webp";
 
 export const Route = createFileRoute("/")({
   // The interview used to live on this page (/?tutor=ppe&start=true, /?reading=...). Old links
@@ -26,13 +27,13 @@ export const Route = createFileRoute("/")({
   },
   head: () => ({
     meta: [
-      { title: "We are here to democratise Oxbridge" },
+      { title: "Compass · Education, grounded in context" },
       {
         name: "description",
         content:
           "Practise your Oxbridge interview out loud with an AI tutor who challenges your reasoning like a real interviewer.",
       },
-      { property: "og:title", content: "We are here to democratise Oxbridge" },
+      { property: "og:title", content: "Compass · Education, grounded in context" },
       {
         property: "og:description",
         content:
@@ -45,74 +46,139 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-function WordSculpture() {
-  // Heavy vector lettering: charcoal-to-white-to-silver fill, a duplicate offset downward for
-  // extrusion, a fine white upper-edge highlight and a restrained pale-cyan rim light.
-  const text = {
-    x: "50%",
-    y: "74%",
-    textAnchor: "middle" as const,
-    fontFamily: "var(--font-display)",
-    fontWeight: 800,
-    fontSize: 330,
-    letterSpacing: -14,
-  };
+const serif = "font-instrument font-normal";
+const mono = "font-jbmono";
+const hairline = "border-[#d6d6d2]";
+
+/** The Meridian rose: nested squares, each a little smaller and more turned, breathing in a
+ * wave while the whole set turns slowly. Decoration only. */
+function Rose() {
+  const squares = Array.from({ length: 26 }, (_, i) => ({
+    "--w": `${560 - i * 18}px`,
+    "--r": `${i * 7}deg`,
+    animationDelay: `${(-i * 0.22).toFixed(2)}s`,
+  }));
   return (
-    <svg viewBox="0 0 1200 400" aria-hidden="true" className="absolute inset-x-0 top-0 w-full">
-      <defs>
-        <linearGradient id="sculpture-metal" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#3a3a3d" />
-          <stop offset="0.38" stopColor="#ffffff" />
-          <stop offset="0.7" stopColor="#c9ccd1" />
-          <stop offset="1" stopColor="#6e6e73" />
-        </linearGradient>
-        <filter id="rim" x="-10%" y="-10%" width="120%" height="120%">
-          <feGaussianBlur stdDeviation="9" />
-        </filter>
-      </defs>
-      <text {...text} fill="#7fd6ff" opacity="0.5" filter="url(#rim)">
-        TALK
-      </text>
-      <text {...text} dy="14" fill="#1d1d1f">
-        TALK
-      </text>
-      <text {...text} className="sculpture-letters">
-        TALK
-      </text>
-      <text {...text} fill="none" stroke="#fff" strokeOpacity="0.7" strokeWidth="1.2">
-        TALK
-      </text>
-    </svg>
+    <div aria-hidden="true" className="rose-turn absolute inset-0">
+      {squares.map((style, i) => (
+        <div key={i} className="rose-sq" style={style as CSSProperties} />
+      ))}
+    </div>
   );
 }
 
-/** One isolated interface plane: the live caption as the tutor speaks. */
-function InterfacePlane() {
-  const bars = [14, 28, 44, 30, 56, 38, 22, 48, 32, 18, 40, 26];
+function SketchCard({
+  src,
+  alt,
+  className,
+  bob,
+  height,
+}: {
+  src: string;
+  alt: string;
+  className: string;
+  bob: string;
+  height: number;
+}) {
   return (
-    <div
-      className="absolute bottom-0 left-1/2 z-10 w-[min(440px,86vw)] -translate-x-1/2 rounded-[28px] border border-white/10 bg-[#161617]/90 p-8 shadow-[0_40px_120px_rgba(41,151,255,0.18)] backdrop-blur-xl"
-      aria-hidden="true"
-    >
-      <div className="flex items-center justify-between text-[14px] text-[#86868b]">
-        <span>Prof Matt</span>
-        <span className="flex items-center gap-2">
-          <span className="live-pulse size-2 rounded-full bg-[#2997ff]" />
-          Live
-        </span>
+    <div className={className}>
+      <div
+        className={`${bob} rounded-xl bg-white p-2.5 shadow-[0_24px_50px_-24px_rgba(0,0,0,0.35)]`}
+      >
+        <img
+          src={src}
+          alt={alt}
+          style={{ height }}
+          className="block w-full rounded-md object-cover grayscale"
+        />
       </div>
-      <p className="mt-6 text-[21px] font-semibold leading-[1.3] tracking-[0.011em] text-[#f5f5f7]">
-        Why would a fair price be one the buyer would{" "}
-        <span className="text-[#86868b]">also choose?</span>
-      </p>
-      <div className="mt-8 flex h-14 items-end gap-1.5">
-        {bars.map((h, i) => (
-          <span
-            key={i}
-            style={{ height: h }}
-            className="w-full rounded-full bg-gradient-to-t from-[#0071e3] to-[#9fd8ff]"
-          />
-        ))}
+    </div>
+  );
+}
+
+const STEPS = [
+  {
+    n: "01",
+    title: "Pick a subject",
+    body: "PPE with Prof Matt, or Geography with Dr River.",
+    img: writer,
+    alt: "Sketch of a student writing",
+    blend: true,
+  },
+  {
+    n: "02",
+    title: "Talk it through",
+    body: `Up to ${INTERVIEW_MINUTES} minutes, out loud, with a chart to reason about around minute ${OBJECT_REVEAL_MINUTES}.`,
+    img: blackboard,
+    alt: "Sketch of a student working an equation at a blackboard",
+    blend: false,
+  },
+  {
+    n: "03",
+    title: "Read your letter",
+    body: "Your tutor writes back on where your reasoning held and where it slipped.",
+    img: reader,
+    alt: "Sketch of a student reading",
+    blend: false,
+  },
+];
+
+const FAQS = [
+  {
+    q: "Is Compass part of Oxford or Cambridge?",
+    a: "No. Compass was built by Cambridge students but is not affiliated with either university. The tutors are AI, and AI can make mistakes.",
+  },
+  {
+    q: "How long is an interview?",
+    a: `Up to ${INTERVIEW_MINUTES} minutes, spoken out loud in your browser. Around minute ${OBJECT_REVEAL_MINUTES} your tutor puts a chart in front of you to reason about.`,
+  },
+  {
+    q: "What do I get afterwards?",
+    a: "A letter from your tutor on where your reasoning held and where it slipped, quoting what you actually said.",
+  },
+  {
+    q: "Can my school buy places for students?",
+    a: "Yes. A school buys a bundle and each student claims a place with their own account. Teachers do not see students' reports.",
+  },
+];
+
+function Faq() {
+  const [open, setOpen] = useState(0);
+  return (
+    <div className="max-w-[880px]">
+      <h2 id="questions" className={`reveal ${serif} mb-8 text-[clamp(36px,4vw,56px)]`}>
+        Questions
+      </h2>
+      <div className="border-t border-[#cfcfcb]">
+        {FAQS.map((f, i) => {
+          const isOpen = open === i;
+          return (
+            <div key={f.q} className="border-b border-[#cfcfcb]">
+              <h3>
+                <button
+                  type="button"
+                  aria-expanded={isOpen}
+                  aria-controls={`faq-${i}`}
+                  onClick={() => setOpen(isOpen ? -1 : i)}
+                  className={`${serif} flex w-full items-center justify-between gap-5 px-2 py-5 text-left text-[26px] text-[#161616] transition-colors hover:bg-white`}
+                >
+                  {f.q}
+                  <span aria-hidden="true" className={`${mono} text-base text-[#5a5a57]`}>
+                    {isOpen ? "−" : "+"}
+                  </span>
+                </button>
+              </h3>
+              {isOpen && (
+                <p
+                  id={`faq-${i}`}
+                  className="max-w-[680px] px-2 pb-6 text-[15px] leading-[1.7] text-[#4a4a48]"
+                >
+                  {f.a}
+                </p>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -120,6 +186,7 @@ function InterfacePlane() {
 
 function Home() {
   const account = useAccountSnapshot();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   // Back from a sign-in that left the site (Google, email confirmation) with a subject chosen:
@@ -133,171 +200,221 @@ function Home() {
     }
   }, [signedIn, navigate]);
 
+  const cell = `cell border-b border-r ${hairline} px-[18px] py-6 text-sm`;
+
   return (
-    <div className="surface-stage min-h-[100svh]">
-      {/* 1. Sculptural opening: object stage, then identity and action anchored below. */}
-      <header className="relative flex min-h-[100svh] flex-col overflow-hidden">
-        <SiteNav />
-        <div className="relative mx-auto mt-10 min-h-[420px] w-full max-w-[1200px] flex-1 sm:min-h-0 sm:flex-none sm:aspect-[1200/520]">
-          <WordSculpture />
-          <InterfacePlane />
-        </div>
-        <div className="relative z-10 mx-auto flex w-full max-w-[1260px] flex-col items-start justify-between gap-8 px-6 pb-14 sm:px-[90px] lg:flex-row lg:items-end">
-          <div>
-            <p className="text-[32px] font-semibold leading-[1.125] tracking-[0.004em]">Compass</p>
-            <h1
-              aria-label="We are here to democratise Oxbridge"
-              className="t-promise mt-2 max-w-[11ch] sm:max-w-none"
+    <div className="meridian min-h-[100svh] bg-[#ededeb] font-tight text-[#161616]">
+      <div className="mx-auto max-w-[1320px] px-3 pt-4 sm:px-6">
+        {/* 1. The framed opening: nav, the rose with the sketch cards, the promise. */}
+        <div className="overflow-hidden rounded-[14px] bg-[#f7f7f5]">
+          <header className="flex flex-wrap items-center justify-between gap-5 px-6 py-[18px] text-[13px] sm:px-8">
+            <Link to="/" className={`${serif} text-[26px] italic`} aria-label="Compass home">
+              Compass
+            </Link>
+            <nav aria-label="Main" className="flex flex-wrap gap-x-7 gap-y-2">
+              <Link to="/subjects" className="hover:underline">
+                Subjects
+              </Link>
+              <Link to="/readings" search={{ subject: "ppe" }} className="hover:underline">
+                Readings
+              </Link>
+              <Link to="/schools" className="hover:underline">
+                For schools
+              </Link>
+              <Link to="/pricing" className="hover:underline">
+                Pricing
+              </Link>
+              {user ? (
+                <Link to="/account" className="hover:underline">
+                  Your account
+                </Link>
+              ) : (
+                <Link to="/auth" className="hover:underline">
+                  Sign in
+                </Link>
+              )}
+            </nav>
+            <Link
+              to="/subjects"
+              className="rounded bg-[#161616] px-4 py-2.5 text-[#f7f7f5] transition-colors hover:bg-[#3a3a3a]"
             >
-              Say it out loud.
-            </h1>
-            <p className="mt-3 text-[17px] text-[#86868b]">
-              We are here to <FlippingWord words={HEADLINE_WORDS} /> Oxbridge.
-            </p>
-          </div>
-          <div className="flex items-center gap-5 rounded-[28px] bg-[#161617] p-5">
-            <div className="text-[14px] leading-[1.286] tracking-[-0.016em]">
-              <p className="font-semibold">Up to {INTERVIEW_MINUTES} minutes</p>
-              <p className="text-[#86868b]">Voice interview and a feedback letter</p>
-            </div>
-            <Link to="/subjects" className="btn-pill">
               Start practising
             </Link>
-          </div>
-        </div>
-      </header>
+          </header>
 
-      {/* 2. Chapter statement. */}
-      <section className="mx-auto max-w-[840px] px-6 py-24 text-center sm:py-36">
-        <p className="t-eyebrow text-[#86868b]">The interview</p>
-        <h2 className="t-display mt-5">Think out loud. Be heard.</h2>
-        <p className="t-lead mt-6 text-[#86868b]">
-          Built by Cambridge students for applicants, based on real context.{" "}
-          <span className="text-[#f5f5f7]">
-            Practise with an AI tutor who challenges your reasoning like a real interviewer.
-          </span>
-        </p>
-        <div className="mt-8 flex items-center justify-center gap-6">
-          <Link to="/subjects" className="btn-pill">
-            Pick a subject
-          </Link>
-          <Link to="/readings" search={{ subject: "ppe" }} className="text-action">
-            Start with a reading ›
-          </Link>
-        </div>
-      </section>
-
-      {/* 3. Material reveal: one oversized detail, lit from the dark. */}
-      <section className="surface-charcoal py-24 sm:py-36">
-        <div className="mx-auto max-w-[1260px] px-6 sm:px-[90px]">
-          <p className="t-eyebrow text-[#86868b]">Your reasoning</p>
-          <h2 className="gradient-sweep t-display mt-5 max-w-[14ch]">
-            Then a chart lands on the table.
-          </h2>
-          <p className="t-lead mt-6 max-w-[840px] text-[#86868b]">
-            Around minute {OBJECT_REVEAL_MINUTES}, your tutor puts a chart in front of you.{" "}
-            <span className="text-[#f5f5f7]">
-              Read it, reason about it, and defend what you see.
-            </span>
-          </p>
-          <div className="tile-black mt-16 border border-[#333336] p-8 sm:p-14">
-            <svg
-              viewBox="0 0 800 300"
-              role="img"
-              aria-label="A chart to reason about"
-              className="w-full"
+          <section className="px-4 pb-20 pt-2.5 text-center sm:px-8">
+            <div className="relative h-[350px] overflow-hidden sm:h-[560px]">
+              <div className="rose-stage absolute left-1/2 top-0 -ml-[450px] h-[560px] w-[900px]">
+                <Rose />
+                <SketchCard
+                  src={blackboard}
+                  alt="Sketch of a student working an equation on a blackboard"
+                  className="fan-l absolute left-1/2 top-[130px] -ml-[300px] w-[220px]"
+                  bob="bob-2"
+                  height={220}
+                />
+                <SketchCard
+                  src={reader}
+                  alt="Sketch of a student reading at a desk"
+                  className="fan-r absolute left-1/2 top-[130px] ml-[80px] w-[220px]"
+                  bob="bob-3"
+                  height={220}
+                />
+                <SketchCard
+                  src={graduate}
+                  alt="Sketch of a graduate in cap and gown"
+                  className="fan-c absolute left-1/2 top-[100px] z-[2] -ml-[125px] w-[250px]"
+                  bob="bob"
+                  height={270}
+                />
+              </div>
+            </div>
+            <h1
+              className={`rise ${serif} m-0 text-[clamp(44px,6.4vw,96px)] leading-[0.98] tracking-[-0.02em]`}
+              style={{ animationDelay: "0.5s" }}
             >
-              <defs>
-                <linearGradient id="line" x1="0" x2="1">
-                  <stop offset="0" stopColor="#9fd8ff" />
-                  <stop offset="1" stopColor="#0071e3" />
-                </linearGradient>
-              </defs>
-              {[60, 120, 180, 240].map((y) => (
-                <line key={y} x1="0" x2="800" y1={y} y2={y} stroke="#333336" />
-              ))}
-              <path
-                d="M0 240 C120 230 180 200 260 190 S420 120 500 110 S680 40 800 30"
-                fill="none"
-                stroke="url(#line)"
-                strokeWidth="6"
-                strokeLinecap="round"
-              />
-              <circle cx="500" cy="110" r="10" fill="#fff" />
-              <circle cx="500" cy="110" r="22" fill="none" stroke="#2997ff" strokeOpacity="0.6" />
-            </svg>
-          </div>
-        </div>
-      </section>
-
-      {/* 4. Proof: one claim per tile, figures alternating with a fragment. */}
-      <section className="py-24 sm:py-36">
-        <div className="mx-auto max-w-[1260px] px-6 sm:px-[90px]">
-          <div className="rounded-[28px] bg-[#1d1d1f] px-6 pb-16 pt-12 sm:px-10 sm:pb-[120px] sm:pt-[72px]">
-            <h2 className="text-[40px] font-semibold leading-[1.07] tracking-[-0.005em] sm:text-[56px]">
-              How it works.
-            </h2>
-            <ol className="mx-auto mt-12 grid max-w-[1050px] gap-5 sm:grid-cols-3">
-              {[
-                ["1", "Pick a subject.", "PPE with Prof Matt or Geography with Dr River."],
-                [
-                  "2",
-                  "Talk.",
-                  `Up to ${INTERVIEW_MINUTES} minutes, out loud, with a chart to reason about.`,
-                ],
-                [
-                  "3",
-                  "Get your letter.",
-                  "Your tutor writes back on where your reasoning held and where it slipped.",
-                ],
-              ].map(([n, title, body]) => (
-                <li
-                  key={n}
-                  className="tile-black flex min-h-[300px] flex-col items-center justify-center p-8 text-center"
-                >
-                  <span className="text-[48px] font-semibold leading-[1.083] tracking-[-0.003em]">
-                    {n}
-                  </span>
-                  <span className="mt-3 text-[17px] font-semibold">{title}</span>
-                  <span className="mt-1 text-[14px] leading-[1.43] text-[#86868b]">{body}</span>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. Light retail resolution: choose a subject. */}
-      <section className="surface-light on-light py-24 sm:py-36">
-        <div className="mx-auto max-w-[1260px] px-6 sm:px-[90px]">
-          <div className="flex items-baseline justify-between gap-4">
-            <h2 className="t-heading">Choose your tutor.</h2>
-            <Link to="/pricing" className="text-action">
-              See pricing ›
-            </Link>
-          </div>
-          <ul className="mt-12 grid gap-5 sm:grid-cols-2">
-            {SUBJECTS.map((s) => (
-              <li key={s.id} className="card-white flex min-h-[380px] flex-col p-8">
-                <span className="text-[14px] font-semibold text-[#6e6e73]">with {s.tutor}</span>
-                <span className="t-card-heading mt-2">{s.name}</span>
-                <span className="mt-3 flex-1 text-[17px] leading-[1.235] tracking-[-0.022em] text-[#6e6e73]">
-                  {s.line}
-                </span>
+              Education, grounded in context.
+              <br />
+              <em>Potential, released.</em>
+            </h1>
+            <p
+              className="rise mx-auto mt-5 max-w-[520px] text-base leading-relaxed text-[#4a4a48]"
+              style={{ animationDelay: "0.65s" }}
+            >
+              Spoken Oxbridge interview practice, built by Cambridge students. Talk for up to{" "}
+              {INTERVIEW_MINUTES} minutes with a tutor who follows your reasoning, then read their
+              letter.
+            </p>
+            <div
+              className={`mx-auto mt-11 grid max-w-[720px] grid-cols-1 border-l border-t text-left sm:grid-cols-3 ${hairline}`}
+            >
+              {SUBJECTS.map((s, i) => (
                 <Link
+                  key={s.id}
                   to="/interview"
                   search={{ tutor: s.id, start: true as const }}
-                  className="btn-pill mt-8 self-start"
+                  className={`${cell} flex justify-between`}
+                  style={{ animationDelay: `${0.7 + i * 0.08}s` }}
                 >
-                  Start interview
+                  <span>
+                    {s.name} · {s.tutor}
+                  </span>
+                  <span className="arr" aria-hidden="true">
+                    →
+                  </span>
                 </Link>
+              ))}
+              <Link
+                to="/readings"
+                search={{ subject: "ppe" }}
+                className={`${cell} flex justify-between`}
+                style={{ animationDelay: "0.86s" }}
+              >
+                <span>Readings</span>
+                <span className="arr" aria-hidden="true">
+                  →
+                </span>
+              </Link>
+              {[
+                `${INTERVIEW_MINUTES} MIN · SPOKEN`,
+                `CHART · MINUTE ${OBJECT_REVEAL_MINUTES}`,
+                "LETTER · AFTER",
+              ].map((label, i) => (
+                <div
+                  key={label}
+                  className={`${cell} ${mono} text-xs text-[#4a4a48]`}
+                  style={{ animationDelay: `${0.94 + i * 0.08}s` }}
+                >
+                  {label}
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        {/* 2. How it works: three sketch cards. */}
+        <section className="px-2 pb-10 pt-28">
+          <p className={`${mono} text-xs text-[#5a5a57]`}>HOW IT WORKS</p>
+          <h2
+            className={`reveal ${serif} mb-14 mt-3.5 max-w-[760px] text-[clamp(38px,4.6vw,66px)] leading-none tracking-[-0.02em]`}
+          >
+            {INTERVIEW_MINUTES} minutes, out loud, with someone who will not let a lazy answer pass.
+          </h2>
+          <ol className="grid gap-6 sm:grid-cols-3">
+            {STEPS.map((step) => (
+              <li key={step.n} className="lift reveal rounded-[14px] bg-[#f7f7f5] p-3.5 pb-7">
+                <img
+                  src={step.img}
+                  alt={step.alt}
+                  className={`block h-[250px] w-full rounded-lg object-cover grayscale ${step.blend ? "mix-blend-multiply" : ""}`}
+                />
+                <p className={`${mono} mx-2.5 mb-1.5 mt-5 text-xs text-[#5a5a57]`}>{step.n}</p>
+                <h3 className={`${serif} mx-2.5 text-[32px]`}>{step.title}</h3>
+                <p className="mx-2.5 mt-2 text-[15px] leading-relaxed text-[#4a4a48]">
+                  {step.body}
+                </p>
               </li>
             ))}
-          </ul>
-        </div>
-      </section>
+          </ol>
+        </section>
 
-      <SiteFooter />
+        {/* 3. The letter. */}
+        <section className="flex flex-wrap items-center gap-12 px-2 py-20">
+          <div className="reveal flex-[1_1_420px] rounded-[14px] bg-[#f7f7f5] p-6">
+            <img
+              src={caps}
+              alt="Sketch of graduates throwing their caps into the air"
+              className="block w-full mix-blend-multiply grayscale"
+            />
+          </div>
+          <div className="flex-[1_1_420px]">
+            <h2
+              className={`reveal ${serif} text-[clamp(40px,4.6vw,68px)] leading-none tracking-[-0.02em]`}
+            >
+              The interview is the practice.
+              <br />
+              <em>The letter is the lesson.</em>
+            </h2>
+            <Link
+              to="/subjects"
+              className="mt-9 inline-block rounded bg-[#161616] px-[22px] py-3.5 text-sm text-[#f7f7f5] transition-colors hover:bg-[#3a3a3a]"
+            >
+              Begin an interview
+            </Link>
+          </div>
+        </section>
+
+        {/* 4. Directory and questions. */}
+        <section className="px-2 pb-28 pt-20">
+          <div className="mb-24 grid border-l border-t border-[#cfcfcb] sm:grid-cols-2 lg:grid-cols-4">
+            {(
+              [
+                { label: "MEET THE TUTORS", title: "Prof Matt & Dr River", to: "/subjects" },
+                { label: "SUBJECTS", title: "PPE & Geography", to: "/subjects" },
+                { label: "APPLICANTS", title: "Pricing and access", to: "/pricing" },
+                { label: "SCHOOLS", title: "Places for your sixth form", to: "/schools" },
+              ] as const
+            ).map((tile) => (
+              <Link
+                key={tile.label}
+                to={tile.to}
+                className="cell block border-b border-r border-[#cfcfcb] px-[22px] pb-8 pt-7"
+              >
+                <span className={`${mono} block text-[11px] text-[#5a5a57]`}>{tile.label}</span>
+                <span className={`${serif} mt-2 block text-[30px]`}>{tile.title}</span>
+              </Link>
+            ))}
+          </div>
+          <Faq />
+        </section>
+
+        <footer className="flex flex-wrap items-center justify-between gap-5 border-t border-[#cfcfcb] px-2 pb-10 pt-7 text-xs text-[#4a4a48]">
+          <span className={`${serif} text-[22px] italic text-[#161616]`}>Compass</span>
+          <span className={mono}>
+            NOT AFFILIATED WITH OXFORD OR CAMBRIDGE · AI CAN MAKE MISTAKES
+          </span>
+        </footer>
+      </div>
     </div>
   );
 }
