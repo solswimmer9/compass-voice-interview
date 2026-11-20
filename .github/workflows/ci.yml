@@ -14,4 +14,6 @@ jobs:
       - run: bunx tsc --noEmit
       - run: bunx eslint .
       - run: bunx vitest run
+      # Checks the whole eval pipeline with canned replies; real runs need the gateway key.
+      - run: bun run evals --dry-run
       - run: bun run build

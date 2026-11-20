@@ -11,7 +11,7 @@ import {
 
 export const PPE: Tutor = {
   id: "ppe",
-  version: "0.4.0",
+  version: "0.5.0",
   pedagogyVersion: PEDAGOGY_VERSION,
   persona: PPE_PERSONA,
   strands: PPE_STRANDS,

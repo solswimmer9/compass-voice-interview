@@ -12,6 +12,7 @@ import {
   REASONING_GUIDE,
 } from "@/lib/interview-briefing";
 import { READINGS } from "@/lib/readings";
+import { VOICE_POLICY } from "@/content/core";
 import { objectMidwaySection, selectObject } from "@/content/objects";
 import {
   bindLiveConnection,
@@ -22,8 +23,13 @@ import {
 const mocks = vi.hoisted(() => ({
   authenticate: vi.fn(),
   rpc: vi.fn(),
+  adminRpc: vi.fn(),
   connect: vi.fn(),
   streamText: vi.fn(),
+}));
+
+vi.mock("@/integrations/supabase/client.server", () => ({
+  supabaseAdmin: { rpc: mocks.adminRpc },
 }));
 
 vi.mock("@/lib/request-auth.server", () => ({
@@ -47,7 +53,7 @@ const config = {
   backendModel: "openai/gpt-6-astra",
 };
 
-// A verbatim copy of the fixed prompt in live-relay.server.ts on main (as of 097ad37, the no-filler wording).
+// A verbatim copy of the fixed prompt in live-relay.server.ts on main (no-filler wording, plus the shared follow-up and background-noise rules of 20 November 2026).
 // Students must keep getting exactly this.
 const LEGACY_READINGS = `PRACTICE READINGS
 The app lists these articles for students to read before an interview. When the interview opens on one of these readings, or the student says they have read one, spend the first 10 to 15 minutes on it, as some colleges do: check they understood it, then test its argument. Do not claim to have read the full article; work from what the student says and this summary. In a reading interview, raise your own thoughts on that article one at a time, as challenges rather than lectures. In any other interview, do not bring up these readings or thoughts unless the student does.
@@ -67,15 +73,8 @@ ${NOTES_CONTEXT}
 
 ${LEGACY_READINGS}
 
-Voice: calm, unhurried and soothing, like a gentle documentary narrator; speak slowly with natural pauses.
-Mannerisms: Sound like a real British academic in a supervision, not a presenter. Keep most turns to one or two short sentences. Open replies with varied natural bridges, for example "Right, but consider...", "Fair enough, though...", "Let's pause there for a second...", "Hang on, go back to...", "I wonder whether...". Never use the same bridge twice in a row, and sometimes use none.
-Pause policy: Students think aloud and often pause mid-thought. Treat a short silence, a trailing "um", "so..." or an unfinished sentence as thinking, not the end of their turn: wait and stay quiet. Respond only once they have clearly finished a point. If they go quiet for a long while, gently say something brief like "Take your time" or "Think aloud if it helps", then wait again. Never fill silence with a new question or an answer.
-No-filler rule: Never use vocalised fillers or stall phrases such as "hmmm", "let me think", "let me see", "give me a second", "um", "er" or "so...". Never narrate that you are thinking or deciding what to say. If you need a moment, stay silent rather than filling it with a sound.
-Interruption policy: Stop speaking and listen when the candidate interrupts.
-Delegation policy:
-Backend tools: A careful reasoning assistant that analyses the candidate's argument and suggests the sharpest follow-up challenge.
-Delegate to the backend when: The candidate gives a long or complex argument and you need a precise counter-argument, or they ask for detailed feedback on the interview.
-Do not delegate to the backend when: Greeting, asking the opening question, short follow-ups, hints, or clarifications. Wait for the backend result before presenting it.`;
+Voice: warm, curious and conversational, like a supervisor thinking alongside the student across a table, not a narrator or broadcaster; relaxed pace with natural pauses.
+${VOICE_POLICY}`;
 
 const LEGACY_BACKEND_SYSTEM =
   "You support a spoken Cambridge geography admissions interviewer. Transcripts may be incomplete or corrected; use the latest correction. " +
@@ -159,13 +158,16 @@ async function backendSystem(h: Harness): Promise<string> {
   return (mocks.streamText.mock.calls[0]?.[0] as { system: string }).system;
 }
 
+const STUDENT_ID = "8d0f7a2e-1c4b-4c55-9a43-2b8f1c6e0d11";
+
 function signIn(email: string | null) {
   mocks.authenticate.mockResolvedValue(
-    email === null ? null : { user: { email }, supabase: { rpc: mocks.rpc } },
+    email === null ? null : { user: { id: STUDENT_ID, email }, supabase: { rpc: mocks.rpc } },
   );
 }
 
 beforeEach(() => {
+  mocks.adminRpc.mockResolvedValue({ data: true, error: null });
   vi.clearAllMocks();
   vi.spyOn(console, "log").mockImplementation(() => {});
   signIn("student@example.com");
@@ -282,7 +284,21 @@ describe("Dr River on topic cards in the live relay", () => {
       expect(h.events).toContainEqual({ type: "app.interview.started", interviewId });
       if (turn === 0) expect(await backendSystem(h)).toBe(LEGACY_BACKEND_SYSTEM);
     }
-    expect(console.log).not.toHaveBeenCalled();
+    // Students get no card session. The only log line is the run manifest, which records the
+    // fixed briefing by version and hash and carries nothing personal.
+    const lines = vi.mocked(console.log).mock.calls.map(([line]) => JSON.parse(String(line)));
+    expect(lines.map(({ event }) => event)).not.toContain("interview.session");
+    expect(lines.length).toBeGreaterThan(0);
+    for (const line of lines) {
+      expect(line).toMatchObject({
+        event: "interview.manifest",
+        interviewId,
+        pack: { id: "geography", version: "fixed-briefing" },
+        cardIds: [],
+        steering: false,
+      });
+      expect(line.promptHash).toMatch(/^[0-9a-f]{64}$/);
+    }
   });
 
   it("keeps a student's reading interview on today's exact prompt and greeting", async () => {
@@ -335,8 +351,9 @@ describe("Dr River on topic cards in the live relay", () => {
     mocks.connect.mockRejectedValue(new Error("Voice startup failed for this test"));
     h.start();
     await vi.waitFor(() =>
-      expect(mocks.rpc).toHaveBeenCalledWith("release_interview_credit", {
+      expect(mocks.adminRpc).toHaveBeenCalledWith("release_interview_credit", {
         p_interview_id: interviewId,
+        p_user_id: STUDENT_ID,
       }),
     );
   });
@@ -345,7 +362,8 @@ describe("Dr River on topic cards in the live relay", () => {
     vi.stubEnv("PREVIEW_TESTER_EMAILS", TESTER);
     vi.stubEnv("NODE_ENV", "development");
     vi.stubEnv("MODE", "development");
-    for (const environment of ["sandbox", "live"]) {
+    // Test mode is refused outright for students, so only the live environment starts.
+    for (const environment of ["live"]) {
       vi.clearAllMocks();
       const h = await startAndGreet({
         environment,

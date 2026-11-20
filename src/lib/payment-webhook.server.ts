@@ -60,12 +60,14 @@ async function revokeForCharge(
     console.warn("No checkout session found for refunded/disputed payment");
     return;
   }
+  // revoke_purchase records the refund/dispute even when the purchase is not recorded yet
+  // (Stripe can deliver events out of order); the purchase is then saved already revoked.
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { error } = await supabaseAdmin
-    .from("purchases")
-    .update({ interviews_remaining: 0, status, updated_at: new Date().toISOString() })
-    .eq("paddle_transaction_id", sessionId)
-    .eq("environment", env);
+  const { error } = await supabaseAdmin.rpc("revoke_purchase", {
+    p_session_id: sessionId,
+    p_environment: env,
+    p_status: status,
+  });
   if (error) throw new Error(`Could not revoke purchase: ${error.message}`);
 }
 

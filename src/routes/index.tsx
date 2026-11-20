@@ -1,11 +1,11 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState } from "react";
 import {
   hasChosenSubject,
   parseInterviewChoice,
   takeChoiceAfterSignIn,
 } from "@/lib/interview-choice";
-import { useAuth } from "@/components/AuthProvider";
+import { MeridianPage, Rose, mono, serif } from "@/components/meridian/MeridianFrame";
 import { INTERVIEW_MINUTES, OBJECT_REVEAL_MINUTES } from "@/lib/limits";
 import { SUBJECTS } from "@/lib/subjects";
 import { useAccountSnapshot } from "@/hooks/useAccountSnapshot";
@@ -46,26 +46,7 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-const serif = "font-instrument font-normal";
-const mono = "font-jbmono";
 const hairline = "border-[#d6d6d2]";
-
-/** The Meridian rose: nested squares, each a little smaller and more turned, breathing in a
- * wave while the whole set turns slowly. Decoration only. */
-function Rose() {
-  const squares = Array.from({ length: 26 }, (_, i) => ({
-    "--w": `${560 - i * 18}px`,
-    "--r": `${i * 7}deg`,
-    animationDelay: `${(-i * 0.22).toFixed(2)}s`,
-  }));
-  return (
-    <div aria-hidden="true" className="rose-turn absolute inset-0">
-      {squares.map((style, i) => (
-        <div key={i} className="rose-sq" style={style as CSSProperties} />
-      ))}
-    </div>
-  );
-}
 
 function SketchCard({
   src,
@@ -186,7 +167,6 @@ function Faq() {
 
 function Home() {
   const account = useAccountSnapshot();
-  const { user } = useAuth();
   const navigate = useNavigate();
 
   // Back from a sign-in that left the site (Google, email confirmation) with a subject chosen:
@@ -203,45 +183,9 @@ function Home() {
   const cell = `cell border-b border-r ${hairline} px-[18px] py-6 text-sm`;
 
   return (
-    <div className="meridian min-h-[100svh] bg-[#ededeb] font-tight text-[#161616]">
-      <div className="mx-auto max-w-[1320px] px-3 pt-4 sm:px-6">
-        {/* 1. The framed opening: nav, the rose with the sketch cards, the promise. */}
-        <div className="overflow-hidden rounded-[14px] bg-[#f7f7f5]">
-          <header className="flex flex-wrap items-center justify-between gap-5 px-6 py-[18px] text-[13px] sm:px-8">
-            <Link to="/" className={`${serif} text-[26px] italic`} aria-label="Compass home">
-              Compass
-            </Link>
-            <nav aria-label="Main" className="flex flex-wrap gap-x-7 gap-y-2">
-              <Link to="/subjects" className="hover:underline">
-                Subjects
-              </Link>
-              <Link to="/readings" search={{ subject: "ppe" }} className="hover:underline">
-                Readings
-              </Link>
-              <Link to="/schools" className="hover:underline">
-                For schools
-              </Link>
-              <Link to="/pricing" className="hover:underline">
-                Pricing
-              </Link>
-              {user ? (
-                <Link to="/account" className="hover:underline">
-                  Your account
-                </Link>
-              ) : (
-                <Link to="/auth" className="hover:underline">
-                  Sign in
-                </Link>
-              )}
-            </nav>
-            <Link
-              to="/subjects"
-              className="rounded bg-[#161616] px-4 py-2.5 text-[#f7f7f5] transition-colors hover:bg-[#3a3a3a]"
-            >
-              Start practising
-            </Link>
-          </header>
-
+    <MeridianPage
+      framed={
+        <>
           <section className="px-4 pb-20 pt-2.5 text-center sm:px-8">
             <div className="relative h-[350px] overflow-hidden sm:h-[560px]">
               <div className="rose-stage absolute left-1/2 top-0 -ml-[450px] h-[560px] w-[900px]">
@@ -330,91 +274,82 @@ function Home() {
               ))}
             </div>
           </section>
+        </>
+      }
+    >
+      {/* 2. How it works: three sketch cards. */}
+      <section className="px-2 pb-10 pt-28">
+        <p className={`${mono} text-xs text-[#5a5a57]`}>HOW IT WORKS</p>
+        <h2
+          className={`reveal ${serif} mb-14 mt-3.5 max-w-[760px] text-[clamp(38px,4.6vw,66px)] leading-none tracking-[-0.02em]`}
+        >
+          {INTERVIEW_MINUTES} minutes, out loud, with someone who will not let a lazy answer pass.
+        </h2>
+        <ol className="grid gap-6 sm:grid-cols-3">
+          {STEPS.map((step) => (
+            <li key={step.n} className="lift reveal rounded-[14px] bg-[#f7f7f5] p-3.5 pb-7">
+              <img
+                src={step.img}
+                alt={step.alt}
+                className={`block h-[250px] w-full rounded-lg object-cover grayscale ${step.blend ? "mix-blend-multiply" : ""}`}
+              />
+              <p className={`${mono} mx-2.5 mb-1.5 mt-5 text-xs text-[#5a5a57]`}>{step.n}</p>
+              <h3 className={`${serif} mx-2.5 text-[32px]`}>{step.title}</h3>
+              <p className="mx-2.5 mt-2 text-[15px] leading-relaxed text-[#4a4a48]">{step.body}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {/* 3. The letter. */}
+      <section className="flex flex-wrap items-center gap-12 px-2 py-20">
+        <div className="reveal flex-[1_1_420px] rounded-[14px] bg-[#f7f7f5] p-6">
+          <img
+            src={caps}
+            alt="Sketch of graduates throwing their caps into the air"
+            className="block w-full mix-blend-multiply grayscale"
+          />
         </div>
-
-        {/* 2. How it works: three sketch cards. */}
-        <section className="px-2 pb-10 pt-28">
-          <p className={`${mono} text-xs text-[#5a5a57]`}>HOW IT WORKS</p>
+        <div className="flex-[1_1_420px]">
           <h2
-            className={`reveal ${serif} mb-14 mt-3.5 max-w-[760px] text-[clamp(38px,4.6vw,66px)] leading-none tracking-[-0.02em]`}
+            className={`reveal ${serif} text-[clamp(40px,4.6vw,68px)] leading-none tracking-[-0.02em]`}
           >
-            {INTERVIEW_MINUTES} minutes, out loud, with someone who will not let a lazy answer pass.
+            The interview is the practice.
+            <br />
+            <em>The letter is the lesson.</em>
           </h2>
-          <ol className="grid gap-6 sm:grid-cols-3">
-            {STEPS.map((step) => (
-              <li key={step.n} className="lift reveal rounded-[14px] bg-[#f7f7f5] p-3.5 pb-7">
-                <img
-                  src={step.img}
-                  alt={step.alt}
-                  className={`block h-[250px] w-full rounded-lg object-cover grayscale ${step.blend ? "mix-blend-multiply" : ""}`}
-                />
-                <p className={`${mono} mx-2.5 mb-1.5 mt-5 text-xs text-[#5a5a57]`}>{step.n}</p>
-                <h3 className={`${serif} mx-2.5 text-[32px]`}>{step.title}</h3>
-                <p className="mx-2.5 mt-2 text-[15px] leading-relaxed text-[#4a4a48]">
-                  {step.body}
-                </p>
-              </li>
-            ))}
-          </ol>
-        </section>
+          <Link
+            to="/subjects"
+            className="mt-9 inline-block rounded bg-[#161616] px-[22px] py-3.5 text-sm text-[#f7f7f5] transition-colors hover:bg-[#3a3a3a]"
+          >
+            Begin an interview
+          </Link>
+        </div>
+      </section>
 
-        {/* 3. The letter. */}
-        <section className="flex flex-wrap items-center gap-12 px-2 py-20">
-          <div className="reveal flex-[1_1_420px] rounded-[14px] bg-[#f7f7f5] p-6">
-            <img
-              src={caps}
-              alt="Sketch of graduates throwing their caps into the air"
-              className="block w-full mix-blend-multiply grayscale"
-            />
-          </div>
-          <div className="flex-[1_1_420px]">
-            <h2
-              className={`reveal ${serif} text-[clamp(40px,4.6vw,68px)] leading-none tracking-[-0.02em]`}
-            >
-              The interview is the practice.
-              <br />
-              <em>The letter is the lesson.</em>
-            </h2>
+      {/* 4. Directory and questions. */}
+      <section className="px-2 pb-28 pt-20">
+        <div className="mb-24 grid border-l border-t border-[#cfcfcb] sm:grid-cols-2 lg:grid-cols-4">
+          {(
+            [
+              { label: "MEET THE TUTORS", title: "Prof Matt & Dr River", to: "/subjects" },
+              { label: "SUBJECTS", title: "PPE & Geography", to: "/subjects" },
+              { label: "APPLICANTS", title: "Pricing and access", to: "/pricing" },
+              { label: "SCHOOLS", title: "Places for your sixth form", to: "/schools" },
+            ] as const
+          ).map((tile) => (
             <Link
-              to="/subjects"
-              className="mt-9 inline-block rounded bg-[#161616] px-[22px] py-3.5 text-sm text-[#f7f7f5] transition-colors hover:bg-[#3a3a3a]"
+              key={tile.label}
+              to={tile.to}
+              className="cell block border-b border-r border-[#cfcfcb] px-[22px] pb-8 pt-7"
             >
-              Begin an interview
+              <span className={`${mono} block text-[11px] text-[#5a5a57]`}>{tile.label}</span>
+              <span className={`${serif} mt-2 block text-[30px]`}>{tile.title}</span>
             </Link>
-          </div>
-        </section>
-
-        {/* 4. Directory and questions. */}
-        <section className="px-2 pb-28 pt-20">
-          <div className="mb-24 grid border-l border-t border-[#cfcfcb] sm:grid-cols-2 lg:grid-cols-4">
-            {(
-              [
-                { label: "MEET THE TUTORS", title: "Prof Matt & Dr River", to: "/subjects" },
-                { label: "SUBJECTS", title: "PPE & Geography", to: "/subjects" },
-                { label: "APPLICANTS", title: "Pricing and access", to: "/pricing" },
-                { label: "SCHOOLS", title: "Places for your sixth form", to: "/schools" },
-              ] as const
-            ).map((tile) => (
-              <Link
-                key={tile.label}
-                to={tile.to}
-                className="cell block border-b border-r border-[#cfcfcb] px-[22px] pb-8 pt-7"
-              >
-                <span className={`${mono} block text-[11px] text-[#5a5a57]`}>{tile.label}</span>
-                <span className={`${serif} mt-2 block text-[30px]`}>{tile.title}</span>
-              </Link>
-            ))}
-          </div>
-          <Faq />
-        </section>
-
-        <footer className="flex flex-wrap items-center justify-between gap-5 border-t border-[#cfcfcb] px-2 pb-10 pt-7 text-xs text-[#4a4a48]">
-          <span className={`${serif} text-[22px] italic text-[#161616]`}>Compass</span>
-          <span className={mono}>
-            NOT AFFILIATED WITH OXFORD OR CAMBRIDGE · AI CAN MAKE MISTAKES
-          </span>
-        </footer>
-      </div>
-    </div>
+          ))}
+        </div>
+        <Faq />
+      </section>
+    </MeridianPage>
   );
 }

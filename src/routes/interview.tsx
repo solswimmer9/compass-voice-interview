@@ -14,9 +14,10 @@ import { WaitingRoom } from "@/components/WaitingRoom";
 import { tutorKey } from "@/lib/tutor-theme";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import { INTERVIEW_MINUTES } from "@/lib/limits";
+import { GUEST_INTERVIEWS } from "@/lib/offer";
 import { useAccountSnapshot } from "@/hooks/useAccountSnapshot";
 import { isPreviewBrowser } from "@/lib/preview";
-import { appendTranscriptFragment, type Line } from "@/lib/transcript";
+import { appendTranscriptFragment, buildResumeRecap, type Line } from "@/lib/transcript";
 import { saveFinishedInterview } from "@/lib/finished-interview";
 
 /** The waiting room stays up at least this long, so it reads as a moment, not a flicker. */
@@ -77,6 +78,7 @@ function ObjectCard({ object }: { object: TableObject }) {
 function InterviewRoom() {
   const [lines, setLines] = useState<Line[]>([]);
   const fragmentSequence = useRef(0);
+  const transcriptSegment = useRef(0);
   const [cardIds, setCardIds] = useState<string[]>([]);
   const [tableObject, setTableObject] = useState<TableObject | null>(null);
 
@@ -104,6 +106,8 @@ function InterviewRoom() {
       start: typeof event.start_ms === "number" ? event.start_ms : 0,
       end: typeof event.end_ms === "number" ? event.end_ms : 0,
       sequence: ++fragmentSequence.current,
+      // Each reconnect starts a new voice session whose timings restart from zero.
+      segment: transcriptSegment.current,
     };
     setLines((previous) => appendTranscriptFragment(previous, role, fragment));
   }, []);
@@ -148,13 +152,22 @@ function InterviewRoom() {
   );
 
   const [elapsed, setElapsed] = useState(0);
+  const endsAt = call.endsAt;
   useEffect(() => {
     if (call.status !== "connected") return;
     const startedAt = Date.now();
-    setElapsed(0);
-    const timer = setInterval(() => setElapsed(Math.floor((Date.now() - startedAt) / 1000)), 1000);
+    const limitSeconds = INTERVIEW_MINUTES * 60;
+    // Prefer the server's deadline, which also covers a resumed interview's time left.
+    const tick = () =>
+      setElapsed(
+        endsAt === null
+          ? Math.floor((Date.now() - startedAt) / 1000)
+          : limitSeconds - Math.ceil(Math.max(0, endsAt - Date.now()) / 1000),
+      );
+    tick();
+    const timer = setInterval(tick, 1000);
     return () => clearInterval(timer);
-  }, [call.status]);
+  }, [call.status, endsAt]);
   const clock = (seconds: number) =>
     `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
@@ -164,11 +177,39 @@ function InterviewRoom() {
     setCardIds([]);
     setTableObject(null);
     fragmentSequence.current = 0;
+    transcriptSegment.current = 0;
     startedRef.current = true;
     setWaitedEnough(false);
     if (waitTimer.current) clearTimeout(waitTimer.current);
     waitTimer.current = setTimeout(() => setWaitedEnough(true), MIN_WAIT_MS);
     call.start();
+  };
+
+  // Tester accounts (PREVIEW_TESTER_EMAILS, checked on the server) are never out of interviews.
+  const unlimited = preview || Boolean(account.data?.tester);
+  const outOfInterviews = !unlimited && account.data?.totalRemaining === 0;
+  // A guest who has used their free tries must sign in; anyone else with none left must buy more.
+  const guestUsedUp = !account.user && Boolean(account.guest) && outOfInterviews;
+  const authSearch = {
+    tutor: ppe ? ("ppe" as const) : ("geography" as const),
+    ...(objectMode ? { mode: "object" as const } : {}),
+  };
+
+  // Not signed in: start as a guest (an anonymous account), so the free tries need no sign-in.
+  // The database still enforces how many tries a guest gets. If guest sessions are unavailable,
+  // fall back to the sign-in page as before.
+  const [startingGuest, setStartingGuest] = useState(false);
+  const startInterview = async () => {
+    if (!account.user && !account.guest) {
+      setStartingGuest(true);
+      const { error } = await supabase.auth.signInAnonymously();
+      setStartingGuest(false);
+      if (error) {
+        void navigate({ to: "/auth", search: authSearch });
+        return;
+      }
+    }
+    start();
   };
 
   const interviewId = call.interviewId;
@@ -177,15 +218,16 @@ function InterviewRoom() {
     if (interviewId && interviewId !== "preview") void refetchAccount();
   }, [interviewId, refetchAccount]);
 
-  // "Start interview" on the subject page lands here with start=true: sign in first if needed,
-  // stay on this page (showing "Get more interviews") when there are none left, else connect.
+  // "Start interview" on the subject page lands here with start=true: a guest who has used their
+  // free tries signs in first, anyone with none left stays here (showing "Get more interviews"),
+  // everyone else connects (starting a guest session if they are not signed in).
   const autoStart = search.start === true;
   const autoStarted = useRef(false);
   useEffect(() => {
     if (!autoStart || autoStarted.current || account.loading) return;
     autoStarted.current = true;
     const { start: _start, ...choice } = search;
-    if (!account.user) {
+    if (guestUsedUp) {
       void navigate({
         to: "/auth",
         search: {
@@ -197,17 +239,28 @@ function InterviewRoom() {
       return;
     }
     void navigate({ to: "/interview", search: choice, replace: true });
-    if (!isPreviewBrowser() && account.data?.totalRemaining === 0) return;
-    start();
-    // start() is recreated every render; this should only fire when a pick arrives.
+    if (outOfInterviews && !isPreviewBrowser()) return;
+    void startInterview();
+    // startInterview() is recreated every render; this should only fire when a pick arrives.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoStart, account.loading, account.user, account.data, search, navigate]);
+  }, [autoStart, account.loading, guestUsedUp, outOfInterviews, search, navigate]);
 
-  // When the call ends with something said, go straight to the feedback letter.
+  // A call that connected and then dropped can be resumed without using another interview.
+  const canReconnect =
+    call.status === "closed" && call.ending === "dropped" && Boolean(call.interviewId);
+  const reconnect = () => {
+    // Earlier lines stay; new ones are kept as a separate segment.
+    transcriptSegment.current += 1;
+    call.reconnect(buildResumeRecap(lines, undefined, tutorName));
+  };
+
+  // When the call ends with something said, go straight to the feedback letter. Feedback closes
+  // the interview for good, so a dropped call waits until reconnecting is declined.
   const idle = call.status === "idle" || call.status === "closed";
   const handedOff = useRef(false);
   useEffect(() => {
     if (call.status !== "closed" || handedOff.current || !startedRef.current) return;
+    if (canReconnect) return;
     if (!lines.length || !call.interviewId) return;
     handedOff.current = true;
     saveFinishedInterview({
@@ -218,7 +271,7 @@ function InterviewRoom() {
       ...(tableObject ? { objectId: tableObject.objectId } : {}),
     });
     void navigate({ to: "/feedback" });
-  }, [call.status, call.interviewId, lines, ppe, cardIds, tableObject, navigate]);
+  }, [call.status, call.interviewId, canReconnect, lines, ppe, cardIds, tableObject, navigate]);
 
   const cancel = () => {
     call.stop();
@@ -259,7 +312,9 @@ function InterviewRoom() {
           onEnd={call.stop}
           playbackBlocked={call.playbackBlocked}
           onResumePlayback={call.resumePlayback}
-          error={call.error}
+          error={
+            call.error ?? (call.unstable ? "Connection is unstable. Trying to recover…" : null)
+          }
         />
       ) : (
         <main className="relative z-10 mx-auto flex min-h-[100svh] max-w-xl flex-col items-center justify-center px-6 py-16 text-center">
@@ -267,32 +322,58 @@ function InterviewRoom() {
             {subjectLabel}
           </p>
           <h1 className="mt-3 text-3xl font-medium tracking-tight sm:text-4xl">
-            {lines.length ? "Getting your letter ready…" : `Interview with ${tutorName}`}
+            {canReconnect
+              ? "The call dropped"
+              : lines.length
+                ? "Getting your letter ready…"
+                : `Interview with ${tutorName}`}
           </h1>
+          {canReconnect && (
+            <div className="mt-6 flex flex-col items-center gap-4">
+              <p className="text-muted-foreground">
+                Reconnect to carry on where you left off. This won’t use another interview, and the
+                time you have left still counts down.
+              </p>
+              <button
+                onClick={reconnect}
+                className="rounded-full bg-primary px-7 py-3 font-medium text-primary-foreground transition hover:opacity-90"
+              >
+                Reconnect
+              </button>
+              <button
+                onClick={call.dismissReconnect}
+                className="text-sm text-muted-foreground underline"
+              >
+                End interview and get feedback
+              </button>
+            </div>
+          )}
           {reading && (
             <p className="mt-3 text-muted-foreground">
               Reading interview: <span className="text-foreground">{reading.title}</span>
             </p>
           )}
-          {call.error && (
+          {call.error && !canReconnect && (
             <p role="alert" className="mt-4 text-sm text-destructive">
               {call.error}
             </p>
           )}
-          {!lines.length && (
+          {!lines.length && !canReconnect && (
             <div className="mt-8 flex flex-col items-center gap-4">
-              {!account.user && !account.loading ? (
-                <Link
-                  to="/auth"
-                  search={{
-                    tutor: ppe ? ("ppe" as const) : ("geography" as const),
-                    ...(objectMode ? { mode: "object" as const } : {}),
-                  }}
-                  className="rounded-full bg-primary px-7 py-3 font-medium text-primary-foreground"
-                >
-                  Sign in to start
-                </Link>
-              ) : !preview && account.data?.totalRemaining === 0 ? (
+              {guestUsedUp ? (
+                <>
+                  <p className="text-muted-foreground">
+                    You have used your free tries. Sign in to keep practising.
+                  </p>
+                  <Link
+                    to="/auth"
+                    search={authSearch}
+                    className="rounded-full bg-primary px-7 py-3 font-medium text-primary-foreground"
+                  >
+                    Sign in to continue
+                  </Link>
+                </>
+              ) : outOfInterviews ? (
                 <>
                   <p className="text-muted-foreground">You have used all your interviews.</p>
                   <Link
@@ -304,12 +385,20 @@ function InterviewRoom() {
                 </>
               ) : (
                 <button
-                  onClick={start}
-                  disabled={!preview && account.loading}
+                  onClick={() => void startInterview()}
+                  disabled={startingGuest || (!preview && account.loading)}
                   className="rounded-full bg-primary px-7 py-3 font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
                 >
                   {call.error ? "Try again" : "Start interview"}
                 </button>
+              )}
+              {!account.user && !account.loading && !guestUsedUp && (
+                <p className="text-sm text-muted-foreground">
+                  {GUEST_INTERVIEWS} free tries, no sign-in needed.{" "}
+                  <Link to="/auth" search={authSearch} className="underline">
+                    Sign in
+                  </Link>
+                </p>
               )}
               <Link to="/subjects" className="text-sm text-muted-foreground underline">
                 Change subject

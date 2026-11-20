@@ -4,7 +4,7 @@ import {
   rememberChoiceForSignIn,
   type InterviewChoice,
 } from "@/lib/interview-choice";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/components/AuthProvider";
@@ -76,6 +76,13 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [message, setMessage] = useState<string | null>(null);
+  // The page title follows the form, so "Create an account" is not titled "Sign in".
+  useEffect(() => {
+    document.title =
+      mode === "signup"
+        ? "Create an account | Oxbridge Interview Practice"
+        : "Sign in | Oxbridge Interview Practice";
+  }, [mode]);
   const [busy, setBusy] = useState(false);
 
   const socialSignIn = async (provider: "google" | "lovable") => {
@@ -219,7 +226,10 @@ function AuthPage() {
             <button
               type="button"
               className="underline"
-              onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+              onClick={() => {
+                setMode(mode === "signin" ? "signup" : "signin");
+                setMessage(null);
+              }}
             >
               {mode === "signin" ? "Create an account" : "I already have an account"}
             </button>

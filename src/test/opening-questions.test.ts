@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { OPENING_QUESTIONS, openingInstructions, openingMessage } from "@/lib/interview-briefing";
+import { OPENING_QUESTIONS, openingInstructions } from "@/lib/interview-briefing";
 
 describe("opening questions", () => {
   it("uses every question once before repeating", () => {
@@ -19,9 +19,8 @@ describe("opening questions", () => {
     expect(openingInstructions(undefined)).toContain("opening question");
   });
 
-  it("greets the candidate and asks the selected question", () => {
-    expect(openingMessage(7)).toBe(
-      `Hello, I’m Dr River. Thank you for joining this practice geography interview. ${OPENING_QUESTIONS[7]}`,
-    );
+  it("introduces Dr River and asks the selected question", () => {
+    expect(openingInstructions(7)).toContain("Dr River");
+    expect(openingInstructions(7)).toContain(OPENING_QUESTIONS[7]);
   });
 });
