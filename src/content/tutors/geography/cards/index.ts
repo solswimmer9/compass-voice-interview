@@ -13,7 +13,6 @@ import disasterNatural from "./disaster-natural.ts";
 import climateEmergency from "./climate-emergency.ts";
 import localArea from "./local-area.ts";
 import legalRightLocation from "./legal-right-location.ts";
-import organisationalResponsibility from "./organisational-responsibility.ts";
 import aiClimate from "./ai-climate.ts";
 import placeChangedThinking from "./place-changed-thinking.ts";
 import borderLineOrProcess from "./border-line-or-process.ts";
@@ -55,7 +54,6 @@ export const GEOGRAPHY_CARDS: TopicCard[] = [
   climateEmergency,
   localArea,
   legalRightLocation,
-  organisationalResponsibility,
   aiClimate,
   treesOrGold,
   miningTheMoon,

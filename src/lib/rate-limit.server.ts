@@ -48,12 +48,22 @@ export function limitMessage(what: string, minutes: number) {
   return `You've reached the limit for ${what}. Please try again in ${wait}.`;
 }
 
-export const takeInterview = createRateLimiter([
-  { limit: 3, ms: HOUR },
-  { limit: 6, ms: DAY },
+// Guests only (anonymous accounts, the free tries before sign-in). A guest can clear their
+// browser for a new guest account, so this caps new guest interviews per connection. Signed-in
+// accounts are not limited here: a whole class can share one school connection, and their
+// credits are already enforced by the database.
+export const takeGuestInterview = createRateLimiter([
+  { limit: 2, ms: HOUR },
+  { limit: 4, ms: DAY },
 ]);
 
+// Keyed on the signed-in student, so a whole school behind one network address is not blocked
+// by a few students.
 export const takeFeedback = createRateLimiter([
   { limit: 4, ms: HOUR },
   { limit: 10, ms: DAY },
 ]);
+
+// A loose per-address guard against floods of feedback requests. High enough that a classroom
+// sharing one address never reaches it.
+export const takeFeedbackRequest = createRateLimiter([{ limit: 120, ms: HOUR }]);

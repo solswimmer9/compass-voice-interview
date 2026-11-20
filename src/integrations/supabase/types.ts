@@ -49,6 +49,27 @@ export type Database = {
           },
         ]
       }
+      payment_revocations: {
+        Row: {
+          checkout_session_id: string
+          created_at: string
+          environment: string
+          status: string
+        }
+        Insert: {
+          checkout_session_id: string
+          created_at?: string
+          environment: string
+          status: string
+        }
+        Update: {
+          checkout_session_id?: string
+          created_at?: string
+          environment?: string
+          status?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -219,8 +240,12 @@ export type Database = {
         Returns: Json
       }
       release_interview_credit: {
-        Args: { p_interview_id: string }
+        Args: { p_interview_id: string; p_user_id: string }
         Returns: boolean
+      }
+      revoke_purchase: {
+        Args: { p_environment: string; p_session_id: string; p_status: string }
+        Returns: number
       }
     }
     Enums: {

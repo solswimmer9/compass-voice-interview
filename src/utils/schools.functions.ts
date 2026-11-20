@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { isServerTester } from "@/lib/testers";
 
 const environment = z.enum(["sandbox", "live"]);
 export const getSchoolBundles = createServerFn({ method: "GET" })
@@ -29,6 +30,13 @@ export const claimSchoolInterview = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data, context }) => {
+    // Test-mode school codes cost nothing, so only tester accounts may claim them.
+    if (data.environment === "sandbox") {
+      const { data: user } = await context.supabase.auth.getUser();
+      if (!isServerTester(user.user?.email)) {
+        return { error: "Test-mode school codes are only for tester accounts." };
+      }
+    }
     const result = await context.supabase.rpc("claim_school_interview", {
       p_code: data.code,
       p_environment: data.environment,

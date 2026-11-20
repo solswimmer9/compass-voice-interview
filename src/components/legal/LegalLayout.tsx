@@ -33,7 +33,7 @@ export function LegalFooter() {
           Refund Policy
         </Link>
       </nav>
-      <p className="mt-2">© 2026 {SELLER_NAME}. Payments by Stripe.</p>
+      <p className="mt-2">© 2026 Oxbridge Interview Sparring Partner. Payments by Stripe.</p>
     </footer>
   );
 }

@@ -11,10 +11,16 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "evals": "bun src/lib/evals/cli.ts"
   },
   "overrides": {
-    "rolldown": "1.2.1"
+    "rolldown": "1.2.1",
+    "shell-quote": "^1.11.0",
+    "js-yaml": "^4.3.2",
+    "nanoid": "^3.3.18",
+    "source-map-js": "^1.2.2",
+    "seroval": "~1.6.11"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.111",
@@ -103,7 +109,7 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
     "vite": "8.1.5",
-    "vitest": "^4.1.10",
+    "vitest": "^4.1.12",
     "ws": "^8.22.2"
   }
 }

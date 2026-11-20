@@ -175,7 +175,8 @@ describe("buildSession", () => {
         }
       }
     }
-  });
+    // Exhaustive over every card combination and reading: slow when the whole suite runs at once.
+  }, 30_000);
 });
 
 describe("renderMemory", () => {

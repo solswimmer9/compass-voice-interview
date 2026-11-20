@@ -33,8 +33,10 @@ function CheckoutSuccessPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !user) void navigate({ to: "/auth" });
-  }, [loading, user, navigate]);
+    // Keep the checkout reference so signing back in returns here to confirm the payment.
+    if (!loading && !user)
+      void navigate({ to: "/auth", search: sessionId ? { session_id: sessionId } : {} });
+  }, [loading, user, navigate, sessionId]);
 
   const [attempts, setAttempts] = useState(0);
   const query = useQuery({

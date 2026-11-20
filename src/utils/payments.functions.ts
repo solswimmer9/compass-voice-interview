@@ -3,6 +3,11 @@ import { createServerFn } from "@tanstack/react-start";
 import type Stripe from "stripe";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { offerForPriceId } from "@/lib/offer";
+import { isValidCheckoutReturnUrl } from "@/lib/checkout-return";
+import { isServerTester } from "@/lib/testers";
+
+/** Test-mode checkout is free money, so only tester accounts may use it. */
+export const TEST_CHECKOUT_TESTERS_ONLY = "Test-mode checkout is only for tester accounts.";
 
 type CheckoutSessionResult = { clientSecret: string } | { error: string };
 
@@ -45,10 +50,18 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }): Promise<CheckoutSessionResult> => {
     if (PURCHASES_PAUSED) throw new Error("Purchases are paused");
+    // The return URL comes from the browser, so check it is our own confirmation page.
+    const { getRequest } = await import("@tanstack/react-start/server");
+    const requestOrigin = getRequest().headers.get("origin");
+    if (!isValidCheckoutReturnUrl(data.returnUrl, requestOrigin))
+      return { error: "Invalid return URL" };
     try {
       const { createStripeClient } = await import("@/lib/stripe.server");
       const stripe = createStripeClient(data.environment);
       const { data: userData } = await context.supabase.auth.getUser();
+      if (data.environment === "sandbox" && !isServerTester(userData.user?.email)) {
+        return { error: TEST_CHECKOUT_TESTERS_ONLY };
+      }
       const prices = await stripe.prices.list({ lookup_keys: [data.priceId] });
       if (!prices.data.length) throw new Error("Price not found");
       const stripePrice = prices.data[0];

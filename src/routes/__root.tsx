@@ -17,8 +17,12 @@ import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { LegalFooter } from "@/components/legal/LegalLayout";
 
 function NotFoundComponent() {
+  useEffect(() => {
+    document.title = "Page not found | Oxbridge Interview Practice";
+  }, []);
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <meta name="robots" content="noindex" />
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
         <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
@@ -108,7 +112,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,700;1,400&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap",
+      },
+      {
+        // Homepage (Grey Meridian): display serif, its sans and the small mono labels.
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap",
+      },
+      {
+        // Homepage (Grey Meridian): display serif, its sans and the small mono labels.
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap",
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],

@@ -2,30 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const verifyWebhook = vi.fn();
 const sessionsList = vi.fn();
-const eqCalls: Array<[string, unknown]> = [];
-const update = vi.fn();
+const rpc = vi.fn();
 
 vi.mock("@/lib/stripe.server", () => ({
   verifyWebhook,
   createStripeClient: () => ({ checkout: { sessions: { list: sessionsList } } }),
 }));
-vi.mock("@/integrations/supabase/client.server", () => ({
-  supabaseAdmin: {
-    from: () => ({
-      update: (values: unknown) => {
-        update(values);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- self-referencing test double
-        const chain: any = {
-          eq: (col: string, val: unknown) => {
-            eqCalls.push([col, val]);
-            return eqCalls.length % 2 === 0 ? Promise.resolve({ error: null }) : chain;
-          },
-        };
-        return chain;
-      },
-    }),
-  },
-}));
+vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: { rpc } }));
 
 const request = () =>
   new Request("https://example.test/api/public/payments/webhook?env=sandbox", {
@@ -35,13 +18,13 @@ const request = () =>
 
 describe("payment webhook refunds and disputes", () => {
   beforeEach(() => {
-    update.mockReset();
+    rpc.mockReset();
     sessionsList.mockReset();
-    eqCalls.length = 0;
     sessionsList.mockResolvedValue({ data: [{ id: "cs_123" }] });
+    rpc.mockResolvedValue({ data: 1, error: null });
   });
 
-  it("zeroes credits on a full refund", async () => {
+  it("revokes the purchase on a full refund", async () => {
     verifyWebhook.mockResolvedValue({
       type: "charge.refunded",
       data: {
@@ -52,10 +35,11 @@ describe("payment webhook refunds and disputes", () => {
     const response = await handlePaymentWebhook(request());
     expect(response.status).toBe(200);
     expect(sessionsList).toHaveBeenCalledWith({ payment_intent: "pi_1", limit: 1 });
-    expect(update).toHaveBeenCalledWith(
-      expect.objectContaining({ interviews_remaining: 0, status: "refunded" }),
-    );
-    expect(eqCalls).toContainEqual(["paddle_transaction_id", "cs_123"]);
+    expect(rpc).toHaveBeenCalledWith("revoke_purchase", {
+      p_session_id: "cs_123",
+      p_environment: "sandbox",
+      p_status: "refunded",
+    });
   });
 
   it("ignores partial refunds", async () => {
@@ -67,18 +51,42 @@ describe("payment webhook refunds and disputes", () => {
     });
     const { handlePaymentWebhook } = await import("@/lib/payment-webhook.server");
     await handlePaymentWebhook(request());
-    expect(update).not.toHaveBeenCalled();
+    expect(rpc).not.toHaveBeenCalled();
   });
 
-  it("zeroes credits when a dispute is opened", async () => {
+  it("revokes the purchase when a dispute is opened", async () => {
     verifyWebhook.mockResolvedValue({
       type: "charge.dispute.created",
       data: { object: { payment_intent: "pi_2" } },
     });
     const { handlePaymentWebhook } = await import("@/lib/payment-webhook.server");
     await handlePaymentWebhook(request());
-    expect(update).toHaveBeenCalledWith(
-      expect.objectContaining({ interviews_remaining: 0, status: "disputed" }),
+    expect(rpc).toHaveBeenCalledWith(
+      "revoke_purchase",
+      expect.objectContaining({ p_status: "disputed" }),
     );
+  });
+
+  it("still records a refund that arrives before the purchase (nothing to update yet)", async () => {
+    rpc.mockResolvedValue({ data: 0, error: null });
+    verifyWebhook.mockResolvedValue({
+      type: "charge.refunded",
+      data: { object: { payment_intent: "pi_3", refunded: true, amount: 2000, amount_refunded: 2000 } },
+    });
+    const { handlePaymentWebhook } = await import("@/lib/payment-webhook.server");
+    const response = await handlePaymentWebhook(request());
+    expect(response.status).toBe(200);
+    expect(rpc).toHaveBeenCalledWith("revoke_purchase", expect.objectContaining({ p_session_id: "cs_123" }));
+  });
+
+  it("asks Stripe to retry when the revocation cannot be saved", async () => {
+    rpc.mockResolvedValue({ data: null, error: { message: "db down" } });
+    verifyWebhook.mockResolvedValue({
+      type: "charge.dispute.created",
+      data: { object: { payment_intent: "pi_4" } },
+    });
+    const { handlePaymentWebhook } = await import("@/lib/payment-webhook.server");
+    const response = await handlePaymentWebhook(request());
+    expect(response.status).toBe(400);
   });
 });

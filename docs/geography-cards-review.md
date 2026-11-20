@@ -267,25 +267,9 @@ Weak moves to watch: treating a country or community as one uniform thing; a bot
 
 **Sources:** Dr River question line: Why can a legal right depend on where you live?
 
-## 13. Who is responsible when an organisation does harm?
+## 13. (Removed) Who is responsible when an organisation does harm?
 
-`organisational-responsibility` · human · leads on to: court-impressive, building-argument
-
-**Dr River sees** (83 words)
-
-Care: check first that the student is comfortable discussing the Holocaust, and offer another example if not. Hook: Adolf Eichmann, a senior organiser of Nazi deportations, was tried in Jerusalem in 1961. One famous account described him as chillingly ordinary, and many historians argue that underestimates his commitment. Never suggest he was innocent or merely following orders, and give no graphic detail. Push on: does distance from harm reduce responsibility? What is a trial for beyond the verdict? Where should it be held?
-
-**Background** (115 words)
-
-Underlying argument (Arendt): Adolf Eichmann, a senior organiser of Nazi deportations, was tried in Jerusalem in 1961. Hannah Arendt described him as chillingly ordinary, and many historians argue that underestimates his commitment.
-
-Care: check first that the student is comfortable discussing the Holocaust, and offer another example if not. Never suggest he was innocent or merely following orders, and give no graphic detail. Discuss genocide only as set out here.
-
-Push on: does distance from harm reduce responsibility, what a trial is for beyond the verdict, and where it should be held.
-
-Weak moves to watch: a both-sides summary without reaching a position; conceding as soon as challenged, or repeating the same point more loudly.
-
-**Sources:** Dr River question line: Who is responsible when an organisation does harm?; Hannah Arendt on Adolf Eichmann (as in the briefing line)
+Removed on 19 November 2026 at the owner's request: a poor opening question. The card and its question line are gone.
 
 ## 14. Can AI solve climate change?
 
@@ -341,32 +325,32 @@ Weak moves to watch: assuming an empty place raises no questions of fairness; as
 
 ## Draft cards (not shown to students until you approve them)
 
-| # | Opening question | Strand | File id |
-|---|---|---|---|
-| 17 | How can ice that melted thousands of years ago still affect a landscape today? | physical | `old-ice-landscape` |
-| 18 | How can we know the temperature of a year nobody recorded? | physical | `past-temperature` |
-| 19 | Is weather getting worse, or are we getting more exposed? | physical | `weather-worse-or-exposed` |
-| 20 | What is a native species, and how long does it take to become one? | physical | `native-species` |
-| 21 | Is planting trees a climate solution or a way of delaying one? | physical | `trees-climate-solution` |
-| 22 | Why would anyone build a city next to a volcano? | human | `hazards-city-volcano` |
-| 23 | Should we rewild Britain? | human | `rewild-britain` |
-| 24 | Are fair-trade bananas really fair? | human | `fair-trade-bananas` |
-| 25 | Why can a country export food while people there go hungry? | human | `food-export-hunger` |
-| 26 | Who should govern the Arctic as the ice retreats? | human | `geopolitics-arctic` |
-| 27 | Should maps be redrawn to remove colonial place names? | human | `colonial-place-names` |
-| 28 | Is a border a line or a process? | human | `border-line-or-process` |
-| 29 | Why do cities exist where they do? | human | `cities-where` |
-| 30 | Is a city ever finished? | human | `city-ever-finished` |
-| 31 | Why is a postcode a better predictor of some things than a person's character? | human | `inequality-postcode` |
-| 32 | When does someone stop being a migrant? | human | `migrant-when` |
-| 33 | Who gets to decide a country is "developing"? | human | `developing-who-decides` |
-| 34 | Why did the same virus produce different pandemics in different places? | human | `same-virus-different-pandemics` |
-| 35 | What can a statistic about a place never tell you? | human | `statistic-limits` |
-| 36 | Should a court be allowed to look impressive? | human | `court-impressive` |
-| 37 | Can you be hopeful about somewhere and angry about it at the same time? | human | `hopeful-and-angry` |
-| 38 | Can one footballer change a war? | human | `footballer-war` |
-| 39 | Why might a town vote against its own economic interests, and is that even the right way to describe it? | human | `town-vote` |
-| 40 | Which place has most changed how you think about the world, and why? | human | `place-changed-thinking` |
+| #   | Opening question                                                                                         | Strand   | File id                          |
+| --- | -------------------------------------------------------------------------------------------------------- | -------- | -------------------------------- |
+| 17  | How can ice that melted thousands of years ago still affect a landscape today?                           | physical | `old-ice-landscape`              |
+| 18  | How can we know the temperature of a year nobody recorded?                                               | physical | `past-temperature`               |
+| 19  | Is weather getting worse, or are we getting more exposed?                                                | physical | `weather-worse-or-exposed`       |
+| 20  | What is a native species, and how long does it take to become one?                                       | physical | `native-species`                 |
+| 21  | Is planting trees a climate solution or a way of delaying one?                                           | physical | `trees-climate-solution`         |
+| 22  | Why would anyone build a city next to a volcano?                                                         | human    | `hazards-city-volcano`           |
+| 23  | Should we rewild Britain?                                                                                | human    | `rewild-britain`                 |
+| 24  | Are fair-trade bananas really fair?                                                                      | human    | `fair-trade-bananas`             |
+| 25  | Why can a country export food while people there go hungry?                                              | human    | `food-export-hunger`             |
+| 26  | Who should govern the Arctic as the ice retreats?                                                        | human    | `geopolitics-arctic`             |
+| 27  | Should maps be redrawn to remove colonial place names?                                                   | human    | `colonial-place-names`           |
+| 28  | Is a border a line or a process?                                                                         | human    | `border-line-or-process`         |
+| 29  | Why do cities exist where they do?                                                                       | human    | `cities-where`                   |
+| 30  | Is a city ever finished?                                                                                 | human    | `city-ever-finished`             |
+| 31  | Why is a postcode a better predictor of some things than a person's character?                           | human    | `inequality-postcode`            |
+| 32  | When does someone stop being a migrant?                                                                  | human    | `migrant-when`                   |
+| 33  | Who gets to decide a country is "developing"?                                                            | human    | `developing-who-decides`         |
+| 34  | Why did the same virus produce different pandemics in different places?                                  | human    | `same-virus-different-pandemics` |
+| 35  | What can a statistic about a place never tell you?                                                       | human    | `statistic-limits`               |
+| 36  | Should a court be allowed to look impressive?                                                            | human    | `court-impressive`               |
+| 37  | Can you be hopeful about somewhere and angry about it at the same time?                                  | human    | `hopeful-and-angry`              |
+| 38  | Can one footballer change a war?                                                                         | human    | `footballer-war`                 |
+| 39  | Why might a town vote against its own economic interests, and is that even the right way to describe it? | human    | `town-vote`                      |
+| 40  | Which place has most changed how you think about the world, and why?                                     | human    | `place-changed-thinking`         |
 
 ## 17. How can ice that melted thousands of years ago still affect a landscape today?
 
@@ -854,7 +838,7 @@ Weak moves to watch: treating a country or community as uniform; treating a numb
 
 ## 36. Should a court be allowed to look impressive?
 
-`court-impressive` · human · draft · leads on to: building-argument, organisational-responsibility, legal-right-location, regeneration-who-for
+`court-impressive` · human · draft · leads on to: building-argument, legal-right-location, regeneration-who-for
 
 **Dr River sees** (122 words)
 
@@ -866,7 +850,7 @@ Underlying argument (the notes on court design, Mulcahy, Rossner and others): ro
 
 Positions to test: whether solemnity and fairness go together or pull apart; whether justice has to be seen to be done, which may require a visible, public place; who is helped and who is hindered by an imposing room, including witnesses, victims and people representing themselves; whether the same design suits every kind of case, from a serious criminal trial to a small civil dispute; whether new forms, such as video hearings or less formal rooms, change fairness; whether the cost and location of courts matter as much as how they look; who decides, and whether those who use courts are asked.
 
-Link to other cards: a legal right depending on where you live; who is responsible when an organisation does harm; rules shaping places and places shaping rules.
+Link to other cards: a legal right depending on where you live; rules shaping places and places shaping rules.
 
 Weak moves to watch: treating "tradition" or "formality" as neutral; treating people who use courts as one uniform group; a both-sides summary without reaching a position; retreating to a memorised case study; conceding as soon as challenged, or repeating the same point more loudly.
 

@@ -192,19 +192,36 @@ function RiverOrb({ theme }: { theme: (typeof TUTOR_THEME)["river"] }) {
 function MattOrb({ theme }: { theme: (typeof TUTOR_THEME)["matt"] }) {
   return (
     <>
+      {/* Fine, stationary radial marks give Matt a precise instrument-like silhouette. */}
       <div
-        className="orb-tick absolute inset-[3%] rounded-full border-2 border-dashed"
-        style={{ borderColor: theme.accentSoft, opacity: 0.7 }}
+        className="absolute inset-[2%] rounded-full"
+        style={{
+          background: `repeating-conic-gradient(from -90deg, ${theme.accentSoft} 0deg 0.7deg, transparent 0.7deg 15deg)`,
+          maskImage: "radial-gradient(circle, transparent 68%, black 69% 71%, transparent 72%)",
+          WebkitMaskImage: "radial-gradient(circle, transparent 68%, black 69% 71%, transparent 72%)",
+          opacity: 0.85,
+        }}
+      />
+      <div
+        className="absolute inset-[10%] rounded-full border"
+        style={{ borderColor: theme.accentSoft, opacity: 0.85 }}
       />
       <div
         className="absolute inset-[13%] rounded-full"
         style={{
           ...scaled(0.08),
-          background: `conic-gradient(from 0deg, ${theme.accentSoft}, ${theme.accent}, ${theme.accentSoft}, ${theme.accent}, ${theme.accentSoft})`,
-          boxShadow: `0 0 calc(10px + var(--orb-level) * 32px) color-mix(in oklab, ${theme.accentSoft} 50%, transparent)`,
+          background: `conic-gradient(from -45deg, ${theme.accentSoft} 0deg, ${theme.accent} 45deg, ${theme.deep} 90deg, ${theme.accent} 135deg, ${theme.accentSoft} 180deg, ${theme.accent} 225deg, ${theme.deep} 270deg, ${theme.accent} 315deg, ${theme.accentSoft} 360deg)`,
+          boxShadow: `0 0 calc(6px + var(--orb-level) * 18px) color-mix(in oklab, ${theme.accentSoft} 38%, transparent)`,
         }}
       >
-        <div className="absolute inset-[9%] rounded-full" style={{ background: theme.deep }} />
+        <div
+          className="absolute inset-[5%] rounded-full border"
+          style={{ borderColor: theme.deep, background: theme.deep }}
+        />
+        <div
+          className="absolute inset-[11%] rounded-full border"
+          style={{ borderColor: `color-mix(in oklab, ${theme.accentSoft} 55%, transparent)` }}
+        />
       </div>
     </>
   );
