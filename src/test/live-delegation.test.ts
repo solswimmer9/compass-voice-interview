@@ -343,10 +343,12 @@ describe("turn analyst and director in the live relay", () => {
     interview.say("Whoever paid for the land, because they bought it.");
     // The tutor starts replying, so the student's turn has ended.
     interview.say("Right, but consider footpaths.", "assistant");
-    await vi.waitFor(async () => {
-      await vi.advanceTimersByTimeAsync(0);
-      expect(console.log).toHaveBeenCalledWith(expect.stringContaining('"interview.turn"'));
-    });
+    if (email === "tester@example.com")
+      await vi.waitFor(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+        expect(console.log).toHaveBeenCalledWith(expect.stringContaining('"interview.turn"'));
+      });
+    else await vi.advanceTimersByTimeAsync(1000);
     const notes = interview.gateway.sent.filter(
       ({ type, content }) =>
         type === "session.instructions.append" && typeof content === "string" && content !== "",
@@ -363,16 +365,12 @@ describe("turn analyst and director in the live relay", () => {
     expect(notes.map(({ content }) => content)).toEqual([expect.stringMatching(/starting level/)]);
   });
 
-  it("analyses a student's turns in shadow mode, without steering their tutor", async () => {
+  it("does not analyse a student's turns, so no model call is spent on them", async () => {
     const { notes } = await exchange("student@example.com");
-    expect(mocks.generateText).toHaveBeenCalledOnce();
+    expect(mocks.generateText).not.toHaveBeenCalled();
     expect(notes).toEqual([]);
-    const logged = vi
-      .mocked(console.log)
-      .mock.calls.map(([line]) => String(line))
-      .find((line) => line.includes('"interview.turn"'));
-    expect(logged).toContain('"steering":false');
-    expect(logged).not.toContain("Whoever paid");
+    const logged = vi.mocked(console.log).mock.calls.map(([line]) => String(line));
+    expect(logged.some((line) => line.includes('"interview.turn"'))).toBe(false);
   });
 
   it("scores the finished interview with the evaluation metrics, without what was said", async () => {

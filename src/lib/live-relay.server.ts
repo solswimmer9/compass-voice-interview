@@ -453,7 +453,7 @@ export function bindLiveConnection(
     stop();
   }, 5000);
   const transcripts: Transcript[] = [];
-  // Turn analyst and phase director: shadow mode for everyone, steering notes for testers.
+  // Turn analyst and phase director: testers only, where it steers the tutor.
   let liveDirector: LiveDirector | undefined;
   // What produced this interview, logged once as its run manifest when the session starts.
   let runInfo:
@@ -700,7 +700,7 @@ export function bindLiveConnection(
 
   /**
    * Starts the turn analyst and director once the interview is authorised. `steer` sends the
-   * director's notes to the live tutor; otherwise they are only logged (shadow mode).
+   * director's notes to the live tutor; without it the director is not started, so no model calls are made.
    */
   function startDirector(plan: {
     tutorId: TutorId;
@@ -708,6 +708,8 @@ export function bindLiveConnection(
     hasStimulus: boolean;
     cardIds?: string[];
   }) {
+    // Students' shadow-mode analysis was never used and cost a model call per turn (owner, 22 Nov 2026).
+    if (!plan.steer) return;
     liveDirector = createLiveDirector({
       minutes: INTERVIEW_MINUTES,
       hasStimulus: plan.hasStimulus,
@@ -1309,7 +1311,7 @@ export function bindLiveConnection(
             };
             startDirector({
               tutorId: GEOGRAPHY_TUTOR_ID,
-              // Testers only ("preview" is the tester interview id); everyone else is shadow mode.
+              // Testers only ("preview" is the tester interview id); everyone else runs without the director.
               steer: interviewId === "preview",
               hasStimulus: Boolean(reading || object),
               ...(cardSession ? { cardIds: cardSession.cardIds } : {}),
