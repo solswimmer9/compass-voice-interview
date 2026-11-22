@@ -15,6 +15,7 @@ export function FeedbackLetter({
   studentName,
   body,
   writing,
+  failed = false,
   date = new Date(),
 }: {
   tutor: TutorLetterInfo;
@@ -23,6 +24,8 @@ export function FeedbackLetter({
   body: string;
   /** True while the text is still streaming in. */
   writing: boolean;
+  /** True when writing stopped with an error, so the letter is incomplete. */
+  failed?: boolean;
   date?: Date;
 }) {
   const blocks = letterBlocks(body);
@@ -102,9 +105,9 @@ export function FeedbackLetter({
           </footer>
         )}
       </article>
-      {done && (
+      {done && !failed && (
         <LetterActions
-          text={letterText(letterSalutation(studentName), body, tutor.name, dated)}
+          text={letterText(letterSalutation(studentName), blocks, tutor.name, dated)}
           fileName={`compass-feedback-${tutor.name}-${date.toISOString().slice(0, 10)}`}
         />
       )}
@@ -114,16 +117,17 @@ export function FeedbackLetter({
 
 /** The letter is only kept for this browser tab, so let students keep their own copy. */
 function LetterActions({ text, fileName }: { text: string; fileName: string }) {
-  const [copied, setCopied] = useState(false);
-  const button = "rounded-full border px-5 py-2 text-sm";
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
+  const button = "min-h-11 rounded-full border px-5 py-2 text-sm";
 
   async function copy() {
     try {
       await navigator.clipboard.writeText(text);
-      setCopied(true);
+      setCopyStatus("copied");
     } catch {
-      setCopied(false);
+      setCopyStatus("failed");
     }
+    setTimeout(() => setCopyStatus("idle"), 3000);
   }
 
   function download() {
@@ -141,10 +145,12 @@ function LetterActions({ text, fileName }: { text: string; fileName: string }) {
         Download letter
       </button>
       <button type="button" onClick={copy} className={button}>
-        {copied ? "Copied" : "Copy letter"}
+        {copyStatus === "copied" ? "Copied" : "Copy letter"}
       </button>
-      <span className="text-sm text-muted-foreground">
-        Save a copy: this letter is not kept after you close the tab.
+      <span aria-live="polite" className="text-sm text-muted-foreground">
+        {copyStatus === "failed"
+          ? "Copying didn't work here. Use Download letter instead."
+          : "Save a copy: this letter is not kept after you close the tab."}
       </span>
     </div>
   );

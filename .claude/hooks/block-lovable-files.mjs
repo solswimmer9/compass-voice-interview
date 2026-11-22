@@ -9,7 +9,7 @@ if (!file) process.exit(0);
 
 const root = process.env.CLAUDE_PROJECT_DIR ?? cwd;
 const rel = relative(root, resolve(cwd, file)).replaceAll("\\", "/");
-if (/^(supabase|drizzle)\//.test(rel)) {
+if (/^(supabase|drizzle)\//i.test(rel)) {
   console.error(
     `Blocked: ${rel} is managed by Lovable. Ask Lovable to change the database instead (see AGENTS.md).`,
   );
