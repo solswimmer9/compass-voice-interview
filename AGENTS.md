@@ -56,6 +56,10 @@ use the editor.
 - The Live relay sends the opening instructions and the "begin now" commentary back to back once media is ready, without waiting for the first acknowledgement; the gateway applies them in order, and waiting added about a second of silence.
 - Dr River's assumption-testing rules live once in `src/content/tutors/geography/assumptions.ts` and feed both the student prompt and tester card sessions, so the two versions push the same way.
 
+## Biology roadmap interviews
+
+- Dr Toby (biology, `src/lib/biology.server.ts`) runs one roadmap scenario per interview (`src/content/scenarios/`), not topic cards. His live prompt holds only the current step; the roadmap checker (`src/lib/interview/roadmap.ts`) runs one text-model call per student turn for every account, moves him on, gives the answer after the hints run out, and shows each step's diagram. Students get approved scenarios only. `src/test/biology-roadmap.test.ts` and the biology block in `src/test/live-interview.test.ts` guard this.
+
 ## Feedback
 
 - Every account gets quote-checked feedback for transcripts with at least two student turns (owner's decision, 14 November 2026): see `src/lib/feedback/README.md`. Students' analyst sees approved notes only; draft PPE notes stay tester-only. Any failure falls back silently to the single-call feedback, which also handles videos and very short transcripts. `src/test/assess-grounded.test.ts` and `src/test/assess-access.test.ts` guard this.

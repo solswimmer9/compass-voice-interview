@@ -1,9 +1,10 @@
 // Tutor registry. Server-only. Adding a tutor: a folder under tutors/ plus one line in TUTORS.
 import { GEOGRAPHY } from "./tutors/geography/index.ts";
 import { PPE } from "./tutors/ppe/index.ts";
+import { BIOLOGY } from "./tutors/biology/index.ts";
 import type { TopicCard, Tutor } from "./types.ts";
 
-export const TUTORS: readonly Tutor[] = [GEOGRAPHY, PPE];
+export const TUTORS: readonly Tutor[] = [GEOGRAPHY, PPE, BIOLOGY];
 
 export function tutorById(id: unknown): Tutor | undefined {
   return typeof id === "string" ? TUTORS.find((tutor) => tutor.id === id) : undefined;

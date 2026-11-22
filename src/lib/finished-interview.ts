@@ -1,12 +1,13 @@
 // The interview that has just ended, handed from the interview room to the feedback page and kept
 // for this browser tab only (sessionStorage), so a refresh does not lose the transcript or letter.
 // Browser-only UI state: the server still enforces one feedback per interview on its own.
+import { subjectById, subjectOrGeography, type SubjectId } from "./subjects";
 
 export type FinishedLine = { role: "user" | "assistant"; text: string };
 
 export type FinishedInterview = {
   interviewId: string;
-  tutor: "ppe" | "geography";
+  tutor: SubjectId;
   lines: FinishedLine[];
   cardIds?: string[];
   /** Set only if the tutor's chart was put on the table, so feedback can use its notes. */
@@ -30,14 +31,15 @@ export function parseFinishedInterview(value: unknown): FinishedInterview | null
   if (!value || typeof value !== "object") return null;
   const v = value as Record<string, unknown>;
   if (typeof v["interviewId"] !== "string" || !v["interviewId"]) return null;
-  if (v["tutor"] !== "ppe" && v["tutor"] !== "geography") return null;
+  const tutor = subjectById(v["tutor"])?.id;
+  if (!tutor) return null;
   if (!Array.isArray(v["lines"]) || !v["lines"].every(isLine)) return null;
   const cardIds = Array.isArray(v["cardIds"])
     ? v["cardIds"].filter((id): id is string => typeof id === "string")
     : [];
   return {
     interviewId: v["interviewId"],
-    tutor: v["tutor"],
+    tutor,
     lines: (v["lines"] as FinishedLine[]).map(({ role, text }) => ({ role, text })),
     ...(cardIds.length ? { cardIds } : {}),
     ...(typeof v["objectId"] === "string" ? { objectId: v["objectId"] } : {}),
@@ -74,7 +76,7 @@ export function updateFinishedInterview(
 
 /** The transcript as the feedback request expects it. */
 export function transcriptText(interview: Pick<FinishedInterview, "tutor" | "lines">): string {
-  const tutorName = interview.tutor === "ppe" ? "Prof Matt" : "Dr River";
+  const tutorName = subjectOrGeography(interview.tutor).tutor;
   return interview.lines
     .map((line) => `${line.role === "assistant" ? tutorName : "You"}: ${line.text.trim()}`)
     .join("\n\n");

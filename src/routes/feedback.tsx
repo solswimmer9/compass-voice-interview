@@ -4,6 +4,7 @@ import { AssessPanel } from "@/components/AssessPanel";
 import { SiteNav } from "@/components/SiteNav";
 import { useAccountSnapshot } from "@/hooks/useAccountSnapshot";
 import { loadFinishedInterview, type FinishedInterview } from "@/lib/finished-interview";
+import { subjectOrGeography } from "@/lib/subjects";
 
 export const Route = createFileRoute("/feedback")({
   head: () => ({
@@ -20,7 +21,8 @@ function FeedbackPage() {
 
   if (interview === undefined) return null;
 
-  const tutorName = interview?.tutor === "ppe" ? "Prof Matt" : "Dr River";
+  const subject = subjectOrGeography(interview?.tutor);
+  const tutorName = subject.tutor;
 
   return (
     <div className="relative min-h-[100svh]">
@@ -42,7 +44,7 @@ function FeedbackPage() {
         ) : (
           <>
             <p className="text-xs font-medium uppercase tracking-[0.25em] text-muted-foreground">
-              {interview.tutor === "ppe" ? "PPE" : "Geography"} · {tutorName}
+              {subject.name} · {tutorName}
             </p>
             <h1 className="mt-2 text-3xl font-medium tracking-tight">Your feedback letter</h1>
 

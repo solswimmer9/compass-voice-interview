@@ -14,6 +14,7 @@ import {
 import { authenticateRequest } from "./request-auth.server.ts";
 import { isServerTester } from "./testers.ts";
 import { isPpeRequest, ppeFeedbackContext } from "./ppe.server.ts";
+import { biologyFeedbackContext, isBiologyRequest } from "./biology.server.ts";
 import { objectFeedbackContext, usableObjectById } from "../content/objects/index.ts";
 import { ARGUMENT_MAP_INSTRUCTIONS } from "./feedback/argument-map.ts";
 import {
@@ -67,6 +68,24 @@ Be honest, specific and encouraging. Under 400 words.
 ${ppeFeedbackContext(cardIds, { includeDrafts })}
 When judging the candidate, give most weight to how far they developed the ideas above in their own words.`;
 
+// Biology feedback. Same headings; judged against the scenario's roadmap. Draft scenarios'
+// notes only for testers.
+const biologySystem = (
+  cardIds: unknown,
+  includeDrafts: boolean,
+) => `You are an experienced Cambridge Natural Sciences (biology) admissions tutor reviewing a practice interview.
+Assess the candidate's reasoning, not their knowledge alone. Use British English and Markdown with these sections:
+## Overall impression (2-3 sentences)
+## Strengths in reasoning (2-3 bullets, quote the candidate where possible)
+## Where the reasoning slipped (2-3 bullets: reciting instead of explaining the mechanism, guessing without a reason, not using a hint once given, redoing work that could be reused)
+## Targeted improvements (3 concrete, practicable actions for next time)
+## Try this next (one follow-up question to practise)
+If a video is provided, also briefly comment on delivery: pace, thinking aloud, composure and body language.
+Be honest, specific and encouraging. Under 400 words.
+
+${biologyFeedbackContext(cardIds, { includeDrafts })}
+When judging the candidate, give most weight to how far they reasoned their way to each point in their own words.`;
+
 export async function handleAssess(request: Request) {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) return Response.json({ error: "AI is not configured" }, { status: 500 });
@@ -92,6 +111,7 @@ export async function handleAssess(request: Request) {
     return Response.json({ error: "Invalid request" }, { status: 400 });
   }
   const ppe = isPpeRequest(body.tutorId);
+  const biology = isBiologyRequest(body.tutorId);
 
   if (!preview) {
     // A loose per-address flood guard, then the real limit per signed-in student.
@@ -115,11 +135,18 @@ export async function handleAssess(request: Request) {
       : "video/mp4";
   const interviewId = typeof body.interviewId === "string" ? body.interviewId : "";
   // Object interview notes: approved objects for everyone, drafts' notes for testers only.
-  const object = usableObjectById(body.objectId, ppe ? "ppe" : "geography", {
-    includeDrafts: preview,
-  });
+  // Biology's diagrams are part of its scenario, so it has no object notes.
+  const object = biology
+    ? undefined
+    : usableObjectById(body.objectId, ppe ? "ppe" : "geography", {
+        includeDrafts: preview,
+      });
   const system = [
-    ppe ? ppeSystem(body.cardIds, preview) : SYSTEM,
+    biology
+      ? biologySystem(body.cardIds, preview)
+      : ppe
+        ? ppeSystem(body.cardIds, preview)
+        : SYSTEM,
     object && objectFeedbackContext(object),
     // Last, so the reply always ends with the map block the panel splits off.
     ARGUMENT_MAP_INSTRUCTIONS,
@@ -208,7 +235,7 @@ export async function handleAssess(request: Request) {
   // All access rules above have already run and the feedback allowance is charged once, before
   // this point, so nothing here can charge twice. Testers may draw on draft notes; students only
   // on approved ones. Any failure falls back silently to the single-call feedback.
-  if (canUseGroundedFeedback({ transcript, video, ppe })) {
+  if (canUseGroundedFeedback({ transcript, video, ppe, biology })) {
     const stream = new ReadableStream<Uint8Array>({
       async start(controller) {
         const pipelineAbort = new AbortController();
@@ -220,6 +247,7 @@ export async function handleAssess(request: Request) {
           {
             transcript,
             ppe,
+            biology,
             cardIds: body.cardIds,
             interviewId,
             includeDrafts: preview,

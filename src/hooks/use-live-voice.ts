@@ -51,8 +51,8 @@ export type LiveStartContext = {
   environment: "sandbox" | "live";
   /** Optional practice reading this interview opens on. */
   readingId?: string;
-  /** "ppe" runs an Oxford-style PPE interview with Prof Matt; omitted means geography. */
-  tutorId?: "ppe";
+  /** "ppe" is Prof Matt, "biology" Dr Toby; omitted means geography (Dr River). */
+  tutorId?: "ppe" | "biology";
   /** "object" opens with an unlabelled chart on the table. The server picks the object. */
   mode?: "object";
 };

@@ -5,6 +5,7 @@ import { readingsFor } from "@/lib/readings";
 import { SUBJECTS, type SubjectId } from "@/lib/subjects";
 import graduate from "@/assets/home/graduate.webp";
 import reader from "@/assets/home/reader.webp";
+import writer from "@/assets/home/writer.webp";
 
 // "Start interview" opens the interview room, which connects straight away behind a short waiting
 // room. A subject with practice readings also offers "start with a reading". Sign-in, credits and
@@ -26,6 +27,8 @@ export const Route = createFileRoute("/subjects")({
 const PORTRAITS: Record<SubjectId, { src: string; alt: string }> = {
   ppe: { src: graduate, alt: "Sketch portrait of Prof Matt in cap and gown" },
   geography: { src: reader, alt: "Sketch portrait of Dr River reading" },
+  // shortcut: placeholder sketch until Dr Toby's own portrait design lands.
+  biology: { src: writer, alt: "Sketch portrait of Dr Toby writing" },
 };
 
 function SubjectsPage() {

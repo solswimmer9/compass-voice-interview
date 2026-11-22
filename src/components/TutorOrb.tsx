@@ -3,6 +3,8 @@ import { rmsLevel } from "@/lib/audio-level";
 import { TUTOR_THEME, type TutorKey } from "@/lib/tutor-theme";
 import graduate from "@/assets/home/graduate.webp";
 import reader from "@/assets/home/reader.webp";
+// shortcut: Dr Toby borrows the writer sketch until his own portrait design lands.
+import writer from "@/assets/home/writer.webp";
 
 type OrbStatus = "connecting" | "connected" | "stopping";
 
@@ -167,8 +169,8 @@ export function TutorOrb({
   );
 }
 
-/** Each tutor's sketch portrait: Prof Matt the graduate, Dr River the reader. */
-const PORTRAITS: Record<TutorKey, string> = { matt: graduate, river: reader };
+/** Each tutor's sketch portrait: Prof Matt the graduate, Dr River the reader, Dr Toby the writer. */
+const PORTRAITS: Record<TutorKey, string> = { matt: graduate, river: reader, toby: writer };
 
 /** Eight nested squares, each a little smaller and more turned: the homepage rose, slimmed. */
 const SQUARES = Array.from({ length: 8 }, (_, i) => ({

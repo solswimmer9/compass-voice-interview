@@ -813,3 +813,103 @@ describe("credits and test mode", () => {
     expect(mocks.connect).not.toHaveBeenCalled();
   });
 });
+
+describe("Biology interviews with Dr Toby", () => {
+  afterEach(() => vi.unstubAllEnvs());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.authenticate.mockResolvedValue({
+      user: { email: "owner@example.com" },
+      supabase: { rpc: mocks.rpc },
+    });
+    mocks.rpc.mockResolvedValue({ data: { allowed: true, interviewId }, error: null });
+  });
+
+  function bound() {
+    let handler: ((data: unknown) => void) | undefined;
+    const browser = browserSocket();
+    const socket: LiveSocket = {
+      ...browser.socket,
+      onMessage(h) {
+        handler = h;
+      },
+    };
+    bindLiveConnection(socket, config, executionContext(), mocks.connect);
+    return { browser, send: (data: string) => handler?.(data) };
+  }
+
+  function gateway(sent: Array<Record<string, unknown>>): LiveSocket {
+    return {
+      readyState: 1,
+      send(data: string) {
+        sent.push(JSON.parse(data) as Record<string, unknown>);
+      },
+      close: vi.fn(),
+      onMessage: vi.fn(),
+      onClose: vi.fn(),
+      onError: vi.fn(),
+    };
+  }
+
+  const startBiology = (extra: object = {}) =>
+    JSON.stringify({
+      type: "app.start",
+      sdp: "test-offer",
+      openingTurn: 0,
+      accessToken: "valid-access-token",
+      environment: "live",
+      tutorId: "biology",
+      ...extra,
+    });
+
+  it("gives a tester the draft PCR roadmap in Dr Toby's own voice, without a credit", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
+    const sent: Array<Record<string, unknown>> = [];
+    mocks.connect.mockResolvedValue(gateway(sent));
+    const { browser, send } = bound();
+
+    send(startBiology());
+
+    await vi.waitFor(() => expect(sent).toHaveLength(1));
+    expect(mocks.rpc).not.toHaveBeenCalledWith("consume_interview_credit", expect.anything());
+    const started = browser.events.find((event) => event["type"] === "app.interview.started");
+    expect(started).toMatchObject({ tutorId: "biology", cardIds: ["bio-pcr"] });
+    const session = sent[0]?.["session"] as { instructions: string };
+    expect(session.instructions).toContain("You are Dr Toby");
+    expect(session.instructions).toContain("What can you tell me about the process of PCR?");
+    // Only the current step: later answers are never in the voice tutor's prompt.
+    expect(session.instructions).not.toContain("2 to the 25");
+    expect(session.instructions).not.toContain("more hydrogen bonds");
+    expect(session).toMatchObject({ audio: { output: { voice: "marin" } } });
+  });
+
+  it("never gives a student a draft scenario, and charges nothing when there is none", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "someone-else@example.com");
+    const { browser, send } = bound();
+
+    send(startBiology());
+
+    await vi.waitFor(() =>
+      expect(browser.events).toContainEqual(
+        expect.objectContaining({
+          type: "app.error",
+          error: { message: "Dr Toby is not available yet." },
+        }),
+      ),
+    );
+    expect(mocks.rpc).not.toHaveBeenCalledWith("consume_interview_credit", expect.anything());
+    expect(mocks.connect).not.toHaveBeenCalled();
+  });
+
+  it("refuses an object interview for biology", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
+    const { browser, send } = bound();
+
+    send(startBiology({ mode: "object" }));
+
+    await vi.waitFor(() =>
+      expect(browser.events).toContainEqual(expect.objectContaining({ type: "app.error" })),
+    );
+    expect(mocks.connect).not.toHaveBeenCalled();
+  });
+});

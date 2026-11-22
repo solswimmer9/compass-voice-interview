@@ -1,6 +1,7 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { readingById } from "@/lib/readings";
+import { subjectOrGeography } from "@/lib/subjects";
 import {
   hasChosenSubject,
   parseInterviewChoice,
@@ -25,7 +26,7 @@ import { autoStartAction, shouldHandOffToFeedback } from "@/lib/interview-handof
 const MIN_WAIT_MS = 2500;
 
 export const Route = createFileRoute("/interview")({
-  // tutor: "ppe" (Prof Matt) or "geography" (Dr River); a reading means geography. mode=object is
+  // tutor: "ppe" (Prof Matt), "biology" (Dr Toby) or "geography" (Dr River); a reading means geography. mode=object is
   // kept for old links (the chart opens the interview). start: set by "Start interview" so the
   // call connects straight away; removed once used, so a refresh never starts a second call.
   validateSearch: (search: Record<string, unknown>): InterviewChoice & { start?: true } => ({
@@ -115,27 +116,28 @@ function InterviewRoom() {
 
   const search = Route.useSearch();
   const { reading: readingParam, tutor: tutorParam, mode } = search;
-  const ppe = tutorParam === "ppe";
+  const subject = subjectOrGeography(tutorParam);
+  const tutorId = subject.id;
   const objectMode = mode === "object";
   // A reading counts only for its own subject's tutor; object interviews ignore readings.
   // (Only Dr River's server path runs reading interviews so far.)
-  const reading = objectMode ? undefined : readingById(readingParam, ppe ? "ppe" : "geography");
-  const tutorName = ppe ? "Prof Matt" : "Dr River";
-  const subjectLabel = ppe ? "PPE · Prof Matt" : "Geography · Dr River";
+  const reading = objectMode ? undefined : readingById(readingParam, tutorId);
+  const tutorName = subject.tutor;
+  const subjectLabel = `${subject.name} · ${subject.tutor}`;
   const getStartContext = useCallback(async () => {
     const environment = getPaymentsEnvironment();
     const { data } = await supabase.auth.getSession();
     const accessToken = data.session?.access_token;
     if (!accessToken) throw new Error("Please sign in again before starting your interview.");
     const objectRequest = objectMode ? { mode: "object" as const } : {};
-    if (ppe) return { accessToken, environment, tutorId: "ppe" as const, ...objectRequest };
+    if (tutorId !== "geography") return { accessToken, environment, tutorId, ...objectRequest };
     return {
       accessToken,
       environment,
       ...objectRequest,
       ...(reading ? { readingId: reading.id } : {}),
     };
-  }, [reading, ppe, objectMode]);
+  }, [reading, tutorId, objectMode]);
   const call = useLiveVoice({ onEvent, getStartContext });
   const account = useAccountSnapshot();
   const [preview, setPreview] = useState(false);
@@ -192,7 +194,7 @@ function InterviewRoom() {
   // A guest who has used their free tries must sign in; anyone else with none left must buy more.
   const guestUsedUp = !account.user && Boolean(account.guest) && outOfInterviews;
   const authSearch = {
-    tutor: ppe ? ("ppe" as const) : ("geography" as const),
+    tutor: tutorId,
     ...(objectMode ? { mode: "object" as const } : {}),
   };
 
@@ -281,13 +283,13 @@ function InterviewRoom() {
     handedOff.current = true;
     saveFinishedInterview({
       interviewId: call.interviewId,
-      tutor: ppe ? "ppe" : "geography",
+      tutor: tutorId,
       lines: lines.map(({ role, text }) => ({ role, text })),
-      ...(ppe && cardIds.length ? { cardIds } : {}),
+      ...(tutorId !== "geography" && cardIds.length ? { cardIds } : {}),
       ...(tableObject ? { objectId: tableObject.objectId } : {}),
     });
     void navigate({ to: "/feedback" });
-  }, [call.status, call.interviewId, canReconnect, lines, ppe, cardIds, tableObject, navigate]);
+  }, [call.status, call.interviewId, canReconnect, lines, tutorId, cardIds, tableObject, navigate]);
 
   const cancel = () => {
     call.stop();
@@ -295,7 +297,7 @@ function InterviewRoom() {
   };
 
   const waiting = call.status === "connecting" || (call.status === "connected" && !waitedEnough);
-  const tutorTheme = tutorKey(ppe ? "ppe" : undefined);
+  const tutorTheme = tutorKey(tutorId);
 
   return (
     <div className="relative min-h-[100svh] overflow-hidden">
@@ -309,7 +311,8 @@ function InterviewRoom() {
           subjectLabel={subjectLabel}
           audioRef={call.audioRef}
           error={call.error}
-          chartLater={!reading && !objectMode}
+          // Biology's diagrams arrive with its questions, not at a set minute.
+          chartLater={!reading && !objectMode && tutorId !== "biology"}
           onCancel={cancel}
         />
       ) : !idle ? (

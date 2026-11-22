@@ -2,14 +2,16 @@
 // and, across a sign-in that leaves the site (Google, email confirmation), in sessionStorage.
 // Browser-only UI state: the server decides access and credits on its own.
 
-export type InterviewChoice = { reading?: string; tutor?: "ppe" | "geography"; mode?: "object" };
+import { subjectById, type SubjectId } from "./subjects.ts";
+
+export type InterviewChoice = { reading?: string; tutor?: SubjectId; mode?: "object" };
 
 /** Keeps only known values, so anything else in the address is ignored. */
 export function parseInterviewChoice(search: Record<string, unknown>): InterviewChoice {
-  const tutor = search["tutor"];
+  const tutor = subjectById(search["tutor"])?.id;
   return {
     ...(typeof search["reading"] === "string" ? { reading: search["reading"] } : {}),
-    ...(tutor === "ppe" || tutor === "geography" ? { tutor } : {}),
+    ...(tutor ? { tutor } : {}),
     ...(search["mode"] === "object" ? { mode: "object" as const } : {}),
   };
 }
