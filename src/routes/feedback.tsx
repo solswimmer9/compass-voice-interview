@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { AssessPanel } from "@/components/AssessPanel";
 import { SiteNav } from "@/components/SiteNav";
 import { useAccountSnapshot } from "@/hooks/useAccountSnapshot";
+import { track } from "@/lib/analytics";
 import { loadFinishedInterview, type FinishedInterview } from "@/lib/finished-interview";
 
 export const Route = createFileRoute("/feedback")({
@@ -16,7 +17,11 @@ function FeedbackPage() {
   const account = useAccountSnapshot();
   // Read in the browser only: the interview is kept in this tab's sessionStorage.
   const [interview, setInterview] = useState<FinishedInterview | null | undefined>(undefined);
-  useEffect(() => setInterview(loadFinishedInterview()), []);
+  useEffect(() => {
+    const finished = loadFinishedInterview();
+    setInterview(finished);
+    if (finished) track("feedback_page_viewed", { tutor: finished.tutor });
+  }, []);
 
   if (interview === undefined) return null;
 

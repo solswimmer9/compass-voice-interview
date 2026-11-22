@@ -58,6 +58,10 @@ function PrivacyPage() {
           the voice tutor and feedback.
         </li>
         <li>Stripe, our payment processor, for payments, fraud prevention, tax and receipts.</li>
+        <li>
+          PostHog (EU servers), for anonymous usage statistics such as which pages are visited and
+          whether interviews finish. It sets no cookies and never receives what you say.
+        </li>
         <li>Professional advisers (legal, accounting).</li>
         <li>Authorities where required by law.</li>
       </ul>
