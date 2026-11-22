@@ -48,7 +48,14 @@ export function canUseGroundedFeedback(args: {
   return turns.filter((t) => t.role === "user").length >= MIN_STUDENT_TURNS;
 }
 
-/** Subject inputs. Draft PPE notes only when `includeDrafts` (tester accounts), as on the single-call path. */
+/**
+ * Subject inputs. Draft PPE notes only when `includeDrafts` (tester accounts), as on the
+ * single-call path.
+ *
+ * Callers must pass `includeDrafts: true` only for a server-verified tester: `handleAssess`
+ * derives it from `isServerTester`. Never derive it from anything a student controls.
+ * `src/test/grounded-gate.test.ts` guards this.
+ */
 export function groundedInput(req: GroundedRequest): FeedbackInput {
   const withObject = (context: string) => [context, req.objectContext].filter(Boolean).join("\n\n");
   if (req.ppe) {
