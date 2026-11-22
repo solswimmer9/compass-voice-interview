@@ -795,13 +795,13 @@ describe("credits and test mode", () => {
 
   it("gives the credit back when the student leaves while it is being taken", async () => {
     let resolveCredit: (value: unknown) => void = () => {};
-    mocks.rpc.mockImplementation(
-      () => new Promise((resolve) => (resolveCredit = resolve)),
-    );
+    mocks.rpc.mockImplementation(() => new Promise((resolve) => (resolveCredit = resolve)));
     const call = startWith("live");
     const onClose = vi.mocked(call.socket.onClose);
     call.send(call.start);
-    await vi.waitFor(() => expect(mocks.rpc).toHaveBeenCalledWith("consume_interview_credit", expect.anything()));
+    await vi.waitFor(() =>
+      expect(mocks.rpc).toHaveBeenCalledWith("consume_interview_credit", expect.anything()),
+    );
     (onClose.mock.calls[0]?.[0] as () => void)();
     resolveCredit({ data: { allowed: true, interviewId }, error: null });
     await vi.waitFor(() =>

@@ -132,7 +132,9 @@ describe("turn order when fragments arrive late", () => {
       sequence: 1,
     });
     expect(lines.map((line) => line.role)).toEqual(["user", "assistant"]);
-    expect(formatTranscript(lines)).toBe("You: Cities grow near rivers.\n\nDr River: Why do you say that?");
+    expect(formatTranscript(lines)).toBe(
+      "You: Cities grow near rivers.\n\nDr River: Why do you say that?",
+    );
   });
 
   it("never moves a turn ahead of an earlier session after a reconnect", async () => {
