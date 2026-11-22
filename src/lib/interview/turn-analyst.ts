@@ -134,7 +134,7 @@ export function defaultTurnState(fallback: ParseFallback = {}): TurnState {
   };
 }
 
-function extractJson(raw: unknown): unknown {
+export function extractJson(raw: unknown): unknown {
   if (raw && typeof raw === "object") return raw;
   if (typeof raw !== "string") return undefined;
   const text = raw

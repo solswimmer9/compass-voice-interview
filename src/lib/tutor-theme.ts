@@ -2,7 +2,6 @@
  * Colour themes for the tutors, shared by anything that shows a tutor's identity
  * (the in-call orb, picker cards, etc.).
  */
-// Dr Toby (Bio NatSci) has an orb ready; tutorKey() maps to him once his subject is live.
 export type TutorKey = "river" | "matt" | "toby";
 
 export type TutorTheme = {
@@ -19,7 +18,8 @@ export const TUTOR_THEME: Record<TutorKey, TutorTheme> = {
   toby: { name: "Dr Toby", colour: "#7fd4a0", rgb: "127 212 160" },
 };
 
-/** Geography (no tutor id) is Dr River; "ppe" is Prof Matt. */
-export function tutorKey(tutorId?: "ppe"): TutorKey {
-  return tutorId === "ppe" ? "matt" : "river";
+/** Geography (no tutor id) is Dr River; "ppe" is Prof Matt; "biology" is Dr Toby. */
+export function tutorKey(tutorId?: string): TutorKey {
+  if (tutorId === "ppe") return "matt";
+  return tutorId === "biology" ? "toby" : "river";
 }

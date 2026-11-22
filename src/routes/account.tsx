@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { subjectOrGeography } from "@/lib/subjects";
 import { useAccountSnapshot } from "@/hooks/useAccountSnapshot";
 import { LIFETIME_ACCESS, offerForProductId } from "@/lib/offer";
 import { updateDisplayName } from "@/utils/account.functions";
@@ -194,7 +195,7 @@ function PastInterviews({ userId }: { userId: string }) {
           {data.map((row) => (
             <li key={row.id} className="flex justify-between gap-4">
               <span>
-                {row.tutor === "ppe" ? "PPE with Prof Matt" : "Geography with Dr River"}
+                {`${subjectOrGeography(row.tutor).name} with ${subjectOrGeography(row.tutor).tutor}`}
                 <span className="block text-xs text-muted-foreground">
                   {new Date(row.finished_at!).toLocaleDateString("en-GB", {
                     day: "numeric",

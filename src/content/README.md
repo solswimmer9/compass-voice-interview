@@ -38,6 +38,11 @@ The tutor "puts something on the table" (an unlabelled chart) and asks what it c
    `src/lib/object-interviews.ts` so the picker offers it to students.
 4. Add it to `OBJECTS` in `objects/index.ts`; `bunx vitest run src/test/content-objects*`.
 
+## Roadmap scenarios (sciences)
+
+Dr Toby (biology) has no cards: each interview is one scenario under `scenarios/`, worked
+through step by step. See `scenarios/README.md`.
+
 ## Add a tutor
 
 1. Add the id to `TutorId` in `types.ts`.

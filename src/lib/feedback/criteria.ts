@@ -70,3 +70,29 @@ export const PPE_CRITERIA: Criterion[] = [
     notEvidence: "Using a term loosely in several senses.",
   },
 ];
+
+export const BIOLOGY_CRITERIA: Criterion[] = [
+  ...SHARED,
+  {
+    id: "mechanism",
+    name: "Reasoning from mechanism",
+    evidenceLooksLike:
+      "The student explains why in terms of what molecules or cells are doing, such as hydrogen bonds breaking or an enzyme acting.",
+    notEvidence: "Reciting a definition or a list of steps with no reason given.",
+  },
+  {
+    id: "using-hints",
+    name: "Using new information",
+    evidenceLooksLike:
+      "After a hint or a new fact from the tutor, the student builds on it to reach the next step themselves.",
+    notEvidence: "Repeating the hint back, or waiting for the tutor to supply the answer.",
+  },
+  {
+    id: "quantitative",
+    name: "Quantitative reasoning",
+    evidenceLooksLike:
+      "The student sets up a calculation or estimate aloud, uses a shortcut such as powers of two, or reuses an earlier result.",
+    notEvidence:
+      "A number with no working, or redoing a whole calculation when an earlier result applies.",
+  },
+];

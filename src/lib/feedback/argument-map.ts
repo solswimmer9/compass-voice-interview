@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { subjectOrGeography } from "../subjects";
 
 /**
  * The feedback stream is one streamText call: the tutor's written feedback, then (optionally)
@@ -173,10 +174,9 @@ export function letterBlocks(markdown: string): LetterBlock[] {
 
 export type TutorLetterInfo = { name: string; initials: string };
 
-export function tutorLetterInfo(tutorId?: "ppe"): TutorLetterInfo {
-  return tutorId === "ppe"
-    ? { name: "Prof Matt", initials: "PM" }
-    : { name: "Dr River", initials: "DR" };
+export function tutorLetterInfo(tutorId?: string): TutorLetterInfo {
+  const { tutor, initials } = subjectOrGeography(tutorId);
+  return { name: tutor, initials };
 }
 
 /** "Dear Sam," from a display name, or "Dear candidate,". */

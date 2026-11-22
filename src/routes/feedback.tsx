@@ -9,6 +9,7 @@ import {
   loadFinishedInterview,
   type FinishedInterview,
 } from "@/lib/finished-interview";
+import { subjectById, subjectOrGeography } from "@/lib/subjects";
 import { supabase } from "@/integrations/supabase/client";
 
 async function loadSavedInterview(id: string): Promise<FinishedInterview | null> {
@@ -18,7 +19,7 @@ async function loadSavedInterview(id: string): Promise<FinishedInterview | null>
     .eq("id", id)
     .maybeSingle();
   if (!data?.feedback) return null;
-  const tutor = data.tutor === "ppe" ? "ppe" : "geography";
+  const tutor = subjectById(data.tutor)?.id ?? "geography";
   const text = (data.transcript as { text?: unknown } | null)?.text;
   return {
     interviewId: data.id,
@@ -56,7 +57,8 @@ function FeedbackPage() {
 
   if (interview === undefined) return null;
 
-  const tutorName = interview?.tutor === "ppe" ? "Prof Matt" : "Dr River";
+  const subject = subjectOrGeography(interview?.tutor);
+  const tutorName = subject.tutor;
 
   return (
     <div className="relative min-h-[100svh]">
@@ -78,7 +80,7 @@ function FeedbackPage() {
         ) : (
           <>
             <p className="text-xs font-medium uppercase tracking-[0.25em] text-muted-foreground">
-              {interview.tutor === "ppe" ? "PPE" : "Geography"} · {tutorName}
+              {subject.name} · {tutorName}
             </p>
             <h1 className="mt-2 text-3xl font-medium tracking-tight">Your feedback letter</h1>
 
