@@ -159,6 +159,25 @@ describe("advanceRoadmap", () => {
     expect(result.reason).toBe("moved-on");
   });
 
+  it("ignores a stray moved-on flag on the last step", () => {
+    const last = { ...startRoadmap(), step: pcr.steps.length - 1 };
+    const result = advanceRoadmap(pcr, last, check({ tutorMovedOn: true }));
+    expect(result.state.done).toBe(false);
+    expect(result.note).toBeUndefined();
+  });
+
+  it("does not count answers to later steps as being stuck", () => {
+    const result = advanceRoadmap(pcr, startRoadmap(), check({ covered: ["why-90"] }));
+    expect(result.state.stuck).toBe(0);
+  });
+
+  it("never holds the previous step's answer in the next question", () => {
+    // Each step's notes carry the next question, so it must not give the current answer away.
+    expect(pcr.steps[1]!.ask).not.toMatch(/cycl/i);
+    expect(pcr.steps[2]!.ask).not.toMatch(/\b(90|55|72)\b/);
+    expect(pcr.steps[3]!.ask).not.toMatch(/anneal|55/i);
+  });
+
   it("closes the interview after the last step", () => {
     const last = { ...startRoadmap(), step: pcr.steps.length - 1 };
     const result = advanceRoadmap(pcr, last, check({ covered: pointsOf(pcr.steps.length - 1) }));
@@ -242,5 +261,13 @@ describe("checker plumbing", () => {
     await vi.waitFor(() => expect(log).toHaveBeenCalled());
     expect(runner.state).toEqual(startRoadmap());
     expect(log.mock.calls[0]![0]).toMatchObject({ checked: false, failure: "Error" });
+  });
+});
+
+describe("biology on the subject page", () => {
+  it("is shown to testers only while no biology scenario is approved", async () => {
+    const { subjectById } = await import("@/lib/subjects");
+    const approved = SCENARIOS.some((s) => s.tutor === "biology" && s.status === "approved");
+    expect(Boolean(subjectById("biology")?.testersOnly)).toBe(!approved);
   });
 });

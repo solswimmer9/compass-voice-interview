@@ -1,6 +1,8 @@
 // PCR roadmap scenario for Dr Toby. Written by Tim (decision tree v1 and roadmap v2, 15 November
 // 2026) and converted into this format. The step-5 numbers (40 molecules, one billion copies)
-// were filled in by Claude because the original left them blank: Tim should check them.
+// were filled in by Claude because the original left them blank: Tim should check them. Steps 3
+// and 4 are reworded so that, while the tutor holds them as "next question", they do not give
+// away the answer to the step before.
 import type { Scenario } from "../types.ts";
 import { flowSvg, thermalCycleSvg } from "./diagrams.ts";
 
@@ -44,7 +46,7 @@ Different strands: if the 40 starting molecules are all different and we want on
     },
     {
       id: "temperatures",
-      ask: "We spoke about thermal cycling being important for PCR. Do you have any idea which temperatures we use in each stage?",
+      ask: "Let's talk temperatures. Do you know which temperatures PCR uses, and in what order?",
       points: [
         { id: "temp-denature", text: "a first stage at about 90-95 degrees C" },
         { id: "temp-anneal", text: "a stage at about 50-65 degrees C (about 55)" },
@@ -62,7 +64,7 @@ Different strands: if the 40 starting molecules are all different and we want on
     },
     {
       id: "why-temperatures",
-      ask: "So we cycle from 90 to 55 to 72 degrees, and you can see that on the diagram now. The question is: why do we use each of these temperatures?",
+      ask: "Let me put those three temperatures up on a diagram. The question now is: why do we use each of them?",
       points: [
         { id: "why-90", text: "about 90 breaks the hydrogen bonds and separates the two strands" },
         { id: "why-55", text: "about 55 lets the primers anneal (bind) to the template" },
@@ -88,7 +90,7 @@ Different strands: if the 40 starting molecules are all different and we want on
     },
     {
       id: "primers-stay",
-      ask: "Excellent, so let's dig a little deeper. If the primers need a low temperature of 55 degrees to anneal, why don't they melt off when we raise the temperature to 72?",
+      ask: "Excellent, so let's dig a little deeper. When we heat the mixture back up to 72 degrees, why don't the primers melt off?",
       points: [
         {
           id: "extend-at-once",

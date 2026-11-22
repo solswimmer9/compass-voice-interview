@@ -13,6 +13,11 @@ export type Subject = {
   initials: string;
   /** One line under the tutor's name on the subject page. */
   line: string;
+  /**
+   * Shown only to tester accounts, while the tutor has nothing approved for students. Must match
+   * the server: src/test/biology-roadmap.test.ts checks it against the approved scenarios.
+   */
+  testersOnly?: true;
 };
 
 export const SUBJECTS: readonly Subject[] = [
@@ -36,6 +41,7 @@ export const SUBJECTS: readonly Subject[] = [
     tutor: "Dr Toby",
     initials: "DT",
     line: "Cambridge-style Natural Sciences, and good practice for medicine. He takes you through a real problem step by step, with hints when you are stuck.",
+    testersOnly: true,
   },
 ];
 

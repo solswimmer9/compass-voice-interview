@@ -538,6 +538,10 @@ export function bindLiveConnection(
     }
     const auth = await authenticateAccessToken(event.accessToken);
     if (!auth) throw new Error("Your sign-in has expired. Please sign in again.");
+    // Unlimited testing is per signed-in tester account, never by web address.
+    const tester = isServerTester(auth.user.email);
+    // Before any guest try or credit, so an interview that cannot be built costs nothing.
+    await beforeCredit?.(tester);
     // A reconnect is the same interview, so it never counts as a new guest try.
     if (auth.user.is_anonymous && !resume) {
       const allowed = takeGuestInterview(visitor);
@@ -547,9 +551,6 @@ export function bindLiveConnection(
         );
       }
     }
-    // Unlimited testing is per signed-in tester account, never by web address.
-    const tester = isServerTester(auth.user.email);
-    await beforeCredit?.(tester);
     // Testers may resume freely; with no stored start time they get a fresh limit.
     if (tester) return "preview";
     if (event.environment !== "sandbox" && event.environment !== "live") {
@@ -820,7 +821,11 @@ export function bindLiveConnection(
       wrapUpTimer = setTimeout(() => sendCue(WRAP_UP_INSTRUCTIONS), wrapUpDelay);
     }
     closingTimer = setTimeout(
-      () => sendCue(CLOSING_INSTRUCTIONS, CLOSING_PROMPT),
+      () => {
+        // After the goodbye, a late roadmap note must not start a new question.
+        roadmap?.close();
+        sendCue(CLOSING_INSTRUCTIONS, CLOSING_PROMPT);
+      },
       Math.max(0, limit - CLOSING_LEAD_MS),
     );
   }

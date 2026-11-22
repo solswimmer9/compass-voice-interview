@@ -3,6 +3,7 @@ import { MeridianPage, Rose, darkButton, mono, serif } from "@/components/meridi
 import { INTERVIEW_MINUTES, OBJECT_REVEAL_MINUTES } from "@/lib/limits";
 import { readingsFor } from "@/lib/readings";
 import { SUBJECTS, type SubjectId } from "@/lib/subjects";
+import { useAccountSnapshot } from "@/hooks/useAccountSnapshot";
 import graduate from "@/assets/home/graduate.webp";
 import reader from "@/assets/home/reader.webp";
 import writer from "@/assets/home/writer.webp";
@@ -32,6 +33,9 @@ const PORTRAITS: Record<SubjectId, { src: string; alt: string }> = {
 };
 
 function SubjectsPage() {
+  const account = useAccountSnapshot();
+  // Display only: the server refuses students a tutor with nothing approved anyway.
+  const subjects = SUBJECTS.filter((s) => !s.testersOnly || account.data?.tester);
   return (
     <MeridianPage
       framed={
@@ -71,7 +75,7 @@ function SubjectsPage() {
     >
       <main className="px-2 pb-28 pt-16">
         <ul className="grid gap-6 lg:grid-cols-2">
-          {SUBJECTS.map((s) => {
+          {subjects.map((s) => {
             const readings = readingsFor(s.id);
             const portrait = PORTRAITS[s.id];
             return (
@@ -110,7 +114,7 @@ function SubjectsPage() {
                     >
                       Or start with a practice reading ({readings.length} articles)
                     </Link>
-                  ) : (
+                  ) : s.id === "biology" ? null : (
                     <span className="text-sm text-[#5a5a57]">Practice readings coming soon</span>
                   )}
                 </div>

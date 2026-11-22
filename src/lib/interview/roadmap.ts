@@ -76,7 +76,7 @@ export function stepNotes(scenario: Scenario, index: number, covered: readonly s
       ? `The student can see a diagram on screen; you cannot. It shows: ${step.diagram.shows}`
       : "",
     next
-      ? `Once every point is covered, say so in a few words and move on to: ${next.ask}`
+      ? `Once every point is covered, say so in a few words and move on to the next question (never use it as a hint for this one): ${next.ask}`
       : `Once every point is covered, close the interview. ${scenario.closing}`,
   ]
     .filter(Boolean)
@@ -198,11 +198,13 @@ export function advanceRoadmap(
   if (state.done) return { state };
   const step = scenario.steps[state.step] as ScenarioStep;
   const covered = [...new Set([...state.covered, ...check.covered])];
-  const madeProgress = step.points.some(
-    (p) => covered.includes(p.id) && !state.covered.includes(p.id),
-  );
+  // Any new point counts as progress, including a later step's: that student is not stuck.
+  const madeProgress = covered.length > state.covered.length;
 
-  if (check.tutorMovedOn) return moveOn(scenario, covered, state.step + 1, "", "moved-on");
+  // On the last step there is nothing to move on to, so a stray flag must not end the interview.
+  const hasNext = state.step + 1 < scenario.steps.length;
+  if (check.tutorMovedOn && hasNext)
+    return moveOn(scenario, covered, nextOpen(scenario, covered, state.step + 1), "", "moved-on");
   if (complete(step, covered)) {
     return moveOn(scenario, covered, nextOpen(scenario, covered, state.step + 1), "", "covered");
   }
