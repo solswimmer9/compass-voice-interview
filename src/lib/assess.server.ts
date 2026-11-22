@@ -230,6 +230,18 @@ export async function handleAssess(request: Request) {
   // so the student can try again instead of losing it.
   const userId = auth?.user.id;
   const restore = () => (userId ? restoreFeedback(interviewId, userId) : Promise.resolve());
+  // The letter as sent, kept on the student's account once it has been delivered in full.
+  const letter: string[] = [];
+  const keep = () =>
+    userId && transcript
+      ? saveFinishedInterview(
+          interviewId,
+          userId,
+          biology ? "biology" : ppe ? "ppe" : "geography",
+          transcript,
+          letter.join(""),
+        )
+      : Promise.resolve();
 
   // Every account: evidence-checked feedback, every quotation verified against the transcript.
   // All access rules above have already run and the feedback allowance is charged once, before
@@ -270,10 +282,15 @@ export async function handleAssess(request: Request) {
         if (outcome.ok) {
           // Send the checked letter at once; the panel already accepts the map arriving after it.
           controller.enqueue(encoder.encode(outcome.text));
+          letter.push(outcome.text);
           const map = await withinGrace(mapBlock, MAP_GRACE_MS);
           // Stop a map call that is still running so it is not billed after the response ends.
           pipelineAbort.abort();
-          if (map && !request.signal.aborted) controller.enqueue(encoder.encode(map));
+          if (map && !request.signal.aborted) {
+            controller.enqueue(encoder.encode(map));
+            letter.push(map);
+          }
+          await keep();
           return controller.close();
         }
         // Falling back: the single-call reply brings its own map, so cancel the separate one.
@@ -286,8 +303,8 @@ export async function handleAssess(request: Request) {
           controller.enqueue(encoder.encode("\n\n[[error]]The assessment could not be completed."));
           return controller.close();
         }
-        const delivered = await pipeFeedback(result, controller, request.signal);
-        if (!delivered) await restore();
+        const delivered = await pipeFeedback(result, controller, request.signal, letter);
+        await (delivered ? keep() : restore());
         controller.close();
       },
     });
@@ -303,8 +320,8 @@ export async function handleAssess(request: Request) {
   }
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
-      const delivered = await pipeFeedback(result, controller, request.signal);
-      if (!delivered) await restore();
+      const delivered = await pipeFeedback(result, controller, request.signal, letter);
+      await (delivered ? keep() : restore());
       controller.close();
     },
   });
@@ -323,6 +340,34 @@ async function restoreFeedback(interviewId: string, userId: string) {
     if (error) throw error;
   } catch (error) {
     console.error("[assess] could not restore feedback after a failed letter", error);
+  }
+}
+
+/** Keeps a finished interview and its letter on the student's account. Never blocks the letter. */
+async function saveFinishedInterview(
+  interviewId: string,
+  userId: string,
+  tutor: "ppe" | "geography" | "biology",
+  transcript: string,
+  feedback: string,
+) {
+  // Tester previews have no real interview row.
+  if (!/^[0-9a-f-]{36}$/i.test(interviewId)) return;
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("interview_sessions")
+      .update({
+        tutor,
+        transcript: { text: transcript },
+        feedback,
+        finished_at: new Date().toISOString(),
+      })
+      .eq("id", interviewId)
+      .eq("user_id", userId);
+    if (error) throw error;
+  } catch (error) {
+    console.error("[assess] could not save the finished interview", error);
   }
 }
 
@@ -354,13 +399,16 @@ async function pipeFeedback(
   result: { fullStream: AsyncIterable<{ type: string; text?: string; error?: unknown }> },
   controller: ReadableStreamDefaultController<Uint8Array>,
   signal: AbortSignal,
+  letter: string[] = [],
 ): Promise<boolean> {
   let sentText = false;
   let failed = false;
   // The word limit covers the letter; a trailing argument-map block passes through intact.
   const limiter = createMapAwareLimiter();
   const send = (text: string) => {
-    if (text) controller.enqueue(encoder.encode(text));
+    if (!text) return;
+    controller.enqueue(encoder.encode(text));
+    letter.push(text);
   };
   try {
     for await (const part of result.fullStream) {

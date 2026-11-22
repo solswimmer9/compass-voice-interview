@@ -35,7 +35,7 @@ export const Route = createFileRoute("/auth")({
       { property: "og:title", content: "Sign in to Oxbridge Interview Practice" },
       {
         property: "og:description",
-        content: "Access your free interview and purchased interview packs.",
+        content: "Access your free interviews and purchased interview packs.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

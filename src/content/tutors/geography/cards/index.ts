@@ -24,9 +24,7 @@ import courtImpressive from "./court-impressive.ts";
 import hopefulAndAngry from "./hopeful-and-angry.ts";
 import footballerWar from "./footballer-war.ts";
 import townVote from "./town-vote.ts";
-import cityEverFinished from "./city-ever-finished.ts";
 import inequalityPostcode from "./inequality-postcode.ts";
-import migrantWhen from "./migrant-when.ts";
 import developingWhoDecides from "./developing-who-decides.ts";
 import sameVirusDifferentPandemics from "./same-virus-different-pandemics.ts";
 import foodExportHunger from "./food-export-hunger.ts";
@@ -34,7 +32,6 @@ import geopoliticsArctic from "./geopolitics-arctic.ts";
 import colonialPlaceNames from "./colonial-place-names.ts";
 import oldIceLandscape from "./old-ice-landscape.ts";
 import hazardsCityVolcano from "./hazards-city-volcano.ts";
-import weatherWorseOrExposed from "./weather-worse-or-exposed.ts";
 import nativeSpecies from "./native-species.ts";
 import treesClimateSolution from "./trees-climate-solution.ts";
 import statisticLimits from "./statistic-limits.ts";
@@ -67,9 +64,7 @@ export const GEOGRAPHY_CARDS: TopicCard[] = [
   hopefulAndAngry,
   footballerWar,
   townVote,
-  cityEverFinished,
   inequalityPostcode,
-  migrantWhen,
   developingWhoDecides,
   sameVirusDifferentPandemics,
   foodExportHunger,
@@ -77,7 +72,6 @@ export const GEOGRAPHY_CARDS: TopicCard[] = [
   colonialPlaceNames,
   oldIceLandscape,
   hazardsCityVolcano,
-  weatherWorseOrExposed,
   nativeSpecies,
   treesClimateSolution,
   statisticLimits,

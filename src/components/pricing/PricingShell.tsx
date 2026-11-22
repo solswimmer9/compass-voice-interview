@@ -15,13 +15,13 @@ export function pricingHead(title: string) {
       { title: `${title} | Oxbridge Interview Practice` },
       {
         name: "description",
-        content: `Your first interview with Dr River or Prof Matt is free. Then top up with the ${INTERVIEW_PACK.name} or get lifetime access, each interview with AI reasoning feedback.`,
+        content: `Your first two interviews with Dr River or Prof Matt are free. Then top up with the ${INTERVIEW_PACK.name} or get lifetime access, each interview with AI reasoning feedback.`,
       },
       { property: "og:title", content: "Pricing · Oxbridge Interview Practice" },
       {
         property: "og:description",
         content:
-          "One free practice interview, then a one-off pack or lifetime access. No subscription.",
+          "Two free practice interviews, then a one-off pack or lifetime access. No subscription.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

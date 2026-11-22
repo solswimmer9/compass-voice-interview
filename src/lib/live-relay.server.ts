@@ -579,7 +579,7 @@ export function bindLiveConnection(
         throw new Error("You've used your free tries. Sign in to keep practising.");
       }
       throw new Error(
-        "Your free interview has been used. See the pricing page for more interviews or lifetime access.",
+        "Your free interviews have been used. See the pricing page for more interviews or lifetime access.",
       );
     }
     interviewCredit = { id: result.interviewId, userId: auth.user.id };

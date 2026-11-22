@@ -1,5 +1,5 @@
 /**
- * Colour themes for the two tutors, shared by anything that shows a tutor's identity
+ * Colour themes for the tutors, shared by anything that shows a tutor's identity
  * (the in-call orb, picker cards, etc.).
  */
 export type TutorKey = "river" | "matt" | "toby";
@@ -15,7 +15,7 @@ export type TutorTheme = {
 export const TUTOR_THEME: Record<TutorKey, TutorTheme> = {
   river: { name: "Dr River", colour: "#8ab4f0", rgb: "138 180 240" },
   matt: { name: "Prof Matt", colour: "#f2a65a", rgb: "242 166 90" },
-  toby: { name: "Dr Toby", colour: "#7cc59a", rgb: "124 197 154" },
+  toby: { name: "Dr Toby", colour: "#7fd4a0", rgb: "127 212 160" },
 };
 
 /** Geography (no tutor id) is Dr River; "ppe" is Prof Matt; "biology" is Dr Toby. */

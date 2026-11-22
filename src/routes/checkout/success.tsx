@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { track } from "@/lib/analytics";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/components/AuthProvider";
@@ -57,6 +58,9 @@ function CheckoutSuccessPage() {
   });
 
   const confirmed = query.data?.confirmed === true;
+  useEffect(() => {
+    if (confirmed) track("purchase_completed", { school: Boolean(query.data?.schoolBundle) });
+  }, [confirmed, query.data?.schoolBundle]);
   const gaveUp = !confirmed && (query.isError || attempts >= MAX_ATTEMPTS);
   const waiting = loading || !user || (Boolean(sessionId) && !confirmed && !gaveUp);
 

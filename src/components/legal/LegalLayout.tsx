@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
 export const SELLER_NAME = "Solomon Allen";
-export const LEGAL_UPDATED = "10 November 2026";
+export const LEGAL_UPDATED = "22 November 2026";
 
 export function LegalLayout({ title, children }: { title: string; children: ReactNode }) {
   return (

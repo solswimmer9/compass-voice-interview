@@ -3,7 +3,6 @@ import { rmsLevel } from "@/lib/audio-level";
 import { TUTOR_THEME, type TutorKey } from "@/lib/tutor-theme";
 import graduate from "@/assets/home/graduate.webp";
 import reader from "@/assets/home/reader.webp";
-// shortcut: Dr Toby borrows the writer sketch until his own portrait design lands.
 import writer from "@/assets/home/writer.webp";
 
 type OrbStatus = "connecting" | "connected" | "stopping";

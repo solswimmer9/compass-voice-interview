@@ -3,10 +3,36 @@ import { useEffect, useState } from "react";
 import { AssessPanel } from "@/components/AssessPanel";
 import { SiteNav } from "@/components/SiteNav";
 import { useAccountSnapshot } from "@/hooks/useAccountSnapshot";
-import { loadFinishedInterview, type FinishedInterview } from "@/lib/finished-interview";
-import { subjectOrGeography } from "@/lib/subjects";
+import { track } from "@/lib/analytics";
+import {
+  linesFromTranscriptText,
+  loadFinishedInterview,
+  type FinishedInterview,
+} from "@/lib/finished-interview";
+import { subjectById, subjectOrGeography } from "@/lib/subjects";
+import { supabase } from "@/integrations/supabase/client";
+
+async function loadSavedInterview(id: string): Promise<FinishedInterview | null> {
+  const { data } = await supabase
+    .from("interview_sessions")
+    .select("id, tutor, transcript, feedback")
+    .eq("id", id)
+    .maybeSingle();
+  if (!data?.feedback) return null;
+  const tutor = subjectById(data.tutor)?.id ?? "geography";
+  const text = (data.transcript as { text?: unknown } | null)?.text;
+  return {
+    interviewId: data.id,
+    tutor,
+    lines: typeof text === "string" ? linesFromTranscriptText(text, tutor) : [],
+    feedbackRequested: true,
+    feedback: data.feedback,
+  };
+}
 
 export const Route = createFileRoute("/feedback")({
+  validateSearch: (search: Record<string, unknown>): { id?: string } =>
+    typeof search["id"] === "string" && search["id"] ? { id: search["id"] } : {},
   head: () => ({
     meta: [{ title: "Your feedback letter | Oxbridge Interview Practice" }],
   }),
@@ -17,7 +43,17 @@ function FeedbackPage() {
   const account = useAccountSnapshot();
   // Read in the browser only: the interview is kept in this tab's sessionStorage.
   const [interview, setInterview] = useState<FinishedInterview | null | undefined>(undefined);
-  useEffect(() => setInterview(loadFinishedInterview()), []);
+  const { id } = Route.useSearch();
+  useEffect(() => {
+    if (id) {
+      // A past interview kept on the account; the database only returns the student's own rows.
+      void loadSavedInterview(id).then(setInterview);
+      return;
+    }
+    const finished = loadFinishedInterview();
+    setInterview(finished);
+    if (finished) track("feedback_page_viewed", { tutor: finished.tutor });
+  }, [id]);
 
   if (interview === undefined) return null;
 

@@ -265,7 +265,7 @@ describe("PPE interviews", () => {
       expect(browser.events).toContainEqual(
         expect.objectContaining({
           type: "app.error",
-          error: { message: expect.stringMatching(/free interview has been used/) },
+          error: { message: expect.stringMatching(/free interviews have been used/) },
         }),
       ),
     );

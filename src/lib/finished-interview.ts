@@ -81,3 +81,19 @@ export function transcriptText(interview: Pick<FinishedInterview, "tutor" | "lin
     .map((line) => `${line.role === "assistant" ? tutorName : "You"}: ${line.text.trim()}`)
     .join("\n\n");
 }
+
+/** Reverses `transcriptText`, for interviews kept on the account as text. */
+export function linesFromTranscriptText(
+  text: string,
+  tutor: FinishedInterview["tutor"],
+): FinishedLine[] {
+  const tutorPrefix = `${subjectOrGeography(tutor).tutor}: `;
+  const lines: FinishedLine[] = [];
+  for (const block of text.split("\n\n")) {
+    if (block.startsWith("You: ")) lines.push({ role: "user", text: block.slice(5) });
+    else if (block.startsWith(tutorPrefix))
+      lines.push({ role: "assistant", text: block.slice(tutorPrefix.length) });
+    else if (lines.length) lines[lines.length - 1]!.text += `\n\n${block}`;
+  }
+  return lines;
+}
