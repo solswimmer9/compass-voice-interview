@@ -13,9 +13,15 @@ export function SiteNav({ back }: { back?: "home" }) {
           ← Home
         </Link>
       )}
-      <span className="flex items-center gap-5">
+      <span className="flex flex-wrap items-center justify-end gap-x-5 gap-y-2">
         <Link to="/subjects" className="text-muted-foreground transition hover:text-foreground">
           Subjects
+        </Link>
+        <Link to="/tutors" className="text-muted-foreground transition hover:text-foreground">
+          Tutors
+        </Link>
+        <Link to="/schools" className="text-muted-foreground transition hover:text-foreground">
+          Schools
         </Link>
         <Link to="/pricing" className="text-muted-foreground transition hover:text-foreground">
           Pricing
