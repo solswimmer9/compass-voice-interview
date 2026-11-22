@@ -4,6 +4,7 @@ import {
   rememberChoiceForSignIn,
   type InterviewChoice,
 } from "@/lib/interview-choice";
+import { parseCheckoutSessionId } from "@/lib/checkout-return";
 import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -12,9 +13,17 @@ import "@lovable.dev/cloud-auth-js/styles.css";
 
 export const Route = createFileRoute("/auth")({
   // Which interview the student was on, so signing in returns them to the same one.
-  validateSearch: (search: Record<string, unknown>): Omit<InterviewChoice, "reading"> => {
+  // session_id: a paid checkout to confirm after signing in (see /checkout/success).
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): Omit<InterviewChoice, "reading"> & { session_id?: string } => {
     const { tutor, mode } = parseInterviewChoice(search);
-    return { ...(tutor ? { tutor } : {}), ...(mode ? { mode } : {}) };
+    const sessionId = parseCheckoutSessionId(search["session_id"]);
+    return {
+      ...(tutor ? { tutor } : {}),
+      ...(mode ? { mode } : {}),
+      ...(sessionId ? { session_id: sessionId } : {}),
+    };
   },
   head: () => ({
     meta: [
@@ -61,16 +70,19 @@ function GoogleIcon() {
 function AuthPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const { tutor, mode: interviewMode } = Route.useSearch();
+  const { tutor, mode: interviewMode, session_id: checkoutSessionId } = Route.useSearch();
   const interviewSearch = {
     ...(tutor ? { tutor } : {}),
     ...(interviewMode ? { mode: interviewMode } : {}),
   };
-  // With a subject chosen, signing in carries straight on into the interview.
+  // With a subject chosen, signing in carries straight on into the interview. A paid checkout
+  // waiting for confirmation takes priority, so the buyer sees their purchase.
   const backToInterview = () =>
-    tutor || interviewMode
-      ? navigate({ to: "/interview", search: { ...interviewSearch, start: true as const } })
-      : navigate({ to: "/" });
+    checkoutSessionId
+      ? navigate({ to: "/checkout/success", search: { session_id: checkoutSessionId } })
+      : tutor || interviewMode
+        ? navigate({ to: "/interview", search: { ...interviewSearch, start: true as const } })
+        : navigate({ to: "/" });
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

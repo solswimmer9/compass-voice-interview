@@ -19,6 +19,7 @@ import { useAccountSnapshot } from "@/hooks/useAccountSnapshot";
 import { isPreviewBrowser } from "@/lib/preview";
 import { appendTranscriptFragment, buildResumeRecap, type Line } from "@/lib/transcript";
 import { saveFinishedInterview } from "@/lib/finished-interview";
+import { autoStartAction, shouldHandOffToFeedback } from "@/lib/interview-handoff";
 
 /** The waiting room stays up at least this long, so it reads as a moment, not a flicker. */
 const MIN_WAIT_MS = 2500;
@@ -224,10 +225,16 @@ function InterviewRoom() {
   const autoStart = search.start === true;
   const autoStarted = useRef(false);
   useEffect(() => {
-    if (!autoStart || autoStarted.current || account.loading) return;
+    const action = autoStartAction({
+      accountLoading: account.loading,
+      guestUsedUp,
+      outOfInterviews,
+      previewBrowser: isPreviewBrowser(),
+    });
+    if (!autoStart || autoStarted.current || action === "wait") return;
     autoStarted.current = true;
     const { start: _start, ...choice } = search;
-    if (guestUsedUp) {
+    if (action === "sign-in") {
       void navigate({
         to: "/auth",
         search: {
@@ -239,7 +246,7 @@ function InterviewRoom() {
       return;
     }
     void navigate({ to: "/interview", search: choice, replace: true });
-    if (outOfInterviews && !isPreviewBrowser()) return;
+    if (action === "out-of-interviews") return;
     void startInterview();
     // startInterview() is recreated every render; this should only fire when a pick arrives.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -259,9 +266,18 @@ function InterviewRoom() {
   const idle = call.status === "idle" || call.status === "closed";
   const handedOff = useRef(false);
   useEffect(() => {
-    if (call.status !== "closed" || handedOff.current || !startedRef.current) return;
-    if (canReconnect) return;
-    if (!lines.length || !call.interviewId) return;
+    if (
+      !call.interviewId ||
+      !shouldHandOffToFeedback({
+        callStatus: call.status,
+        alreadyHandedOff: handedOff.current,
+        startedHere: startedRef.current,
+        canReconnect,
+        lineCount: lines.length,
+        interviewId: call.interviewId,
+      })
+    )
+      return;
     handedOff.current = true;
     saveFinishedInterview({
       interviewId: call.interviewId,
