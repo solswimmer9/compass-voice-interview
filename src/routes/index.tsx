@@ -31,7 +31,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Practise your Oxbridge interview out loud with an AI tutor who challenges your reasoning like a real interviewer.",
+          "Practise your Oxbridge interview out loud with an AI tutor who challenges your reasoning, then read their feedback letter.",
       },
       { property: "og:title", content: "Compass · Education, grounded in context" },
       {
@@ -119,7 +119,7 @@ const FAQS = [
   },
   {
     q: "Can I trust the feedback?",
-    a: "Your tutor's letter quotes what you said wherever it can, so you can check its points against your own words. It is practice feedback, not a mark or a prediction, and AI can make mistakes. Use it alongside advice from your teachers.",
+    a: "Your tutor's letter quotes what you said, so you can check its points against your own words. Before you see it, any line that quotes words you did not say is removed. It is practice feedback, not a mark or a prediction, and AI can make mistakes. Use it alongside advice from your teachers.",
   },
   {
     q: "Does practising with Compass count as cheating?",
@@ -127,11 +127,11 @@ const FAQS = [
   },
   {
     q: "Is this fair for students who can't afford coaching?",
-    a: "Private coaching is expensive and not everyone can get it. Compass is meant to make interview practice available to more students, and schools can buy a bundle of interviews for their sixth form. Teachers don't see individual students' reports.",
+    a: "Private coaching is expensive and not everyone can get it. Compass is meant to make interview practice available to more students, and schools can buy a bundle of interviews for their sixth form. Teachers see how many places are left, never a student's transcript or letter. It is one way to practise, not a replacement for a teacher's mock interview.",
   },
   {
     q: "Can my school buy places for students?",
-    a: "Yes. A school buys a bundle and each student claims a place with their own account. Teachers do not see students' reports.",
+    a: "Yes. A school buys a bundle and each student claims a place with their own account. Teachers do not see students' transcripts or letters.",
   },
 ];
 

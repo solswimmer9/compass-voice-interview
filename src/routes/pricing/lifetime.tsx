@@ -118,9 +118,9 @@ function LifetimePricing() {
               className="rise mx-auto mt-4 max-w-xl text-sm leading-relaxed text-[#4a4a48]"
               style={{ animationDelay: "0.25s" }}
             >
-              <span className="text-[#161616]">Built on real Cambridge context.</span> Made by
-              Cambridge students and informed by real Cambridge geography notes, so Dr River covers
-              more ground than any one interviewer can hold in their head.
+              <span className="text-[#161616]">Built by Cambridge students.</span> Dr River draws on
+              Cambridge geography notes. Compass is practice and is not affiliated with Oxford or
+              Cambridge.
             </p>
           </div>
         </section>
