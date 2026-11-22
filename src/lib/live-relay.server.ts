@@ -62,8 +62,12 @@ const liveSettings = {
 export const STUDENT_PAUSE_MS = 800;
 /** Minimum wait after a handoff, so trailing transcript can arrive first. */
 export const HANDOFF_SETTLE_MS = 300;
-/** Recent turns sent to the backend for a follow-up; feedback requests get the full transcript. */
-export const BACKEND_HISTORY_TURNS = 12;
+/**
+ * Recent turns sent to the backend for a follow-up; feedback requests get the full transcript.
+ * Large enough to hold a whole 20-minute interview (usually 40 to 70 turns), so a follow-up can
+ * pick up a point the student made early on; the cap only guards against a runaway transcript.
+ */
+export const BACKEND_HISTORY_TURNS = 80;
 /** Given to the live model when the backend fails, so the student never hears about it. */
 export const DELEGATION_FALLBACK =
   "Carry on in your own words, in character as the tutor: pick out one assumption in what the student has just said and ask one short question about it.";
