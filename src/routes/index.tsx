@@ -118,6 +118,18 @@ const FAQS = [
     a: "A letter from your tutor on where your reasoning held and where it slipped, quoting what you actually said.",
   },
   {
+    q: "Can I trust the feedback?",
+    a: "Your tutor's letter quotes what you said wherever it can, so you can check its points against your own words. It is practice feedback, not a mark or a prediction, and AI can make mistakes. Use it alongside advice from your teachers.",
+  },
+  {
+    q: "Does practising with Compass count as cheating?",
+    a: "Compass is practice, like a mock interview with a teacher or a friend. We are not affiliated with Oxford or Cambridge, and we don't claim either university endorses it. If you want a college's view on interview preparation, ask them directly.",
+  },
+  {
+    q: "Is this fair for students who can't afford coaching?",
+    a: "Private coaching is expensive and not everyone can get it. Compass is meant to make interview practice available to more students, and schools can buy a bundle of interviews for their sixth form. Teachers don't see individual students' reports.",
+  },
+  {
     q: "Can my school buy places for students?",
     a: "Yes. A school buys a bundle and each student claims a place with their own account. Teachers do not see students' reports.",
   },
@@ -329,7 +341,7 @@ function Home() {
 
       {/* 4. Directory and questions. */}
       <section className="px-2 pb-28 pt-20">
-        <div className="mb-24 grid border-l border-t border-[#cfcfcb] sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-4 grid border-l border-t border-[#cfcfcb] sm:grid-cols-2 lg:grid-cols-4">
           {(
             [
               { label: "MEET THE TUTORS", title: "Prof Matt & Dr River", to: "/subjects" },
@@ -348,6 +360,11 @@ function Home() {
             </Link>
           ))}
         </div>
+        <p className="mb-24 px-2 text-[15px] leading-relaxed text-[#4a4a48]">
+          <Link to="/schools" className="underline underline-offset-4">
+            Teachers: give your sixth form interview practice without seeing anyone's report.
+          </Link>
+        </p>
         <Faq />
       </section>
     </MeridianPage>
