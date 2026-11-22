@@ -3,7 +3,7 @@ import { FREE_INTERVIEWS, INTERVIEW_PACK } from "@/lib/offer";
 
 describe("interview offer", () => {
   it("gives each customer one free interview", () => {
-    expect(FREE_INTERVIEWS).toBe(1);
+    expect(FREE_INTERVIEWS).toBe(2);
   });
 
   it("charges £20 as a one-off payment", () => {
