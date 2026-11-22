@@ -76,6 +76,19 @@ const initialState: LiveState = {
 
 /** Missing heartbeat acknowledgements for this long end the call. */
 export const HEARTBEAT_ACK_WINDOW_MS = 12_000;
+/**
+ * Microphone clean-up before audio reaches the tutor: echo and noise filtering, steady volume,
+ * one channel, and voice isolation where the browser supports it (others ignore it), so room
+ * noise is less likely to sound like the student speaking.
+ */
+export const MICROPHONE_CONSTRAINTS = {
+  echoCancellation: true,
+  noiseSuppression: true,
+  autoGainControl: true,
+  channelCount: 1,
+  voiceIsolation: true,
+} as MediaTrackConstraints;
+
 /** How long an interrupted media connection may try to recover on its own. */
 export const MEDIA_RECOVERY_GRACE_MS = 15_000;
 
@@ -498,7 +511,7 @@ function createLiveVoice(options: LiveOptions) {
       const startContext = await options.getStartContext();
       if (!starting()) return;
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true },
+        audio: MICROPHONE_CONSTRAINTS,
       });
       microphone = stream;
       if (!starting()) {

@@ -6,27 +6,15 @@ export type TutorKey = "river" | "matt";
 
 export type TutorTheme = {
   name: string;
-  /** Main accent colour, e.g. for borders and highlights. */
-  accent: string;
-  /** Lighter tint of the accent. */
-  accentSoft: string;
-  /** Darkest tone, used for centres and shadows. */
-  deep: string;
+  /** The tutor's colour: the orb's lines, portrait ring and status label. */
+  colour: string;
+  /** The same colour as "r g b", for translucent lines and glow. */
+  rgb: string;
 };
 
 export const TUTOR_THEME: Record<TutorKey, TutorTheme> = {
-  river: {
-    name: "Dr River",
-    accent: "oklch(0.45 0.08 220)",
-    accentSoft: "oklch(0.85 0.08 200)",
-    deep: "oklch(0.25 0.04 240)",
-  },
-  matt: {
-    name: "Prof Matt",
-    accent: "oklch(0.55 0.12 50)",
-    accentSoft: "oklch(0.82 0.12 75)",
-    deep: "oklch(0.22 0.03 60)",
-  },
+  river: { name: "Dr River", colour: "#8ab4f0", rgb: "138 180 240" },
+  matt: { name: "Prof Matt", colour: "#f2a65a", rgb: "242 166 90" },
 };
 
 /** Geography (no tutor id) is Dr River; "ppe" is Prof Matt. */
