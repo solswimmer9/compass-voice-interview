@@ -123,11 +123,11 @@ const FAQS = [
   },
   {
     q: "Does practising with Compass count as cheating?",
-    a: "Compass is practice, like a mock interview with a teacher or a friend. We are not affiliated with Oxford or Cambridge, and we don't claim either university endorses it. If you want a college's view on interview preparation, ask them directly.",
+    a: "Compass is practice, like a mock interview with a teacher or a friend. If you want a college's view on interview preparation, ask them directly.",
   },
   {
     q: "Is this fair for students who can't afford coaching?",
-    a: "Private coaching is expensive and not everyone can get it. Compass is meant to make interview practice available to more students, and schools can buy a bundle of interviews for their sixth form. Teachers don't see individual students' reports.",
+    a: "Private coaching is expensive and not everyone can get it. Compass is meant to make interview practice available to more students, and schools can buy a bundle of interviews for their sixth form.",
   },
   {
     q: "Can my school buy places for students?",
@@ -341,7 +341,7 @@ function Home() {
 
       {/* 4. Directory and questions. */}
       <section className="px-2 pb-28 pt-20">
-        <div className="mb-4 grid border-l border-t border-[#cfcfcb] sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-24 grid border-l border-t border-[#cfcfcb] sm:grid-cols-2 lg:grid-cols-4">
           {(
             [
               { label: "MEET THE TUTORS", title: "Prof Matt & Dr River", to: "/subjects" },
@@ -360,11 +360,6 @@ function Home() {
             </Link>
           ))}
         </div>
-        <p className="mb-24 px-2 text-[15px] leading-relaxed text-[#4a4a48]">
-          <Link to="/schools" className="underline underline-offset-4">
-            Teachers: give your sixth form interview practice without seeing anyone's report.
-          </Link>
-        </p>
         <Faq />
       </section>
     </MeridianPage>
