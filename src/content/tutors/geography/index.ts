@@ -11,7 +11,7 @@ import {
 
 export const GEOGRAPHY: Tutor = {
   id: "geography",
-  version: "1.2.0",
+  version: "1.3.0",
   pedagogyVersion: PEDAGOGY_VERSION,
   persona: GEOGRAPHY_PERSONA,
   strands: GEOGRAPHY_STRANDS,
