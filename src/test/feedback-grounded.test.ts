@@ -226,12 +226,12 @@ describe("runCheckedFeedback", () => {
     const input = groundedInput({
       transcript: transcriptFor("Prof Matt"),
       ppe: true,
-      cardIds: ["bag-charge"],
+      cardIds: ["promise-to-the-dead"],
       includeDrafts: true,
     });
     expect(input.tutorName).toBe("Prof Matt");
     expect(input.criteria.map((c) => c.id)).toContain("facts-values");
-    expect(input.backendContext).toContain("[bag-charge]");
+    expect(input.backendContext).toContain("[promise-to-the-dead]");
     const out = await runCheckedFeedback(
       { transcript: transcriptFor("Prof Matt"), ppe: true, includeDrafts: true },
       deps(OBSERVATIONS, WRITER_REPORT),
@@ -243,10 +243,10 @@ describe("runCheckedFeedback", () => {
     const input = groundedInput({
       transcript: transcriptFor("Prof Matt"),
       ppe: true,
-      cardIds: ["bag-charge", "fairness-three-principles"],
+      cardIds: ["promise-to-the-dead", "fairness-three-principles"],
       includeDrafts: false,
     });
-    expect(input.backendContext).not.toContain("[bag-charge]");
+    expect(input.backendContext).not.toContain("[promise-to-the-dead]");
     expect(input.backendContext).toContain("[fairness-three-principles]");
   });
 

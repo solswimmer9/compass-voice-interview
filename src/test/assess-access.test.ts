@@ -161,7 +161,7 @@ describe("feedback access", () => {
         transcript: "x",
         interviewId: "00000000-0000-0000-0000-000000000000",
         tutorId: "ppe",
-        cardIds: ["prepunishment", "bag-charge"],
+        cardIds: ["prepunishment", "promise-to-the-dead"],
       },
       "a.b.c",
     );
@@ -173,8 +173,8 @@ describe("feedback access", () => {
     const { system } = streamText.mock.calls[0]![0] as { system: string };
     expect(system).toContain("Oxford PPE admissions tutor");
     expect(system).toContain("[prepunishment]");
-    // bag-charge is a draft: a student's feedback never draws on draft notes.
-    expect(system).not.toContain("[bag-charge]");
+    // promise-to-the-dead is a draft: a student's feedback never draws on draft notes.
+    expect(system).not.toContain("[promise-to-the-dead]");
   });
 
   it("gives a tester PPE feedback from Prof Matt's notes", async () => {
@@ -186,14 +186,19 @@ describe("feedback access", () => {
     const response = await handleAssess(
       post(
         PUBLISHED_URL,
-        { transcript: "x", interviewId: "preview", tutorId: "ppe", cardIds: ["bag-charge"] },
+        {
+          transcript: "x",
+          interviewId: "preview",
+          tutorId: "ppe",
+          cardIds: ["promise-to-the-dead"],
+        },
         "a.b.c",
       ),
     );
     expect(response.status).toBe(200);
     const { system } = streamText.mock.calls[0]![0] as { system: string };
     expect(system).toContain("Oxford PPE admissions tutor");
-    expect(system).toContain("[bag-charge]");
+    expect(system).toContain("[promise-to-the-dead]");
     expect(system).not.toContain("[rent-cap-day-after]");
   });
 
