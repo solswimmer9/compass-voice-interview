@@ -36,6 +36,13 @@
       "when": 1795095110620,
       "tag": "0004_close_credit_loopholes",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795385966643,
+      "tag": "0005_free_limit_two_and_saved_interviews",
+      "breakpoints": true
     }
   ]
 }
