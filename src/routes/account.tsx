@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccountSnapshot } from "@/hooks/useAccountSnapshot";
@@ -123,6 +124,7 @@ function AccountPage() {
             </label>
             <button className="mt-4 rounded-full border px-5 py-2 text-sm">Save profile</button>
           </form>
+          <PastInterviews userId={user.id} />
           <section className="rounded-md border bg-card p-6">
             <h2 className="font-serif text-2xl font-semibold">Purchase history</h2>
             {data?.purchases.length ? (
@@ -166,5 +168,52 @@ function AccountPage() {
         </p>
       )}
     </main>
+  );
+}
+
+/** Finished interviews with their feedback letters, newest first. */
+function PastInterviews({ userId }: { userId: string }) {
+  const { data } = useQuery({
+    queryKey: ["past-interviews", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("interview_sessions")
+        .select("id, tutor, finished_at")
+        .eq("user_id", userId)
+        .not("finished_at", "is", null)
+        .order("finished_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+  return (
+    <section className="rounded-md border bg-card p-6">
+      <h2 className="font-serif text-2xl font-semibold">Past interviews</h2>
+      {data?.length ? (
+        <ul className="mt-4 space-y-3 text-sm">
+          {data.map((row) => (
+            <li key={row.id} className="flex justify-between gap-4">
+              <span>
+                {row.tutor === "ppe" ? "PPE with Prof Matt" : "Geography with Dr River"}
+                <span className="block text-xs text-muted-foreground">
+                  {new Date(row.finished_at!).toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </span>
+              </span>
+              <Link to="/feedback" search={{ id: row.id }} className="underline">
+                Read feedback
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-3 text-sm text-muted-foreground">
+          Your interviews and feedback letters will appear here.
+        </p>
+      )}
+    </section>
   );
 }

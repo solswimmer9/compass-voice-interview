@@ -378,10 +378,13 @@ describe("feedback access", () => {
       expect(adminUpdate).toHaveBeenCalledWith({ feedback_used: false });
     });
 
-    it("keeps the allowance used once a letter is delivered", async () => {
+    it("keeps the allowance used once a letter is delivered, and saves the letter", async () => {
       const text = await requestLetter([{ type: "text-delta", text: "Dear student," }]);
       expect(text).toContain("Dear student,");
-      expect(adminUpdate).not.toHaveBeenCalled();
+      expect(adminUpdate).not.toHaveBeenCalledWith({ feedback_used: false });
+      expect(adminUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ feedback: "Dear student,", finished_at: expect.any(String) }),
+      );
     });
   });
 

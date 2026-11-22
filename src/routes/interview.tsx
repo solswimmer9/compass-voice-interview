@@ -19,6 +19,7 @@ import { useAccountSnapshot } from "@/hooks/useAccountSnapshot";
 import { isPreviewBrowser } from "@/lib/preview";
 import { appendTranscriptFragment, buildResumeRecap, type Line } from "@/lib/transcript";
 import { saveFinishedInterview } from "@/lib/finished-interview";
+import { track } from "@/lib/analytics";
 import { autoStartAction, shouldHandOffToFeedback } from "@/lib/interview-handoff";
 
 /** The waiting room stays up at least this long, so it reads as a moment, not a flicker. */
@@ -201,6 +202,7 @@ function InterviewRoom() {
   // fall back to the sign-in page as before.
   const [startingGuest, setStartingGuest] = useState(false);
   const startInterview = async () => {
+    track("interview_start_clicked", { tutor: authSearch.tutor, guest: !account.user });
     if (!account.user && !account.guest) {
       setStartingGuest(true);
       const { error } = await supabase.auth.signInAnonymously();
@@ -212,6 +214,19 @@ function InterviewRoom() {
     }
     start();
   };
+
+  useEffect(() => {
+    if (call.status === "connected") track("interview_connected", { tutor: authSearch.tutor });
+  }, [call.status, authSearch.tutor]);
+  useEffect(() => {
+    if (outOfInterviews) track("out_of_interviews", { guest: guestUsedUp });
+  }, [outOfInterviews, guestUsedUp]);
+  useEffect(() => {
+    if (call.status === "closed" && call.ending) track("interview_ended", { ending: call.ending });
+  }, [call.status, call.ending]);
+  useEffect(() => {
+    if (call.error) track("interview_error", { message: call.error.slice(0, 120) });
+  }, [call.error]);
 
   const interviewId = call.interviewId;
   const refetchAccount = account.refetch;
@@ -279,6 +294,7 @@ function InterviewRoom() {
     )
       return;
     handedOff.current = true;
+    track("interview_finished", { tutor: ppe ? "ppe" : "geography", lines: lines.length });
     saveFinishedInterview({
       interviewId: call.interviewId,
       tutor: ppe ? "ppe" : "geography",
