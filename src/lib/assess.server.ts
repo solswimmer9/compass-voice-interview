@@ -110,7 +110,9 @@ export async function handleAssess(request: Request) {
     typeof body.transcript === "string" ? body.transcript.trim().slice(0, 40_000) : "";
   const video = typeof body.video === "string" ? body.video : "";
   const videoType =
-    typeof body.videoType === "string" && body.videoType ? body.videoType.toLowerCase() : "video/mp4";
+    typeof body.videoType === "string" && body.videoType
+      ? body.videoType.toLowerCase()
+      : "video/mp4";
   const interviewId = typeof body.interviewId === "string" ? body.interviewId : "";
   // Object interview notes: approved objects for everyone, drafts' notes for testers only.
   const object = usableObjectById(body.objectId, ppe ? "ppe" : "geography", {
