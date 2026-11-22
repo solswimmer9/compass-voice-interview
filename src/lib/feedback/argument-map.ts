@@ -187,3 +187,20 @@ export function letterSalutation(displayName?: string | null): string {
     ?.replace(/[^\p{L}\p{M}'’-]/gu, "");
   return `Dear ${first ? first : "candidate"},`;
 }
+
+/** Plain-text copy of the letter for students to keep: the same blocks the page shows, no Markdown. */
+export function letterText(
+  salutation: string,
+  blocks: LetterBlock[],
+  tutorName: string,
+  dated: string,
+) {
+  const body = blocks
+    .map((block) =>
+      block.kind === "list"
+        ? block.items.map((item, i) => `${block.ordered ? `${i + 1}.` : "-"} ${item}`).join("\n")
+        : block.text,
+    )
+    .join("\n\n");
+  return `${dated}\n\n${salutation}\n\n${body}\n\nWith best wishes,\n${tutorName}\n`;
+}
