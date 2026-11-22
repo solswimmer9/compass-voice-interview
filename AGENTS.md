@@ -52,7 +52,7 @@ use the editor.
 
 - Signed-in tester accounts get Dr River built from approved geography cards (`src/lib/geography.server.ts`). Every other account must keep the existing interview prompt unchanged, except that every normal (non-reading) interview appends its tutor's approved mid-interview chart section (`objectMidwaySection`, revealed after `OBJECT_REVEAL_MINUTES`; owner's decision, 13 November 2026); `src/test/geography-cards.test.ts` guards this.
 - Every tutor's speaking rules (mannerisms, pauses, fillers, follow-ups, noise and interruptions, delegation) live once in `VOICE_POLICY` in `src/content/core.ts`, used by the fixed Dr River prompt and every card session, so students, testers and Prof Matt get the same behaviour; keep it short, because PPE and card sessions sit near the 2,000-word live limit. `src/test/interview-sharpness.test.ts` guards this.
-- Topic cards and their approval rules: `src/content/README.md`. Latest handover: `docs/overnight/2026-11-12-handover.md`.
+- Topic cards and their approval rules: `src/content/README.md`. Latest handover: `docs/archive/overnight/2026-11-12-handover.md`.
 - The Live relay sends the opening instructions and the "begin now" commentary back to back once media is ready, without waiting for the first acknowledgement; the gateway applies them in order, and waiting added about a second of silence.
 - Dr River's assumption-testing rules live once in `src/content/tutors/geography/assumptions.ts` and feed both the student prompt and tester card sessions, so the two versions push the same way.
 

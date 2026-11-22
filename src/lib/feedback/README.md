@@ -16,4 +16,4 @@ Rules:
 - The quote check covers the letter only. The argument map comes from a separate call that never sees the letter, so it is validated for shape (`parseArgumentMap`) but not quote-checked, exactly as on the single-call path.
 - Logs carry counts and reasons only, never transcript text.
 
-Known low-severity gaps are listed in `docs/overnight/2026-11-12-handover.md`.
+Known low-severity gaps are listed in `docs/archive/overnight/2026-11-12-handover.md`.

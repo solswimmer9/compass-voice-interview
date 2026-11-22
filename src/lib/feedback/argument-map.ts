@@ -187,3 +187,7 @@ export function letterSalutation(displayName?: string | null): string {
     ?.replace(/[^\p{L}\p{M}'’-]/gu, "");
   return `Dear ${first ? first : "candidate"},`;
 }
+
+export function letterText(salutation: string, body: string, tutorName: string, dated: string) {
+  return `${dated}\n\n${salutation}\n\n${body.trim()}\n\nWith best wishes,\n${tutorName}\n`;
+}
