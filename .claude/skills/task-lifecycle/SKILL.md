@@ -35,10 +35,14 @@ One builder owns the change. Dispatch it once, and send every fix back to that s
   `bun run build` (the CI on `main`).
 - **Reviewers:** `/code-review`. Codex is not installed here; say so in the report rather than
   dropping the second review silently.
-- **Verify:** start the app with `bunx vite dev --host 127.0.0.1` and drive pages with Playwright
-  (pre-installed). There is no non-production database or Stripe in the sandbox, and no WebRTC
-  audio, so voice calls, payments and credit changes are **unverified** here: list the manual test
-  for the owner instead.
+- **Verify:** the verifier follows `.claude/skills/verifier-compass/SKILL.md` (also what `/verify`
+  picks up). Tell it what to check against: the spec plus the user flows the diff touches. The dev
+  server talks to the live database, and there is no Stripe or WebRTC audio in the sandbox, so
+  voice calls, payments and credit changes are **unverified** here: list the manual test for the
+  owner instead.
+- **When to stop:** a round is clean when no high or medium severity findings remain; low ones go
+  in the PR as notes. Never more than two review rounds and two verify rounds, because a reviewer
+  asked to find problems always finds some.
 - **Merge:** read `.claude/merge-gate.md` first; never edit it without the owner. The owner's
   "merge it" in the conversation is the go-ahead. "Deploy" means the owner publishing in Lovable;
   the agent's live check is CI passing on `main`.
