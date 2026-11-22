@@ -71,12 +71,17 @@ describe("payment webhook refunds and disputes", () => {
     rpc.mockResolvedValue({ data: 0, error: null });
     verifyWebhook.mockResolvedValue({
       type: "charge.refunded",
-      data: { object: { payment_intent: "pi_3", refunded: true, amount: 2000, amount_refunded: 2000 } },
+      data: {
+        object: { payment_intent: "pi_3", refunded: true, amount: 2000, amount_refunded: 2000 },
+      },
     });
     const { handlePaymentWebhook } = await import("@/lib/payment-webhook.server");
     const response = await handlePaymentWebhook(request());
     expect(response.status).toBe(200);
-    expect(rpc).toHaveBeenCalledWith("revoke_purchase", expect.objectContaining({ p_session_id: "cs_123" }));
+    expect(rpc).toHaveBeenCalledWith(
+      "revoke_purchase",
+      expect.objectContaining({ p_session_id: "cs_123" }),
+    );
   });
 
   it("asks Stripe to retry when the revocation cannot be saved", async () => {

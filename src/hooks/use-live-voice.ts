@@ -503,10 +503,7 @@ function createLiveVoice(options: LiveOptions) {
     window.addEventListener("pagehide", end);
     // Covers sign-in, the microphone prompt and network setup, so the call can never sit on
     // "connecting" forever before the voice service is contacted.
-    deadline = setTimeout(
-      () => fail(STARTUP_TIMEOUT_MESSAGE),
-      STARTUP_TIMEOUT_MS,
-    );
+    deadline = setTimeout(() => fail(STARTUP_TIMEOUT_MESSAGE), STARTUP_TIMEOUT_MS);
     try {
       const startContext = await options.getStartContext();
       if (!starting()) return;
