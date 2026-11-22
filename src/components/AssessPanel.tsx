@@ -134,7 +134,13 @@ export function AssessPanel({
         </div>
       )}
       {(busy || output.trim()) && (
-        <FeedbackLetter tutor={tutor} studentName={studentName} body={output} writing={busy} />
+        <FeedbackLetter
+          tutor={tutor}
+          studentName={studentName}
+          body={output}
+          writing={busy}
+          failed={Boolean(error)}
+        />
       )}
       {!busy && argumentMap && <ArgumentMap map={argumentMap} tutorName={tutor.name} />}
     </section>

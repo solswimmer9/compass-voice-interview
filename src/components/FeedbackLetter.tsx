@@ -1,4 +1,10 @@
-import { letterBlocks, letterSalutation, type TutorLetterInfo } from "@/lib/feedback/argument-map";
+import { useState } from "react";
+import {
+  letterBlocks,
+  letterSalutation,
+  letterText,
+  type TutorLetterInfo,
+} from "@/lib/feedback/argument-map";
 
 const PAPER = "oklch(0.95 0.02 85)";
 const INK = "oklch(0.22 0.02 60)";
@@ -9,6 +15,7 @@ export function FeedbackLetter({
   studentName,
   body,
   writing,
+  failed = false,
   date = new Date(),
 }: {
   tutor: TutorLetterInfo;
@@ -17,6 +24,8 @@ export function FeedbackLetter({
   body: string;
   /** True while the text is still streaming in. */
   writing: boolean;
+  /** True when writing stopped with an error, so the letter is incomplete. */
+  failed?: boolean;
   date?: Date;
 }) {
   const blocks = letterBlocks(body);
@@ -26,73 +35,124 @@ export function FeedbackLetter({
     year: "numeric",
   });
 
+  const done = !writing && blocks.length > 0;
+
   return (
-    <article
-      aria-label={`Feedback letter from ${tutor.name}`}
-      aria-busy={writing}
-      className="relative mt-8 rounded-sm px-5 pb-10 pt-6 shadow-[0_18px_40px_-18px_rgb(0_0_0/0.8)] sm:px-10 sm:pb-12 sm:pt-8 motion-safe:sm:-rotate-1"
-      style={{ background: PAPER, color: INK, fontFamily: SERIF }}
-    >
-      <header
-        className="flex flex-wrap items-baseline gap-x-2 gap-y-1 border-b pb-3 text-[0.7rem] uppercase tracking-[0.2em]"
-        style={{ borderColor: "oklch(0.22 0.02 60 / 0.2)", fontFamily: "var(--font-sans)" }}
+    <>
+      <article
+        aria-label={`Feedback letter from ${tutor.name}`}
+        aria-busy={writing}
+        className="relative mt-8 rounded-sm px-5 pb-10 pt-6 shadow-[0_18px_40px_-18px_rgb(0_0_0/0.8)] sm:px-10 sm:pb-12 sm:pt-8 motion-safe:sm:-rotate-1"
+        style={{ background: PAPER, color: INK, fontFamily: SERIF }}
       >
-        <span>From the desk of {tutor.name}</span>
-        <span aria-hidden>·</span>
-        <time dateTime={date.toISOString().slice(0, 10)} className="opacity-70">
-          {dated}
-        </time>
-      </header>
+        <header
+          className="flex flex-wrap items-baseline gap-x-2 gap-y-1 border-b pb-3 text-[0.7rem] uppercase tracking-[0.2em]"
+          style={{ borderColor: "oklch(0.22 0.02 60 / 0.2)", fontFamily: "var(--font-sans)" }}
+        >
+          <span>From the desk of {tutor.name}</span>
+          <span aria-hidden>·</span>
+          <time dateTime={date.toISOString().slice(0, 10)} className="opacity-70">
+            {dated}
+          </time>
+        </header>
 
-      <p className="mt-6 text-lg">{letterSalutation(studentName)}</p>
+        <p className="mt-6 text-lg">{letterSalutation(studentName)}</p>
 
-      <div className="mt-4 space-y-4 text-[1.05rem] leading-relaxed">
-        {blocks.length === 0 && writing && (
-          <p className="italic opacity-70">
-            {tutor.name} is writing<span className="motion-safe:animate-pulse">…</span>
-          </p>
+        <div className="mt-4 space-y-4 text-[1.05rem] leading-relaxed">
+          {blocks.length === 0 && writing && (
+            <p className="italic opacity-70">
+              {tutor.name} is writing<span className="motion-safe:animate-pulse">…</span>
+            </p>
+          )}
+          {blocks.map((block, i) => {
+            if (block.kind === "heading")
+              return (
+                <h3 key={i} className="pt-2 text-base font-semibold italic">
+                  {block.text}
+                </h3>
+              );
+            if (block.kind === "list") {
+              const List = block.ordered ? "ol" : "ul";
+              return (
+                <List
+                  key={i}
+                  className={`${block.ordered ? "list-decimal" : "list-disc"} space-y-2 pl-5 marker:opacity-60`}
+                >
+                  {block.items.map((item, j) => (
+                    <li key={j}>{item}</li>
+                  ))}
+                </List>
+              );
+            }
+            return <p key={i}>{block.text}</p>;
+          })}
+          {writing && blocks.length > 0 && (
+            <span
+              aria-hidden
+              className="inline-block h-4 w-px translate-y-0.5 motion-safe:animate-pulse"
+              style={{ background: INK }}
+            />
+          )}
+        </div>
+
+        {done && (
+          <footer className="mt-8 flex items-end justify-between gap-4">
+            <div>
+              <p>With best wishes,</p>
+              <p className="mt-2 text-2xl italic">{tutor.name}</p>
+            </div>
+            <WaxSeal initials={tutor.initials} />
+          </footer>
         )}
-        {blocks.map((block, i) => {
-          if (block.kind === "heading")
-            return (
-              <h3 key={i} className="pt-2 text-base font-semibold italic">
-                {block.text}
-              </h3>
-            );
-          if (block.kind === "list") {
-            const List = block.ordered ? "ol" : "ul";
-            return (
-              <List
-                key={i}
-                className={`${block.ordered ? "list-decimal" : "list-disc"} space-y-2 pl-5 marker:opacity-60`}
-              >
-                {block.items.map((item, j) => (
-                  <li key={j}>{item}</li>
-                ))}
-              </List>
-            );
-          }
-          return <p key={i}>{block.text}</p>;
-        })}
-        {writing && blocks.length > 0 && (
-          <span
-            aria-hidden
-            className="inline-block h-4 w-px translate-y-0.5 motion-safe:animate-pulse"
-            style={{ background: INK }}
-          />
-        )}
-      </div>
-
-      {!writing && blocks.length > 0 && (
-        <footer className="mt-8 flex items-end justify-between gap-4">
-          <div>
-            <p>With best wishes,</p>
-            <p className="mt-2 text-2xl italic">{tutor.name}</p>
-          </div>
-          <WaxSeal initials={tutor.initials} />
-        </footer>
+      </article>
+      {done && !failed && (
+        <LetterActions
+          text={letterText(letterSalutation(studentName), blocks, tutor.name, dated)}
+          fileName={`compass-feedback-${tutor.name}-${date.toISOString().slice(0, 10)}`}
+        />
       )}
-    </article>
+    </>
+  );
+}
+
+/** The letter is only kept for this browser tab, so let students keep their own copy. */
+function LetterActions({ text, fileName }: { text: string; fileName: string }) {
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
+  const button = "min-h-11 rounded-full border px-5 py-2 text-sm";
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyStatus("copied");
+    } catch {
+      setCopyStatus("failed");
+    }
+    setTimeout(() => setCopyStatus("idle"), 3000);
+  }
+
+  function download() {
+    const url = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${fileName.replace(/[^\w-]+/g, "-")}.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  return (
+    <div className="mt-6 flex flex-wrap items-center gap-3">
+      <button type="button" onClick={download} className={button}>
+        Download letter
+      </button>
+      <button type="button" onClick={copy} className={button}>
+        {copyStatus === "copied" ? "Copied" : "Copy letter"}
+      </button>
+      <span aria-live="polite" className="text-sm text-muted-foreground">
+        {copyStatus === "failed"
+          ? "Copying didn't work here. Use Download letter instead."
+          : "Save a copy: this letter is not kept after you close the tab."}
+      </span>
+    </div>
   );
 }
 
