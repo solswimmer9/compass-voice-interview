@@ -79,7 +79,7 @@ function FeedbackPage() {
             <section className="mt-12 rounded-md border bg-card p-6 text-center sm:p-8">
               <h2 className="text-xl font-medium tracking-tight">Keep practising</h2>
               <p className="mt-2 text-sm text-muted-foreground">
-                The real interview rewards practice. Get more interviews, or lifetime access.
+                Want another go before the real thing? Get more interviews, or lifetime access.
               </p>
               <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
                 <Link
