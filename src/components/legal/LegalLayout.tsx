@@ -1,21 +1,28 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { MeridianPage, mono, serif } from "@/components/meridian/MeridianFrame";
 
 export const SELLER_NAME = "Solomon Allen";
 export const LEGAL_UPDATED = "22 November 2026";
 
 export function LegalLayout({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <main className="mx-auto max-w-2xl px-6 py-12 text-foreground">
-      <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
-        ← Back to practice
-      </Link>
-      <h1 className="mt-6 text-3xl font-semibold">{title}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Last updated {LEGAL_UPDATED}</p>
-      <div className="mt-8 space-y-4 text-sm leading-relaxed [&_h2]:mt-8 [&_h2]:text-lg [&_h2]:font-semibold [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5 [&_a]:underline">
-        {children}
-      </div>
-    </main>
+    <MeridianPage
+      framed={
+        <main className="mx-auto max-w-2xl px-6 pb-16 pt-8 text-[#161616]">
+          <Link to="/" className="text-sm text-[#4a4a48] hover:underline">
+            ← Back to interview practice
+          </Link>
+          <h1 className={`${serif} mt-6 text-[clamp(40px,5vw,60px)] leading-none`}>{title}</h1>
+          <p className={`${mono} mt-3 text-xs text-[#5a5a57]`}>
+            LAST UPDATED {LEGAL_UPDATED.toUpperCase()}
+          </p>
+          <div className="mt-8 space-y-4 text-[15px] leading-relaxed text-[#2a2a28] [&_a]:underline [&_h2]:mt-10 [&_h2]:font-instrument [&_h2]:text-[28px] [&_h2]:leading-tight [&_h2]:text-[#161616] [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5">
+            {children}
+          </div>
+        </main>
+      }
+    />
   );
 }
 
@@ -33,7 +40,7 @@ export function LegalFooter() {
           Refund Policy
         </Link>
       </nav>
-      <p className="mt-2">© 2026 Oxbridge Interview Sparring Partner. Payments by Stripe.</p>
+      <p className="mt-2">© 2026 Compass. Payments by Stripe.</p>
     </footer>
   );
 }

@@ -359,7 +359,7 @@ function Home() {
             className="block w-full mix-blend-multiply grayscale"
           />
         </div>
-        <div className="flex-[1_1_420px]">
+        <div className="min-w-0 flex-[1_1_420px]">
           <h2
             className={`reveal ${serif} text-[clamp(40px,4.6vw,68px)] leading-none tracking-[-0.02em]`}
           >
@@ -376,7 +376,7 @@ function Home() {
                 Start your interview
               </span>
               <span
-                className={`${mono} block whitespace-nowrap text-[10px] text-[#bdbdb8] sm:text-[11px]`}
+                className={`${mono} block sm:whitespace-nowrap text-[10px] text-[#bdbdb8] sm:text-[11px]`}
               >
                 FIRST {FREE_INTERVIEWS} FREE · {INTERVIEW_MINUTES} MIN · LETTER AFTER
               </span>

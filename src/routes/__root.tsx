@@ -90,13 +90,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "google-site-verification", content: "UCCIyFZXX9NrxS0jgnr1SPUBM0U4uMGFDfiRir7NTCM" },
-      { title: "Oxbridge Interview Sparring Partner" },
+      { title: "Compass · Oxbridge interview practice" },
       {
         name: "description",
         content: "Practise Cambridge geography and Oxford PPE interviews with a voice tutor.",
       },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Oxbridge Interview Sparring Partner" },
+      { property: "og:title", content: "Compass · Oxbridge interview practice" },
       {
         property: "og:description",
         content: "Practise Cambridge geography and Oxford PPE interviews with a voice tutor.",
