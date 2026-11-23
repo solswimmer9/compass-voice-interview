@@ -14,6 +14,7 @@ import blackboard from "@/assets/home/blackboard.webp";
 import reader from "@/assets/home/reader.webp";
 import writer from "@/assets/home/writer.webp";
 import caps from "@/assets/home/caps.webp";
+import maths from "@/assets/home/maths.webp";
 
 export const Route = createFileRoute("/")({
   // The interview used to live on this page (/?tutor=ppe&start=true, /?reading=...). Old links
@@ -311,6 +312,30 @@ function Home() {
             </li>
           ))}
         </ol>
+      </section>
+
+      {/* Coming soon: maths with Prof Hannah. */}
+      <section className="flex flex-wrap-reverse items-center gap-12 px-2 py-20">
+        <div className="flex-[1_1_420px]">
+          <p className={`${mono} text-xs text-[#5a5a57]`}>COMING SOON</p>
+          <h2
+            className={`reveal ${serif} mt-3.5 text-[clamp(40px,4.6vw,68px)] leading-none tracking-[-0.02em]`}
+          >
+            Maths,
+            <br />
+            <em>with Prof Hannah.</em>
+          </h2>
+          <p className="mt-6 max-w-[440px] text-[15px] leading-relaxed text-[#4a4a48]">
+            Proofs, puzzles and the step you cannot skip, worked through out loud at the board.
+          </p>
+        </div>
+        <div className="reveal flex-[1_1_320px] rounded-[14px] bg-[#f7f7f5] p-6">
+          <img
+            src={maths}
+            alt="Sketch of a student writing equations on a blackboard"
+            className="mx-auto block max-h-[420px] mix-blend-multiply grayscale"
+          />
+        </div>
       </section>
 
       {/* 3. The letter. */}
