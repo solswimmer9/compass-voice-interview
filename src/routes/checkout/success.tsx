@@ -25,7 +25,8 @@ export const Route = createFileRoute("/checkout/success")({
   component: CheckoutSuccessPage,
 });
 
-const MAX_ATTEMPTS = 6;
+// Stripe usually sends the payment webhook within seconds, but it can take up to half a minute.
+const MAX_ATTEMPTS = 15;
 const POLL_MS = 2_000;
 
 function CheckoutSuccessPage() {
