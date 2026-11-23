@@ -1,7 +1,7 @@
 import posthog from "posthog-js";
 
-// Public PostHog project key (safe in browser code). Empty means analytics is off.
-const POSTHOG_KEY = "";
+// Public, write-only PostHog project token (EU project 364227). Empty turns analytics off.
+const POSTHOG_KEY = "phc_kmwCKN7g3weXQKL4JMrWLtWj5hLRhpGxFgZL9oF8eHwQ";
 const POSTHOG_HOST = "https://eu.i.posthog.com";
 
 let started = false;
