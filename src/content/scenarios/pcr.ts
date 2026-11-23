@@ -9,7 +9,7 @@ import { flowSvg, thermalCycleSvg } from "./diagrams.ts";
 const scenario: Scenario = {
   id: "bio-pcr",
   tutor: "biology",
-  status: "draft",
+  status: "approved",
   title: "PCR",
   author: "Tim McManus",
   knowledge: `Definition and purpose: polymerase chain reaction (PCR) amplifies (copies, increases the amount of) a DNA sample.
@@ -175,8 +175,9 @@ Different strands: if the 40 starting molecules are all different and we want on
   ],
   closing:
     "Say: Okay, let's leave things there for the day. Then give two specific strengths and one thing to work on, each tied to something they said, and close warmly.",
-  reviewedBy: "",
-  reviewedAt: "",
+  // Approved by the owner on 23 Nov 2026 for all students, before Tim's check and a voice test.
+  reviewedBy: "solly",
+  reviewedAt: "2026-11-23",
 };
 
 export default scenario;
