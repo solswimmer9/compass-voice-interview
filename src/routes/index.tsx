@@ -304,7 +304,7 @@ function Home() {
         <h2
           className={`reveal ${serif} mb-14 mt-3.5 max-w-[760px] text-[clamp(38px,4.6vw,66px)] leading-none tracking-[-0.02em]`}
         >
-          {INTERVIEW_MINUTES} minutes of thinking out loud, with a Socratic tutor who keeps asking why.
+          {INTERVIEW_MINUTES} minutes with a tutor who pushes the boundaries of your thinking.
         </h2>
         <ol className="grid gap-6 sm:grid-cols-3">
           {STEPS.map((step) => (
