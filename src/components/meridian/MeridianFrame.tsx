@@ -41,9 +41,6 @@ export function MeridianHeader() {
         <Link to="/subjects" className="hover:underline" activeProps={{ className: "underline" }}>
           Subjects
         </Link>
-        <Link to="/readings" search={{ subject: "ppe" }} className="hover:underline">
-          Readings
-        </Link>
         <Link to="/schools" className="hover:underline">
           For schools
         </Link>

@@ -7,6 +7,7 @@ import {
 } from "@/lib/interview-choice";
 import { MeridianPage, Rose, mono, serif } from "@/components/meridian/MeridianFrame";
 import { INTERVIEW_MINUTES, OBJECT_REVEAL_MINUTES } from "@/lib/limits";
+import { FREE_INTERVIEWS } from "@/lib/offer";
 import { SUBJECTS } from "@/lib/subjects";
 import { useAccountSnapshot } from "@/hooks/useAccountSnapshot";
 import graduate from "@/assets/home/graduate.webp";
@@ -83,7 +84,7 @@ const STEPS = [
   {
     n: "01",
     title: "Pick a subject",
-    body: "PPE with Prof Matt, or Geography with Dr River.",
+    body: "PPE with Prof Matt, Geography with Dr River or Biology with Dr Toby.",
     img: writer,
     alt: "Sketch of a student writing",
     blend: true,
@@ -99,7 +100,7 @@ const STEPS = [
   {
     n: "03",
     title: "Read your letter",
-    body: "Your tutor writes back on where your reasoning held and where it slipped.",
+    body: "Every subject ends with a letter from your tutor on where your reasoning held and where it slipped.",
     img: reader,
     alt: "Sketch of a student reading",
     blend: false,
@@ -279,17 +280,6 @@ function Home() {
                   </span>
                 </Link>
               ))}
-              <Link
-                to="/readings"
-                search={{ subject: "ppe" }}
-                className={`${cell} flex justify-between`}
-                style={{ animationDelay: "0.86s" }}
-              >
-                <span>Readings</span>
-                <span className="arr" aria-hidden="true">
-                  →
-                </span>
-              </Link>
               {[
                 `${INTERVIEW_MINUTES} MIN · SPOKEN`,
                 `CHART · MINUTE ${OBJECT_REVEAL_MINUTES}`,
@@ -379,9 +369,24 @@ function Home() {
           </h2>
           <Link
             to="/subjects"
-            className="mt-9 inline-block rounded bg-[#161616] px-[22px] py-3.5 text-sm text-[#f7f7f5] transition-colors hover:bg-[#3a3a3a]"
+            className="group mt-9 inline-flex items-center gap-4 rounded-full bg-[#161616] py-3 pl-6 pr-3 sm:gap-5 sm:pl-7 text-[#f7f7f5] shadow-[0_10px_30px_-12px_rgba(0,0,0,0.5)] transition hover:-translate-y-0.5 hover:bg-[#2a2a2a]"
           >
-            Begin an interview
+            <span className="text-left">
+              <span className={`${serif} block text-[26px] leading-tight`}>
+                Start your interview
+              </span>
+              <span
+                className={`${mono} block whitespace-nowrap text-[10px] text-[#bdbdb8] sm:text-[11px]`}
+              >
+                FIRST {FREE_INTERVIEWS} FREE · {INTERVIEW_MINUTES} MIN · LETTER AFTER
+              </span>
+            </span>
+            <span
+              aria-hidden="true"
+              className="flex size-12 items-center justify-center rounded-full bg-[#f7f7f5] text-xl text-[#161616] transition-transform group-hover:translate-x-1"
+            >
+              →
+            </span>
           </Link>
         </div>
       </section>
@@ -391,8 +396,8 @@ function Home() {
         <div className="mb-4 grid border-l border-t border-[#cfcfcb] sm:grid-cols-2 lg:grid-cols-4">
           {(
             [
-              { label: "MEET THE TUTORS", title: "Prof Matt & Dr River", to: "/subjects" },
-              { label: "SUBJECTS", title: "PPE & Geography", to: "/subjects" },
+              { label: "MEET THE TUTORS", title: "Prof Matt, Dr River & Dr Toby", to: "/subjects" },
+              { label: "SUBJECTS", title: "PPE, Geography & Biology", to: "/subjects" },
               { label: "APPLICANTS", title: "Pricing and access", to: "/pricing" },
               { label: "SCHOOLS", title: "Places for your sixth form", to: "/schools" },
             ] as const

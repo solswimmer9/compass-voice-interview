@@ -53,7 +53,8 @@ function SubjectsPage() {
             style={{ animationDelay: "0.15s" }}
           >
             Up to {INTERVIEW_MINUTES} minutes, out loud. Partway through, your tutor will put a
-            chart on the table for you to reason about.
+            chart on the table for you to reason about. Every subject ends with a feedback letter
+            from your tutor.
           </p>
           <div className="mx-auto mt-10 grid max-w-[720px] grid-cols-1 border-l border-t border-[#d6d6d2] text-left sm:grid-cols-3">
             {[
@@ -98,6 +99,9 @@ function SubjectsPage() {
                   {s.name}
                 </h2>
                 <p className="mt-4 flex-1 text-[15px] leading-relaxed text-[#4a4a48]">{s.line}</p>
+                <p className={`${mono} mt-4 text-xs text-[#5a5a57]`}>
+                  ENDS WITH A FEEDBACK LETTER FROM {s.tutor.toUpperCase()}
+                </p>
                 <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
                   <Link
                     to="/interview"
