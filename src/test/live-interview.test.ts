@@ -255,6 +255,29 @@ describe("PPE interviews", () => {
     }
   });
 
+  it("opens a student's PPE reading interview on that reading, for one credit", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "someone-else@example.com");
+    const { readingById } = await import("@/lib/readings");
+    const reading = readingById("ansell-housing", "ppe")!;
+    for (const [readingId, expected] of [
+      [reading.id, true],
+      ["escobar-hippos", false],
+    ] as const) {
+      const sent: Array<Record<string, unknown>> = [];
+      mocks.connect.mockResolvedValue(gateway(sent));
+      mocks.rpc.mockClear();
+      const { browser, send } = bound();
+
+      send(startPpe(browser, { readingId }));
+
+      await vi.waitFor(() => expect(sent).toHaveLength(1));
+      expect(mocks.rpc).toHaveBeenCalledTimes(1);
+      const session = sent[0]?.["session"] as { instructions: string };
+      expect(session.instructions).toContain("You are Prof Matt");
+      expect(session.instructions.includes(reading.context)).toBe(expected);
+    }
+  });
+
   it("does not start PPE for a student whose credits are used up", async () => {
     vi.stubEnv("PREVIEW_TESTER_EMAILS", "someone-else@example.com");
     mocks.rpc.mockResolvedValue({ data: { allowed: false }, error: null });

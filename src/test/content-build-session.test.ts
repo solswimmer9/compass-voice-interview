@@ -8,7 +8,7 @@ import { GEOGRAPHY } from "@/content/tutors/geography";
 import type { StudentMemory, TopicCard, Tutor } from "@/content/types";
 import { countWords } from "@/content/words";
 import { openingInstructions, readingOpeningInstructions } from "@/lib/interview-briefing";
-import { READINGS } from "@/lib/readings";
+import { READINGS, readingsFor } from "@/lib/readings";
 
 const bytes = (text: string) => new TextEncoder().encode(text).length;
 const geographyCards = cardsFor("geography");
@@ -161,7 +161,7 @@ describe("buildSession", () => {
                 .slice(0, 3),
             ];
       for (const combo of combos) {
-        for (const reading of [null, ...READINGS]) {
+        for (const reading of [null, ...readingsFor(tutor.id)]) {
           const { liveInstructions } = await buildSession({
             tutor,
             cards: combo,

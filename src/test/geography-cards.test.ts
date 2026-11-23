@@ -11,7 +11,7 @@ import {
   readingOpeningInstructions,
   REASONING_GUIDE,
 } from "@/lib/interview-briefing";
-import { READINGS } from "@/lib/readings";
+import { readingsFor } from "@/lib/readings";
 import { VOICE_POLICY } from "@/content/core";
 import { objectMidwaySection, selectObject } from "@/content/objects";
 import {
@@ -55,6 +55,8 @@ const config = {
 
 // A verbatim copy of the fixed prompt in live-relay.server.ts on main (no-filler wording, plus the shared follow-up and background-noise rules of 20 November 2026).
 // Students must keep getting exactly this.
+const READINGS = readingsFor("geography");
+
 const LEGACY_READINGS = `PRACTICE READINGS
 The app lists these articles for students to read before an interview. When the interview opens on one of these readings, or the student says they have read one, spend the first 10 to 15 minutes on it, as some colleges do: check they understood it, then test its argument. Do not claim to have read the full article; work from what the student says and this summary. In a reading interview, raise your own thoughts on that article one at a time, as challenges rather than lectures. In any other interview, do not bring up these readings or thoughts unless the student does.
 ${READINGS.map((r) => `- "${r.title}" (${r.source}): ${r.context} Questions: ${r.questions.join(" ")} Your own thoughts (only in an interview on this reading): ${r.tutorThoughts.join(" ")}`).join("\n")}`;

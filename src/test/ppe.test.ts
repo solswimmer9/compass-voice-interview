@@ -59,6 +59,24 @@ describe("PPE content", () => {
     }
   });
 
+  it("opens on a PPE practice reading within the live budget, ignoring other subjects' readings", async () => {
+    const { readingsFor } = await import("@/lib/readings");
+    for (const reading of readingsFor("ppe")) {
+      for (let turn = 0; turn < 10; turn++) {
+        const session = await buildPpeSession({ openingTurn: turn, readingId: reading.id });
+        expect(session.readingId).toBe(reading.id);
+        expect(session.opening).toContain("Prof Matt");
+        expect(session.opening).toContain(reading.title);
+        expect(new TextEncoder().encode(session.opening).length).toBeLessThan(LIMITS.openingBytes);
+        expect(countWords(session.liveInstructions)).toBeLessThanOrEqual(
+          LIMITS.liveInstructionsWords,
+        );
+      }
+    }
+    const geography = await buildPpeSession({ openingTurn: 0, readingId: "escobar-hippos" });
+    expect(geography.readingId).toBeUndefined();
+  });
+
   it("rotates the opening card by openingTurn", async () => {
     const a = await buildPpeSession({ openingTurn: 0 });
     const b = await buildPpeSession({ openingTurn: 1 });

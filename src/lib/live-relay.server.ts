@@ -1308,7 +1308,9 @@ export function bindLiveConnection(
                 async (tester) => {
                   session = await buildPpeSession(event, { includeDrafts: tester });
                   if (objectMode) object = pickObject(PPE_TUTOR_ID, tester, event.openingTurn);
-                  else planMidwayObject(PPE_TUTOR_ID, tester, event.openingTurn);
+                  // A reading fills the first part of the interview, so it gets no chart.
+                  else if (!session.readingId)
+                    planMidwayObject(PPE_TUTOR_ID, tester, event.openingTurn);
                 },
                 resume,
               );
@@ -1327,6 +1329,7 @@ export function bindLiveConnection(
                   pedagogyVersion,
                   cardIds,
                   promptHash,
+                  readingId: session.readingId ?? null,
                   ...(object ? { objectId: object.id } : {}),
                 }),
               );
@@ -1344,12 +1347,13 @@ export function bindLiveConnection(
                 tutorVersion,
                 pedagogyVersion,
                 cardIds,
+                readingId: session.readingId,
                 objectId: object?.id,
               };
               startDirector({
                 tutorId: PPE_TUTOR_ID,
                 steer: interviewId === "preview",
-                hasStimulus: Boolean(object),
+                hasStimulus: Boolean(session.readingId || object),
                 cardIds,
               });
               if (object) applyObject(object, session.liveInstructions);
