@@ -133,7 +133,7 @@ function LifetimePricing() {
             price={pack.displayPrice}
             note="For a quick top-up."
             items={[
-              `${pack.interviews} voice interviews with Dr River or Prof Matt`,
+              `${pack.interviews} voice interviews with Dr River, Prof Matt or Dr Toby`,
               "AI feedback after each one",
             ]}
             action={
@@ -151,7 +151,7 @@ function LifetimePricing() {
             price={LIFETIME_ACCESS.displayPrice}
             note="One payment. Yours to keep."
             items={[
-              `Unlimited voice interviews with Dr River or Prof Matt, up to ${minutes} minutes each`,
+              `Unlimited voice interviews with Dr River, Prof Matt or Dr Toby, up to ${minutes} minutes each`,
               "AI feedback after every interview",
               "Transcript replay and optional video feedback on delivery",
               "Every new question and feature we add",
@@ -173,7 +173,7 @@ function LifetimePricing() {
             price={SCHOOL_BUNDLE.displayPrice}
             note="Per admissions cycle."
             items={[
-              `${SCHOOL_BUNDLE.interviews} shared voice interviews with Dr River or Prof Matt`,
+              `${SCHOOL_BUNDLE.interviews} shared voice interviews with Dr River, Prof Matt or Dr Toby`,
               `Up to ${SCHOOL_BUNDLE.maxStudents} students, with one school code`,
               "AI feedback after each interview",
             ]}

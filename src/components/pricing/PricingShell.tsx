@@ -15,7 +15,7 @@ export function pricingHead(title: string) {
       { title: `${title} | Oxbridge Interview Practice` },
       {
         name: "description",
-        content: `Your first two interviews with Dr River or Prof Matt are free. Then top up with the ${INTERVIEW_PACK.name} or get lifetime access, each interview with AI reasoning feedback.`,
+        content: `Your first two interviews with Dr River, Prof Matt or Dr Toby are free. Then top up with the ${INTERVIEW_PACK.name} or get lifetime access, each interview with AI reasoning feedback.`,
       },
       { property: "og:title", content: "Pricing · Oxbridge Interview Practice" },
       {

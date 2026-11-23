@@ -2,6 +2,13 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { READING_MINUTES, readingById } from "@/lib/readings";
 import { subjectById } from "@/lib/subjects";
+import {
+  MeridianPage,
+  darkButton,
+  lightButton,
+  mono,
+  serif,
+} from "@/components/meridian/MeridianFrame";
 
 export const Route = createFileRoute("/readings_/$readingId")({
   loader: ({ params }) => {
@@ -65,105 +72,112 @@ function ReadingSessionPage() {
   const done = startedAt !== null && remaining === 0;
 
   return (
-    <main className="mx-auto min-h-screen max-w-2xl px-6 py-10">
-      <Link
-        to="/readings"
-        search={{ subject: reading.subject }}
-        className="text-sm text-muted-foreground hover:text-foreground"
-      >
-        ← All readings
-      </Link>
-
-      <p className="mt-12 font-mono text-xs text-muted-foreground">
-        {reading.source} · {reading.usedIn}
-      </p>
-      <h1 className="mt-2 font-serif text-3xl font-semibold tracking-tight text-balance">
-        {reading.title}
-      </h1>
-
-      <ol className="mt-8 space-y-4">
-        <Step
-          number={1}
-          title={reading.searchLink ? "Find the article" : "Open the article"}
-          active={startedAt === null}
-          complete={startedAt !== null}
-        >
-          <a
-            href={reading.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={startTimer}
-            onAuxClick={startTimer}
-            className="group mt-3 flex items-center justify-between gap-4 rounded-lg border bg-background p-4 text-left transition hover:border-foreground/40"
-          >
-            <span>
-              <span className="block text-xs text-muted-foreground">{reading.source}</span>
-              <span className="mt-0.5 block font-medium">{reading.title}</span>
-              <span className="mt-1 block text-xs text-muted-foreground">
-                {reading.searchLink
-                  ? "Opens a search for the article in a new tab. It may need a subscription."
-                  : "Opens on the publisher's site in a new tab. Keep this page open."}
-              </span>
-            </span>
-            <span aria-hidden="true" className="text-xl transition group-hover:translate-x-0.5">
-              ↗
-            </span>
-          </a>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {reading.searchLink ? "Searching" : "Opening it"} starts your {READING_MINUTES}-minute
-            reading timer.
-          </p>
-        </Step>
-
-        <Step
-          number={2}
-          title={`Read for ${READING_MINUTES} minutes`}
-          active={startedAt !== null && !done}
-          complete={done}
-        >
-          {startedAt === null ? (
-            <p className="mt-2 text-sm text-muted-foreground">
-              Your timer starts when you {reading.searchLink ? "search for" : "open"} the article.
-            </p>
-          ) : (
-            <div className="mt-3 flex items-baseline gap-4">
-              <span className="font-serif text-5xl font-semibold tabular-nums" aria-live="polite">
-                {clock(remaining)}
-              </span>
-              <span className="text-sm text-muted-foreground">
-                {done ? "Time's up." : "left. Make notes on the questions below."}
-              </span>
-            </div>
-          )}
-        </Step>
-
-        <Step number={3} title={`Talk it through with ${tutorName}`} active={done} complete={false}>
-          <p className="mt-2 text-sm text-muted-foreground">
-            He'll ask you to sum up the argument, then test it and share his own take.
-          </p>
+    <MeridianPage
+      framed={
+        <main className="mx-auto max-w-2xl px-6 pb-16 pt-8 text-[#161616]">
           <Link
-            to="/interview"
-            search={{ tutor: reading.subject, reading: reading.id, start: true as const }}
-            className={`mt-4 inline-flex rounded-full px-6 py-3 font-medium transition ${
-              done
-                ? "bg-primary text-primary-foreground hover:opacity-90"
-                : "border hover:bg-secondary"
-            }`}
+            to="/readings"
+            search={{ subject: reading.subject }}
+            className="text-sm text-[#4a4a48] hover:underline"
           >
-            {done ? "Start the interview" : "I'm ready early, start now"}
+            ← All readings
           </Link>
-        </Step>
-      </ol>
 
-      <h2 className="mt-10 text-sm font-medium">Context</h2>
-      <p className="mt-1 text-sm text-muted-foreground">{reading.context}</p>
-      <h2 className="mt-6 text-sm font-medium">While you read, think about</h2>
-      <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-muted-foreground">
-        {reading.questions.map((question) => (
-          <li key={question}>{question}</li>
-        ))}
-      </ul>
-    </main>
+          <p className={`${mono} mt-10 text-xs uppercase text-[#5a5a57]`}>
+            {reading.source} · {reading.usedIn}
+          </p>
+          <h1 className={`${serif} mt-3 text-[clamp(38px,5vw,56px)] leading-[1.02] text-balance`}>
+            {reading.title}
+          </h1>
+
+          <ol className="mt-8 space-y-4">
+            <Step
+              number={1}
+              title={reading.searchLink ? "Find the article" : "Open the article"}
+              active={startedAt === null}
+              complete={startedAt !== null}
+            >
+              <a
+                href={reading.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={startTimer}
+                onAuxClick={startTimer}
+                className="group mt-3 flex items-center justify-between gap-4 rounded-[10px] border border-[#d6d6d2] bg-white p-4 text-left transition hover:border-[#161616]"
+              >
+                <span>
+                  <span className="block text-xs text-[#4a4a48]">{reading.source}</span>
+                  <span className="mt-0.5 block font-medium">{reading.title}</span>
+                  <span className="mt-1 block text-xs text-[#4a4a48]">
+                    {reading.searchLink
+                      ? "Opens a search for the article in a new tab. It may need a subscription."
+                      : "Opens on the publisher's site in a new tab. Keep this page open."}
+                  </span>
+                </span>
+                <span aria-hidden="true" className="text-xl transition group-hover:translate-x-0.5">
+                  ↗
+                </span>
+              </a>
+              <p className="mt-2 text-xs text-[#4a4a48]">
+                {reading.searchLink ? "Searching" : "Opening it"} starts your {READING_MINUTES}
+                -minute reading timer.
+              </p>
+            </Step>
+
+            <Step
+              number={2}
+              title={`Read for ${READING_MINUTES} minutes`}
+              active={startedAt !== null && !done}
+              complete={done}
+            >
+              {startedAt === null ? (
+                <p className="mt-2 text-sm text-[#4a4a48]">
+                  Your timer starts when you {reading.searchLink ? "search for" : "open"} the
+                  article.
+                </p>
+              ) : (
+                <div className="mt-3 flex items-baseline gap-4">
+                  <span className={`${serif} text-6xl tabular-nums`} aria-live="polite">
+                    {clock(remaining)}
+                  </span>
+                  <span className="text-sm text-[#4a4a48]">
+                    {done ? "Time's up." : "left. Make notes on the questions below."}
+                  </span>
+                </div>
+              )}
+            </Step>
+
+            <Step
+              number={3}
+              title={`Talk it through with ${tutorName}`}
+              active={done}
+              complete={false}
+            >
+              <p className="mt-2 text-sm text-[#4a4a48]">
+                {tutorName} will ask you to sum up the argument, then test it and share a view of
+                their own.
+              </p>
+              <Link
+                to="/interview"
+                search={{ tutor: reading.subject, reading: reading.id, start: true as const }}
+                className={`mt-4 ${done ? darkButton : lightButton}`}
+              >
+                {done ? "Start the interview" : "I'm ready early, start now"}
+              </Link>
+            </Step>
+          </ol>
+
+          <h2 className="mt-10 text-sm font-medium">Context</h2>
+          <p className="mt-1 text-sm text-[#4a4a48]">{reading.context}</p>
+          <h2 className="mt-6 text-sm font-medium">While you read, think about</h2>
+          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-[#4a4a48]">
+            {reading.questions.map((question) => (
+              <li key={question}>{question}</li>
+            ))}
+          </ul>
+        </main>
+      }
+    />
   );
 }
 
@@ -182,18 +196,22 @@ function Step({
 }) {
   return (
     <li
-      className={`rounded-xl border p-5 transition ${
-        active ? "border-foreground/40 bg-card" : complete ? "opacity-60" : ""
+      className={`rounded-[14px] border p-5 transition ${
+        active
+          ? "border-[#161616] bg-white"
+          : complete
+            ? "border-[#d6d6d2] opacity-60"
+            : "border-[#d6d6d2]"
       }`}
     >
       <div className="flex items-center gap-3">
         <span
           className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-medium ${
             complete
-              ? "bg-accent text-accent-foreground"
+              ? "bg-[#d6d6d2] text-[#161616]"
               : active
-                ? "bg-primary text-primary-foreground"
-                : "border text-muted-foreground"
+                ? "bg-[#161616] text-[#f7f7f5]"
+                : "border border-[#d6d6d2] text-[#5a5a57]"
           }`}
         >
           {complete ? "✓" : number}

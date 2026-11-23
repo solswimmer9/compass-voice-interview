@@ -7,7 +7,7 @@ export const INTERVIEW_PACK = {
   priceId: "interview_pack_2_gbp",
   name: "2-Interview Pack",
   description:
-    "Two full voice interviews with Dr River (geography) or Prof Matt (PPE), each with AI reasoning feedback.",
+    "Two full voice interviews with any tutor (geography, PPE or biology), each with AI reasoning feedback.",
   amountMinor: 2000,
   currency: "gbp",
   displayPrice: "£20",
@@ -23,7 +23,7 @@ export const LIFETIME_ACCESS = {
   priceId: "lifetime_access_gbp",
   name: "Lifetime access",
   description:
-    "Unlimited voice interviews with Dr River (geography) and Prof Matt (PPE), each with AI reasoning feedback.",
+    "Unlimited voice interviews with every tutor (geography, PPE and biology), each with AI reasoning feedback.",
   amountMinor: 10000,
   currency: "gbp",
   displayPrice: "£100",

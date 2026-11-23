@@ -118,9 +118,7 @@ function SubjectsPage() {
                     >
                       Or start with a practice reading ({readings.length} articles)
                     </Link>
-                  ) : s.id === "biology" ? null : (
-                    <span className="text-sm text-[#5a5a57]">Practice readings coming soon</span>
-                  )}
+                  ) : null}
                 </div>
               </li>
             );
