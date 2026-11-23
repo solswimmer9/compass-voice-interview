@@ -14,6 +14,8 @@ import blackboard from "@/assets/home/blackboard.webp";
 import reader from "@/assets/home/reader.webp";
 import writer from "@/assets/home/writer.webp";
 import caps from "@/assets/home/caps.webp";
+import maths from "@/assets/home/maths.webp";
+import medicine from "@/assets/home/medicine.webp";
 
 export const Route = createFileRoute("/")({
   // The interview used to live on this page (/?tutor=ppe&start=true, /?reading=...). Old links
@@ -101,6 +103,23 @@ const STEPS = [
     img: reader,
     alt: "Sketch of a student reading",
     blend: false,
+  },
+];
+
+const COMING_SOON: { subject: string; tutor: string; line: string; img: string; alt: string }[] = [
+  {
+    subject: "Maths",
+    tutor: "Prof Hannah",
+    line: "Proofs, puzzles and the step you cannot skip, worked through out loud at the board.",
+    img: maths,
+    alt: "Sketch of a student writing equations on a blackboard",
+  },
+  {
+    subject: "Medicine",
+    tutor: "Dr Anna",
+    line: "Ethics, evidence and the patient in front of you, reasoned through out loud.",
+    img: medicine,
+    alt: "Sketch of a doctor carrying books down a corridor",
   },
 ];
 
@@ -311,6 +330,34 @@ function Home() {
             </li>
           ))}
         </ol>
+      </section>
+
+      {/* Coming soon: the next tutors. */}
+      <section className="px-2 py-20">
+        <p className={`${mono} text-xs text-[#5a5a57]`}>COMING SOON</p>
+        <h2
+          className={`reveal ${serif} mb-12 mt-3.5 text-[clamp(38px,4.6vw,66px)] leading-none tracking-[-0.02em]`}
+        >
+          Two more tutors, <em>on their way.</em>
+        </h2>
+        <ul className="grid gap-6 sm:grid-cols-2">
+          {COMING_SOON.map((t) => (
+            <li key={t.subject} className="lift reveal rounded-[14px] bg-[#f7f7f5] p-3.5 pb-7">
+              <div className="relative h-[280px] overflow-hidden rounded-lg">
+                <img
+                  src={t.img}
+                  alt={t.alt}
+                  className="mx-auto block h-full mix-blend-multiply grayscale"
+                />
+              </div>
+              <p className={`${mono} mx-2.5 mb-1.5 mt-5 text-xs text-[#5a5a57]`}>
+                {t.subject.toUpperCase()} · COMING SOON
+              </p>
+              <h3 className={`${serif} mx-2.5 text-[32px]`}>{t.tutor}</h3>
+              <p className="mx-2.5 mt-2 text-[15px] leading-relaxed text-[#4a4a48]">{t.line}</p>
+            </li>
+          ))}
+        </ul>
       </section>
 
       {/* 3. The letter. */}
