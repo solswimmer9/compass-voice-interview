@@ -5,6 +5,7 @@ import {
   type LiveSocket,
 } from "@/lib/live-relay.server";
 import { OBJECT_REVEAL_MINUTES } from "@/lib/limits";
+import pcr from "@/content/scenarios/pcr";
 
 const mocks = vi.hoisted(() => ({
   authenticate: vi.fn(),
@@ -265,7 +266,7 @@ describe("PPE interviews", () => {
       expect(browser.events).toContainEqual(
         expect.objectContaining({
           type: "app.error",
-          error: { message: expect.stringMatching(/free interview has been used/) },
+          error: { message: expect.stringMatching(/free interviews have been used/) },
         }),
       ),
     );
@@ -795,13 +796,13 @@ describe("credits and test mode", () => {
 
   it("gives the credit back when the student leaves while it is being taken", async () => {
     let resolveCredit: (value: unknown) => void = () => {};
-    mocks.rpc.mockImplementation(
-      () => new Promise((resolve) => (resolveCredit = resolve)),
-    );
+    mocks.rpc.mockImplementation(() => new Promise((resolve) => (resolveCredit = resolve)));
     const call = startWith("live");
     const onClose = vi.mocked(call.socket.onClose);
     call.send(call.start);
-    await vi.waitFor(() => expect(mocks.rpc).toHaveBeenCalledWith("consume_interview_credit", expect.anything()));
+    await vi.waitFor(() =>
+      expect(mocks.rpc).toHaveBeenCalledWith("consume_interview_credit", expect.anything()),
+    );
     (onClose.mock.calls[0]?.[0] as () => void)();
     resolveCredit({ data: { allowed: true, interviewId }, error: null });
     await vi.waitFor(() =>
@@ -809,6 +810,126 @@ describe("credits and test mode", () => {
         p_interview_id: interviewId,
         p_user_id: "8d0f7a2e-1c4b-4c55-9a43-2b8f1c6e0d11",
       }),
+    );
+    expect(mocks.connect).not.toHaveBeenCalled();
+  });
+});
+
+describe("Biology interviews with Dr Toby", () => {
+  afterEach(() => vi.unstubAllEnvs());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.authenticate.mockResolvedValue({
+      user: { email: "owner@example.com" },
+      supabase: { rpc: mocks.rpc },
+    });
+    mocks.rpc.mockResolvedValue({ data: { allowed: true, interviewId }, error: null });
+  });
+
+  function bound() {
+    let handler: ((data: unknown) => void) | undefined;
+    const browser = browserSocket();
+    const socket: LiveSocket = {
+      ...browser.socket,
+      onMessage(h) {
+        handler = h;
+      },
+    };
+    bindLiveConnection(socket, config, executionContext(), mocks.connect);
+    return { browser, send: (data: string) => handler?.(data) };
+  }
+
+  function gateway(sent: Array<Record<string, unknown>>): LiveSocket {
+    return {
+      readyState: 1,
+      send(data: string) {
+        sent.push(JSON.parse(data) as Record<string, unknown>);
+      },
+      close: vi.fn(),
+      onMessage: vi.fn(),
+      onClose: vi.fn(),
+      onError: vi.fn(),
+    };
+  }
+
+  const startBiology = (extra: object = {}) =>
+    JSON.stringify({
+      type: "app.start",
+      sdp: "test-offer",
+      openingTurn: 0,
+      accessToken: "valid-access-token",
+      environment: "live",
+      tutorId: "biology",
+      ...extra,
+    });
+
+  it("gives a tester the PCR roadmap in Dr Toby's own voice, without a credit", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
+    const sent: Array<Record<string, unknown>> = [];
+    mocks.connect.mockResolvedValue(gateway(sent));
+    const { browser, send } = bound();
+
+    send(startBiology());
+
+    await vi.waitFor(() => expect(sent).toHaveLength(1));
+    expect(mocks.rpc).not.toHaveBeenCalledWith("consume_interview_credit", expect.anything());
+    const started = browser.events.find((event) => event["type"] === "app.interview.started");
+    expect(started).toMatchObject({ tutorId: "biology", cardIds: ["bio-pcr"] });
+    const session = sent[0]?.["session"] as { instructions: string };
+    expect(session.instructions).toContain("You are Dr Toby");
+    expect(session.instructions).toContain("What can you tell me about the process of PCR?");
+    // Only the current step: later answers are never in the voice tutor's prompt.
+    expect(session.instructions).not.toContain("2 to the 25");
+    expect(session.instructions).not.toContain("more hydrogen bonds");
+    expect(session).toMatchObject({ audio: { output: { voice: "marin" } } });
+  });
+
+  it("gives a student the approved PCR roadmap for one credit", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "someone-else@example.com");
+    const sent: Array<Record<string, unknown>> = [];
+    mocks.connect.mockResolvedValue(gateway(sent));
+    const { send } = bound();
+
+    send(startBiology());
+
+    await vi.waitFor(() => expect(sent).toHaveLength(1));
+    expect(mocks.rpc).toHaveBeenCalledWith("consume_interview_credit", expect.anything());
+    expect((sent[0]?.["session"] as { instructions: string }).instructions).toContain(
+      "What can you tell me about the process of PCR?",
+    );
+  });
+
+  it("never gives a student a draft scenario, and charges nothing when there is none", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "someone-else@example.com");
+    pcr.status = "draft";
+    try {
+      const { browser, send } = bound();
+
+      send(startBiology());
+
+      await vi.waitFor(() =>
+        expect(browser.events).toContainEqual(
+          expect.objectContaining({
+            type: "app.error",
+            error: { message: "Dr Toby is not available yet." },
+          }),
+        ),
+      );
+      expect(mocks.rpc).not.toHaveBeenCalledWith("consume_interview_credit", expect.anything());
+      expect(mocks.connect).not.toHaveBeenCalled();
+    } finally {
+      pcr.status = "approved";
+    }
+  });
+
+  it("refuses an object interview for biology", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
+    const { browser, send } = bound();
+
+    send(startBiology({ mode: "object" }));
+
+    await vi.waitFor(() =>
+      expect(browser.events).toContainEqual(expect.objectContaining({ type: "app.error" })),
     );
     expect(mocks.connect).not.toHaveBeenCalled();
   });

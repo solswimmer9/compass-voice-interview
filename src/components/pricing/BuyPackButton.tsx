@@ -1,3 +1,4 @@
+import { track } from "@/lib/analytics";
 import { Link } from "@tanstack/react-router";
 import { useAuth } from "@/components/AuthProvider";
 import { useState } from "react";
@@ -43,7 +44,10 @@ export function BuyPackButton({
       <Button
         type="button"
         disabled={loading || !user}
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          track("checkout_opened", { offer: offer.productId });
+          setOpen(true);
+        }}
         className={cn(base, className)}
       >
         {label ?? `Buy · ${offer.displayPrice}`}
@@ -64,7 +68,7 @@ export function StartFreeLink({
   freeLeft = true,
 }: {
   className?: string;
-  /** Whether a signed-in user still has their free interview. */
+  /** Whether a signed-in user still has a free interview. */
   freeLeft?: boolean;
 }) {
   const { user } = useAuth();
@@ -76,7 +80,7 @@ export function StartFreeLink({
         className,
       )}
     >
-      {!user ? "Start free" : freeLeft ? "Use my free interview" : "Go to practice"}
+      {!user ? "Start free" : freeLeft ? "Use a free interview" : "Go to practice"}
     </Link>
   );
 }

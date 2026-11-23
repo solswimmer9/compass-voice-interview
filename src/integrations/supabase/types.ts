@@ -18,25 +18,37 @@ export type Database = {
         Row: {
           created_at: string
           environment: string
+          feedback: string | null
           feedback_used: boolean
+          finished_at: string | null
           id: string
           purchase_id: string | null
+          transcript: Json | null
+          tutor: string | null
           user_id: string
         }
         Insert: {
           created_at?: string
           environment: string
+          feedback?: string | null
           feedback_used?: boolean
+          finished_at?: string | null
           id?: string
           purchase_id?: string | null
+          transcript?: Json | null
+          tutor?: string | null
           user_id: string
         }
         Update: {
           created_at?: string
           environment?: string
+          feedback?: string | null
           feedback_used?: boolean
+          finished_at?: string | null
           id?: string
           purchase_id?: string | null
+          transcript?: Json | null
+          tutor?: string | null
           user_id?: string
         }
         Relationships: [

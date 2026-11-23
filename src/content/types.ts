@@ -1,7 +1,7 @@
 // Types for the tutor content layer. See docs/context-layer-spec.md.
 // Server-only: everything under src/content is imported from *.server.ts files, never browser code.
 
-export type TutorId = "geography" | "ppe";
+export type TutorId = "geography" | "ppe" | "biology";
 
 export type SourceKind = "paper" | "book" | "podcast" | "video" | "notes" | "question" | "data";
 
@@ -143,4 +143,63 @@ export type SessionContext = {
   pedagogyVersion: string;
   cardIds: string[];
   readingId?: string;
+};
+
+/**
+ * A science roadmap scenario (biology first): a fixed run of questions with right answers,
+ * worked through in order. See src/content/scenarios/README.md for how to write one.
+ */
+export type ScenarioDiagram = {
+  /** Neutral id sent to the browser, e.g. "bio-pcr-1". */
+  id: string;
+  /** Inline SVG the student sees. */
+  svg: string;
+  /** Description for screen readers. Sent to the browser. */
+  alt: string;
+  /** What the diagram shows, for the tutor, who cannot see it. */
+  shows: string;
+};
+
+export type ScenarioPoint = {
+  /** Unique within the scenario, e.g. "primers". */
+  id: string;
+  /** What the student must convey, in a few words. Judged on meaning, not wording. */
+  text: string;
+};
+
+export type ScenarioStep = {
+  /** Unique within the scenario, e.g. "temperatures". */
+  id: string;
+  /** The question as asked aloud. */
+  ask: string;
+  /** What a full answer covers. The checker ticks these off; the tutor asks for any gaps. */
+  points: ScenarioPoint[];
+  /** At most 3 hints, mildest first, given one at a time. Never the answer itself. */
+  hints: string[];
+  /** Said once the hints are used up and the student is still stuck, before moving on. */
+  answer: string;
+  /** The author's IF rules for this step, e.g. "If the order is wrong, say ...". */
+  rules?: string[];
+  /** Shown to the student when this step starts. */
+  diagram?: ScenarioDiagram;
+};
+
+export type Scenario = {
+  /** Stable slug, stored against interviews. Sent to the browser, so keep it neutral. */
+  id: string;
+  tutor: TutorId;
+  /** Only approved scenarios reach students; drafts are for tester accounts. */
+  status: "draft" | "approved";
+  /** Internal name, e.g. "PCR". */
+  title: string;
+  /** Who wrote it. */
+  author: string;
+  /** Background the checker and feedback use. Never sent to the voice tutor whole. */
+  knowledge: string;
+  steps: ScenarioStep[];
+  /** How the tutor closes once the last step is done. */
+  closing: string;
+  reviewedBy: string;
+  /** ISO date, YYYY-MM-DD. Empty for drafts. */
+  reviewedAt: string;
 };

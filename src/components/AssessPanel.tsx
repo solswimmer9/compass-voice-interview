@@ -27,7 +27,8 @@ export function AssessPanel({
   /** The signed-in profile's display name, for the letter's greeting. */
   studentName?: string | null | undefined;
 }) {
-  const tutorId = interview.tutor === "ppe" ? ("ppe" as const) : undefined;
+  // Geography is sent without a tutor id, as the server expects.
+  const tutorId = interview.tutor === "geography" ? undefined : interview.tutor;
   const tutor = tutorLetterInfo(tutorId);
   const saved = interview.feedback ? splitFeedbackStream(interview.feedback) : null;
   const [output, setOutput] = useState(saved?.letter ?? "");
@@ -133,7 +134,13 @@ export function AssessPanel({
         </div>
       )}
       {(busy || output.trim()) && (
-        <FeedbackLetter tutor={tutor} studentName={studentName} body={output} writing={busy} />
+        <FeedbackLetter
+          tutor={tutor}
+          studentName={studentName}
+          body={output}
+          writing={busy}
+          failed={Boolean(error)}
+        />
       )}
       {!busy && argumentMap && <ArgumentMap map={argumentMap} tutorName={tutor.name} />}
     </section>

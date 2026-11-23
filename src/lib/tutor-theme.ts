@@ -1,35 +1,25 @@
 /**
- * Colour themes for the two tutors, shared by anything that shows a tutor's identity
+ * Colour themes for the tutors, shared by anything that shows a tutor's identity
  * (the in-call orb, picker cards, etc.).
  */
-export type TutorKey = "river" | "matt";
+export type TutorKey = "river" | "matt" | "toby";
 
 export type TutorTheme = {
   name: string;
-  /** Main accent colour, e.g. for borders and highlights. */
-  accent: string;
-  /** Lighter tint of the accent. */
-  accentSoft: string;
-  /** Darkest tone, used for centres and shadows. */
-  deep: string;
+  /** The tutor's colour: the orb's lines, portrait ring and status label. */
+  colour: string;
+  /** The same colour as "r g b", for translucent lines and glow. */
+  rgb: string;
 };
 
 export const TUTOR_THEME: Record<TutorKey, TutorTheme> = {
-  river: {
-    name: "Dr River",
-    accent: "oklch(0.45 0.08 220)",
-    accentSoft: "oklch(0.85 0.08 200)",
-    deep: "oklch(0.25 0.04 240)",
-  },
-  matt: {
-    name: "Prof Matt",
-    accent: "oklch(0.55 0.12 50)",
-    accentSoft: "oklch(0.82 0.12 75)",
-    deep: "oklch(0.22 0.03 60)",
-  },
+  river: { name: "Dr River", colour: "#8ab4f0", rgb: "138 180 240" },
+  matt: { name: "Prof Matt", colour: "#f2a65a", rgb: "242 166 90" },
+  toby: { name: "Dr Toby", colour: "#7fd4a0", rgb: "127 212 160" },
 };
 
-/** Geography (no tutor id) is Dr River; "ppe" is Prof Matt. */
-export function tutorKey(tutorId?: "ppe"): TutorKey {
-  return tutorId === "ppe" ? "matt" : "river";
+/** Geography (no tutor id) is Dr River; "ppe" is Prof Matt; "biology" is Dr Toby. */
+export function tutorKey(tutorId?: string): TutorKey {
+  if (tutorId === "ppe") return "matt";
+  return tutorId === "biology" ? "toby" : "river";
 }

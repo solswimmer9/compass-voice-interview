@@ -7,16 +7,16 @@ import { groundedInput } from "@/lib/feedback/grounded.server";
 const request = {
   transcript: "Prof Matt: Hello.\n\nYou: Hi.",
   ppe: true,
-  cardIds: ["bag-charge"],
+  cardIds: ["promise-to-the-dead"],
 };
 
 describe("draft notes in checked feedback", () => {
   it("includes a draft PPE note only when drafts are requested", () => {
     expect(groundedInput({ ...request, includeDrafts: true }).backendContext).toContain(
-      "[bag-charge]",
+      "[promise-to-the-dead]",
     );
     expect(groundedInput({ ...request, includeDrafts: false }).backendContext).not.toContain(
-      "[bag-charge]",
+      "[promise-to-the-dead]",
     );
   });
 

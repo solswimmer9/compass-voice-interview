@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState, type CSSProperties, type RefObject } from "react";
 import { rmsLevel } from "@/lib/audio-level";
 import { TUTOR_THEME, type TutorKey } from "@/lib/tutor-theme";
+import graduate from "@/assets/home/graduate.webp";
+import reader from "@/assets/home/reader.webp";
+import writer from "@/assets/home/writer.webp";
 
 type OrbStatus = "connecting" | "connected" | "stopping";
 
@@ -141,7 +144,7 @@ export function TutorOrb({
       data-testid="tutor-orb"
       data-tutor={tutor}
       data-speaking={speaking}
-      className={`tutor-orb relative mx-auto grid place-items-center ${size === "lg" ? "size-44 sm:size-[280px]" : size === "sm" ? "size-24 sm:size-[200px]" : "mb-6 size-40 sm:size-[200px]"}`}
+      className={`tutor-orb mx-auto flex flex-col items-center ${size === "md" ? "mb-6" : ""}`}
       style={
         {
           "--orb-level": "0",
@@ -150,10 +153,14 @@ export function TutorOrb({
         } as CSSProperties
       }
     >
-      {tutor === "river" ? <RiverOrb theme={theme} /> : <MattOrb theme={theme} />}
+      <div
+        className={`relative ${size === "lg" ? "size-44 sm:size-[280px]" : size === "sm" ? "size-24 sm:size-[200px]" : "size-40 sm:size-[200px]"}`}
+      >
+        <Halo tutor={tutor} />
+      </div>
       <span
-        className="relative text-[10px] font-medium uppercase tracking-[0.08em] sm:text-[11px] sm:tracking-[0.2em]"
-        style={{ color: tutor === "river" ? "oklch(0.97 0.02 200)" : theme.accentSoft }}
+        className="mt-5 text-[10px] font-medium uppercase tracking-[0.08em] sm:text-[11px] sm:tracking-[0.2em]"
+        style={{ color: theme.colour }}
       >
         {label}
       </span>
@@ -161,67 +168,55 @@ export function TutorOrb({
   );
 }
 
-const scaled = (amount: number): CSSProperties => ({
-  transform: `scale(calc(1 + var(--orb-level) * ${amount}))`,
-});
+/** Each tutor's sketch portrait: Prof Matt the graduate, Dr River the reader, Dr Toby the writer. */
+const PORTRAITS: Record<TutorKey, string> = { matt: graduate, river: reader, toby: writer };
 
-function RiverOrb({ theme }: { theme: (typeof TUTOR_THEME)["river"] }) {
+/** Eight nested squares, each a little smaller and more turned: the homepage rose, slimmed. */
+const SQUARES = Array.from({ length: 8 }, (_, i) => ({
+  inset: `${(i * 4.5 + 16) / 2}%`,
+  turn: `${i * 8}deg`,
+  delay: `${(-i * 0.22).toFixed(2)}s`,
+  alpha: Math.max(0.08, 0.55 - i * 0.05),
+}));
+
+/**
+ * The Meridian Halo: the tutor's portrait in a ring of their colour, inside a slowly turning
+ * rose. The rose swells a little and the portrait glows as the tutor speaks (--orb-level).
+ */
+function Halo({ tutor }: { tutor: TutorKey }) {
+  const { colour, rgb } = TUTOR_THEME[tutor];
   return (
     <>
-      <div className="orb-ripples absolute inset-0">
-        {[0, 1].map((ring) => (
-          <span
-            key={ring}
-            className="orb-ripple absolute inset-[12%] rounded-full border"
-            style={{ borderColor: theme.accentSoft, animationDelay: `${ring * 1.6}s` }}
-          />
-        ))}
+      <div className="halo-turn absolute inset-0">
+        <div
+          className="absolute inset-0"
+          style={{ transform: "scale(calc(1 + var(--orb-level) * 0.25))" }}
+        >
+          {SQUARES.map((square) => (
+            <div
+              key={square.turn}
+              className="halo-sq"
+              style={
+                {
+                  inset: square.inset,
+                  "--r": square.turn,
+                  animationDelay: square.delay,
+                  borderColor: `rgb(${rgb} / ${square.alpha})`,
+                } as CSSProperties
+              }
+            />
+          ))}
+        </div>
       </div>
       <div
-        className="absolute inset-[12%] rounded-full"
+        className="absolute inset-[28%] overflow-hidden rounded-full bg-[#f2f2f0]"
         style={{
-          ...scaled(0.12),
-          background: `radial-gradient(circle at 35% 30%, ${theme.accentSoft} 0%, ${theme.accent} 55%, ${theme.deep} 100%)`,
-          boxShadow: `0 0 calc(16px + var(--orb-level) * 40px) color-mix(in oklab, ${theme.accentSoft} 55%, transparent)`,
-        }}
-      />
-    </>
-  );
-}
-
-function MattOrb({ theme }: { theme: (typeof TUTOR_THEME)["matt"] }) {
-  return (
-    <>
-      {/* Fine, stationary radial marks give Matt a precise instrument-like silhouette. */}
-      <div
-        className="absolute inset-[2%] rounded-full"
-        style={{
-          background: `repeating-conic-gradient(from -90deg, ${theme.accentSoft} 0deg 0.7deg, transparent 0.7deg 15deg)`,
-          maskImage: "radial-gradient(circle, transparent 68%, black 69% 71%, transparent 72%)",
-          WebkitMaskImage: "radial-gradient(circle, transparent 68%, black 69% 71%, transparent 72%)",
-          opacity: 0.85,
-        }}
-      />
-      <div
-        className="absolute inset-[10%] rounded-full border"
-        style={{ borderColor: theme.accentSoft, opacity: 0.85 }}
-      />
-      <div
-        className="absolute inset-[13%] rounded-full"
-        style={{
-          ...scaled(0.08),
-          background: `conic-gradient(from -45deg, ${theme.accentSoft} 0deg, ${theme.accent} 45deg, ${theme.deep} 90deg, ${theme.accent} 135deg, ${theme.accentSoft} 180deg, ${theme.accent} 225deg, ${theme.deep} 270deg, ${theme.accent} 315deg, ${theme.accentSoft} 360deg)`,
-          boxShadow: `0 0 calc(6px + var(--orb-level) * 18px) color-mix(in oklab, ${theme.accentSoft} 38%, transparent)`,
+          border: `2px solid ${colour}`,
+          transform: "scale(calc(1 + var(--orb-level) * 0.08))",
+          boxShadow: `0 0 calc(10px + var(--orb-level) * 140px) rgb(${rgb} / 0.35)`,
         }}
       >
-        <div
-          className="absolute inset-[5%] rounded-full border"
-          style={{ borderColor: theme.deep, background: theme.deep }}
-        />
-        <div
-          className="absolute inset-[11%] rounded-full border"
-          style={{ borderColor: `color-mix(in oklab, ${theme.accentSoft} 55%, transparent)` }}
-        />
+        <img src={PORTRAITS[tutor]} alt="" className="size-full object-cover grayscale" />
       </div>
     </>
   );

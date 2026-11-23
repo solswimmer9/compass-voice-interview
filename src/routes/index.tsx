@@ -14,6 +14,7 @@ import blackboard from "@/assets/home/blackboard.webp";
 import reader from "@/assets/home/reader.webp";
 import writer from "@/assets/home/writer.webp";
 import caps from "@/assets/home/caps.webp";
+import maths from "@/assets/home/maths.webp";
 
 export const Route = createFileRoute("/")({
   // The interview used to live on this page (/?tutor=ppe&start=true, /?reading=...). Old links
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Practise your Oxbridge interview out loud with an AI tutor who challenges your reasoning like a real interviewer.",
+          "Practise your Oxbridge interview out loud with an AI tutor who challenges your reasoning, then read their feedback letter.",
       },
       { property: "og:title", content: "Compass · Education, grounded in context" },
       {
@@ -104,6 +105,23 @@ const STEPS = [
   },
 ];
 
+// shortcut: Dr Anna has no portrait yet, so her card shows the rose; add img once there is one.
+const COMING_SOON: { subject: string; tutor: string; line: string; img?: string; alt?: string }[] =
+  [
+    {
+      subject: "Maths",
+      tutor: "Prof Hannah",
+      line: "Proofs, puzzles and the step you cannot skip, worked through out loud at the board.",
+      img: maths,
+      alt: "Sketch of a student writing equations on a blackboard",
+    },
+    {
+      subject: "Medicine",
+      tutor: "Dr Anna",
+      line: "Ethics, evidence and the patient in front of you, reasoned through out loud.",
+    },
+  ];
+
 const FAQS = [
   {
     q: "Is Compass part of Oxford or Cambridge?",
@@ -119,7 +137,7 @@ const FAQS = [
   },
   {
     q: "Can I trust the feedback?",
-    a: "Your tutor's letter quotes what you said wherever it can, so you can check its points against your own words. It is practice feedback, not a mark or a prediction, and AI can make mistakes. Use it alongside advice from your teachers.",
+    a: "Your tutor's letter quotes what you said, so you can check its points against your own words. Before you see it, any line that quotes words you did not say is removed. It is practice feedback, not a mark or a prediction, and AI can make mistakes. Use it alongside advice from your teachers.",
   },
   {
     q: "Does practising with Compass count as cheating?",
@@ -127,11 +145,11 @@ const FAQS = [
   },
   {
     q: "Is this fair for students who can't afford coaching?",
-    a: "Private coaching is expensive and not everyone can get it. Compass is meant to make interview practice available to more students, and schools can buy a bundle of interviews for their sixth form. Teachers don't see individual students' reports.",
+    a: "Private coaching is expensive and not everyone can get it. Compass is meant to make interview practice available to more students, and schools can buy a bundle of interviews for their sixth form. Teachers see how many places are left, never a student's transcript or letter. It is one way to practise, not a replacement for a teacher's mock interview.",
   },
   {
     q: "Can my school buy places for students?",
-    a: "Yes. A school buys a bundle and each student claims a place with their own account. Teachers do not see students' reports.",
+    a: "Yes. A school buys a bundle and each student claims a place with their own account. Teachers do not see students' transcripts or letters.",
   },
 ];
 
@@ -311,6 +329,38 @@ function Home() {
             </li>
           ))}
         </ol>
+      </section>
+
+      {/* Coming soon: the next tutors. */}
+      <section className="px-2 py-20">
+        <p className={`${mono} text-xs text-[#5a5a57]`}>COMING SOON</p>
+        <h2
+          className={`reveal ${serif} mb-12 mt-3.5 text-[clamp(38px,4.6vw,66px)] leading-none tracking-[-0.02em]`}
+        >
+          Two more tutors, <em>on their way.</em>
+        </h2>
+        <ul className="grid gap-6 sm:grid-cols-2">
+          {COMING_SOON.map((t) => (
+            <li key={t.subject} className="lift reveal rounded-[14px] bg-[#f7f7f5] p-3.5 pb-7">
+              <div className="relative h-[280px] overflow-hidden rounded-lg">
+                {t.img ? (
+                  <img
+                    src={t.img}
+                    alt={t.alt}
+                    className="mx-auto block h-full mix-blend-multiply grayscale"
+                  />
+                ) : (
+                  <Rose count={10} size={210} step={13} />
+                )}
+              </div>
+              <p className={`${mono} mx-2.5 mb-1.5 mt-5 text-xs text-[#5a5a57]`}>
+                {t.subject.toUpperCase()} · COMING SOON
+              </p>
+              <h3 className={`${serif} mx-2.5 text-[32px]`}>{t.tutor}</h3>
+              <p className="mx-2.5 mt-2 text-[15px] leading-relaxed text-[#4a4a48]">{t.line}</p>
+            </li>
+          ))}
+        </ul>
       </section>
 
       {/* 3. The letter. */}

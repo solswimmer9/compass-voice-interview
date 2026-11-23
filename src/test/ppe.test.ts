@@ -6,20 +6,31 @@ import { countWords } from "@/content/words";
 import { buildPpeSession, ppeFeedbackContext, ppeTutor } from "@/lib/ppe.server";
 
 describe("PPE content", () => {
-  it("approves only the nine cards Solomon reviewed; the rest stay drafts", () => {
+  it("approves only the cards Solomon reviewed; the rest stay drafts", () => {
     expect(
       cardsFor("ppe")
         .map((card) => card.id)
         .sort(),
     ).toEqual([
+      "bag-charge",
+      "changing-your-mind",
+      "climate-collective-action",
       "democracy-and-growth",
       "fairness-three-principles",
       "housing-water-pollution",
       "infrastructure-veto",
+      "legal-but-wrong",
+      "machine-in-pain",
       "mixed-neighbourhoods",
+      "mps-by-lottery",
+      "museum-entry-free",
+      "offensive-speech",
       "organ-allocation",
       "political-myth",
+      "power-and-authority",
       "prepunishment",
+      "rent-cap-day-after",
+      "sixteen-year-olds-vote",
       "welfare-cuts-fair",
     ]);
     expect(isTutorAvailable("ppe")).toBe(true);
@@ -69,8 +80,10 @@ describe("PPE content", () => {
     });
     expect(context).toContain("[museum-entry-free]");
     expect(context).not.toContain("[river-person]");
-    expect(context).not.toContain("[bag-charge]");
-    expect(ppeFeedbackContext(undefined, { includeDrafts: true })).toContain("[bag-charge]");
+    expect(context).not.toContain("[promise-to-the-dead]");
+    expect(ppeFeedbackContext(undefined, { includeDrafts: true })).toContain(
+      "[promise-to-the-dead]",
+    );
   });
 
   it("gives students approved cards only, in every rotation", async () => {
@@ -83,10 +96,12 @@ describe("PPE content", () => {
   });
 
   it("keeps draft notes out of student feedback", () => {
-    const context = ppeFeedbackContext(["bag-charge", "prepunishment"]);
+    const context = ppeFeedbackContext(["promise-to-the-dead", "prepunishment"]);
     expect(context).toContain("[prepunishment]");
-    expect(context).not.toContain("[bag-charge]");
-    expect(ppeFeedbackContext()).not.toContain("[bag-charge]");
-    expect(ppeFeedbackContext(undefined, { includeDrafts: true })).toContain("[bag-charge]");
+    expect(context).not.toContain("[promise-to-the-dead]");
+    expect(ppeFeedbackContext()).not.toContain("[promise-to-the-dead]");
+    expect(ppeFeedbackContext(undefined, { includeDrafts: true })).toContain(
+      "[promise-to-the-dead]",
+    );
   });
 });

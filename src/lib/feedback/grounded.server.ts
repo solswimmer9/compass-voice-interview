@@ -5,7 +5,8 @@
 // caller then gives the single-call feedback instead, with no error shown.
 import { NOTES_CONTEXT, REASONING_GUIDE } from "../interview-briefing.ts";
 import { ppeFeedbackContext, ppeTutor } from "../ppe.server.ts";
-import { GEOGRAPHY_CRITERIA, PPE_CRITERIA } from "./criteria";
+import { biologyFeedbackContext, biologyTutor } from "../biology.server.ts";
+import { BIOLOGY_CRITERIA, GEOGRAPHY_CRITERIA, PPE_CRITERIA } from "./criteria";
 import { renderGroundedFeedback } from "./grounded-output";
 import { runGroundedFeedback, type FeedbackDeps, type FeedbackInput } from "./pipeline";
 import { parseTranscript } from "./transcript";
@@ -19,6 +20,8 @@ export const MIN_STUDENT_TURNS = 2;
 export type GroundedRequest = {
   transcript: string;
   ppe: boolean;
+  /** Dr Toby. Takes precedence over `ppe`. */
+  biology?: boolean;
   cardIds?: unknown;
   interviewId?: string;
   /** Draft PPE notes are for tester accounts only. Students get approved notes only. */
@@ -30,7 +33,8 @@ export type GroundedRequest = {
 export type GroundedOutcome =
   { ok: true; text: string; truncated: boolean } | { ok: false; reason: string };
 
-function tutorName(ppe: boolean): string {
+function tutorName(ppe: boolean, biology = false): string {
+  if (biology) return biologyTutor().persona.name;
   return ppe ? ppeTutor().persona.name : "Dr River";
 }
 
@@ -39,12 +43,13 @@ export function canUseGroundedFeedback(args: {
   transcript: string;
   video: string;
   ppe: boolean;
+  biology?: boolean;
 }): boolean {
   // A video (with or without a transcript) is assessed on today's path: the pipeline only reads
   // the transcript, cannot check anything said in a video, and deliberately avoids comments on
   // delivery that a video submission asks for.
   if (args.video || !args.transcript) return false;
-  const turns = parseTranscript(args.transcript, tutorName(args.ppe));
+  const turns = parseTranscript(args.transcript, tutorName(args.ppe, args.biology));
   return turns.filter((t) => t.role === "user").length >= MIN_STUDENT_TURNS;
 }
 
@@ -58,6 +63,17 @@ export function canUseGroundedFeedback(args: {
  */
 export function groundedInput(req: GroundedRequest): FeedbackInput {
   const withObject = (context: string) => [context, req.objectContext].filter(Boolean).join("\n\n");
+  if (req.biology) {
+    const tutor = biologyTutor();
+    return {
+      transcript: req.transcript,
+      tutorName: tutor.persona.name,
+      criteria: BIOLOGY_CRITERIA,
+      reasoningGuide: tutor.reasoningGuide,
+      backendContext: biologyFeedbackContext(req.cardIds, { includeDrafts: req.includeDrafts }),
+      ...(req.interviewId ? { interviewId: req.interviewId } : {}),
+    };
+  }
   if (req.ppe) {
     const tutor = ppeTutor();
     return {

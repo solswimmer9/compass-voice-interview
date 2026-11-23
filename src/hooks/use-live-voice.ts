@@ -51,8 +51,8 @@ export type LiveStartContext = {
   environment: "sandbox" | "live";
   /** Optional practice reading this interview opens on. */
   readingId?: string;
-  /** "ppe" runs an Oxford-style PPE interview with Prof Matt; omitted means geography. */
-  tutorId?: "ppe";
+  /** "ppe" is Prof Matt, "biology" Dr Toby; omitted means geography (Dr River). */
+  tutorId?: "ppe" | "biology";
   /** "object" opens with an unlabelled chart on the table. The server picks the object. */
   mode?: "object";
 };
@@ -503,10 +503,7 @@ function createLiveVoice(options: LiveOptions) {
     window.addEventListener("pagehide", end);
     // Covers sign-in, the microphone prompt and network setup, so the call can never sit on
     // "connecting" forever before the voice service is contacted.
-    deadline = setTimeout(
-      () => fail(STARTUP_TIMEOUT_MESSAGE),
-      STARTUP_TIMEOUT_MS,
-    );
+    deadline = setTimeout(() => fail(STARTUP_TIMEOUT_MESSAGE), STARTUP_TIMEOUT_MS);
     try {
       const startContext = await options.getStartContext();
       if (!starting()) return;

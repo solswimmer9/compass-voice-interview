@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { subjectOrGeography } from "../subjects";
 
 /**
  * The feedback stream is one streamText call: the tutor's written feedback, then (optionally)
@@ -173,10 +174,9 @@ export function letterBlocks(markdown: string): LetterBlock[] {
 
 export type TutorLetterInfo = { name: string; initials: string };
 
-export function tutorLetterInfo(tutorId?: "ppe"): TutorLetterInfo {
-  return tutorId === "ppe"
-    ? { name: "Prof Matt", initials: "PM" }
-    : { name: "Dr River", initials: "DR" };
+export function tutorLetterInfo(tutorId?: string): TutorLetterInfo {
+  const { tutor, initials } = subjectOrGeography(tutorId);
+  return { name: tutor, initials };
 }
 
 /** "Dear Sam," from a display name, or "Dear candidate,". */
@@ -186,4 +186,21 @@ export function letterSalutation(displayName?: string | null): string {
     .split(/\s+/)[0]
     ?.replace(/[^\p{L}\p{M}'’-]/gu, "");
   return `Dear ${first ? first : "candidate"},`;
+}
+
+/** Plain-text copy of the letter for students to keep: the same blocks the page shows, no Markdown. */
+export function letterText(
+  salutation: string,
+  blocks: LetterBlock[],
+  tutorName: string,
+  dated: string,
+) {
+  const body = blocks
+    .map((block) =>
+      block.kind === "list"
+        ? block.items.map((item, i) => `${block.ordered ? `${i + 1}.` : "-"} ${item}`).join("\n")
+        : block.text,
+    )
+    .join("\n\n");
+  return `${dated}\n\n${salutation}\n\n${body}\n\nWith best wishes,\n${tutorName}\n`;
 }

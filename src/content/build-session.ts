@@ -55,7 +55,7 @@ function readingListLine(entry: ReadingListEntry) {
   return `- ${entry.author}, ${entry.title}${entry.year ? ` (${entry.year})` : ""}`;
 }
 
-async function sha256Hex(text: string): Promise<string> {
+export async function sha256Hex(text: string): Promise<string> {
   // Web Crypto: global in Cloudflare Workers, Node 20+ and browsers.
   const digest = await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");

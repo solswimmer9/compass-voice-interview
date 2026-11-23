@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { initAnalytics } from "@/lib/analytics";
 import { AuthProvider } from "@/components/AuthProvider";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { LegalFooter } from "@/components/legal/LegalLayout";
@@ -149,6 +150,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useEffect(initAnalytics, []);
 
   return (
     <QueryClientProvider client={queryClient}>

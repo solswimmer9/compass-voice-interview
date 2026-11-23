@@ -52,9 +52,13 @@ use the editor.
 
 - Signed-in tester accounts get Dr River built from approved geography cards (`src/lib/geography.server.ts`). Every other account must keep the existing interview prompt unchanged, except that every normal (non-reading) interview appends its tutor's approved mid-interview chart section (`objectMidwaySection`, revealed after `OBJECT_REVEAL_MINUTES`; owner's decision, 13 November 2026); `src/test/geography-cards.test.ts` guards this.
 - Every tutor's speaking rules (mannerisms, pauses, fillers, follow-ups, noise and interruptions, delegation) live once in `VOICE_POLICY` in `src/content/core.ts`, used by the fixed Dr River prompt and every card session, so students, testers and Prof Matt get the same behaviour; keep it short, because PPE and card sessions sit near the 2,000-word live limit. `src/test/interview-sharpness.test.ts` guards this.
-- Topic cards and their approval rules: `src/content/README.md`. Latest handover: `docs/overnight/2026-11-12-handover.md`.
+- Topic cards and their approval rules: `src/content/README.md`.
 - The Live relay sends the opening instructions and the "begin now" commentary back to back once media is ready, without waiting for the first acknowledgement; the gateway applies them in order, and waiting added about a second of silence.
 - Dr River's assumption-testing rules live once in `src/content/tutors/geography/assumptions.ts` and feed both the student prompt and tester card sessions, so the two versions push the same way.
+
+## Biology roadmap interviews
+
+- Dr Toby (biology, `src/lib/biology.server.ts`) runs one roadmap scenario per interview (`src/content/scenarios/`), not topic cards. His live prompt holds only the current step; the roadmap checker (`src/lib/interview/roadmap.ts`) runs one text-model call per student turn for every account, moves him on, gives the answer after the hints run out, and shows each step's diagram. Students get approved scenarios only. `src/test/biology-roadmap.test.ts` and the biology block in `src/test/live-interview.test.ts` guard this.
 
 ## Feedback
 
@@ -62,6 +66,4 @@ use the editor.
 
 ## Turn analyst and phase director
 
-- Every live interview runs the turn analyst and phase director (`src/lib/interview/live-director.ts`, wired in `live-relay.server.ts`) after each student turn. Steering notes reach the live tutor only for tester accounts; everyone else is shadow mode, where turn states are logged as `interview.turn` lines and nothing is sent (owner's decision, 19 November 2026, following the migration plan in `docs/multi-subject-interview-architecture.md`). Logs carry labels only, never transcript text or user identifiers. To steer students too, change `steer` in `startDirector` calls; `src/test/live-delegation.test.ts` guards both modes.
-- Every interview logs one `interview.manifest` line at session start (`buildRunManifest` in `src/lib/interview/manifest.ts`): tutor pack and version (`fixed-briefing` for students on the fixed Dr River prompt), cards, models, director and feedback pipeline versions, and a SHA-256 of the exact instructions sent. Nothing personal and no transcript. Model names live only in `src/lib/models.ts`.
-
+- Rules for the director, turn analyst and interview manifest live in `src/lib/interview/CLAUDE.md`, next to the code. Model names live only in `src/lib/models.ts`.

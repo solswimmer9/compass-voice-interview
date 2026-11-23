@@ -198,13 +198,13 @@ describe("tester feedback goes through the evidence-checked pipeline", () => {
         transcript: transcriptFor("Prof Matt"),
         interviewId: "preview",
         tutorId: "ppe",
-        cardIds: ["bag-charge"],
+        cardIds: ["promise-to-the-dead"],
       }),
     );
     expect(await response.text()).toContain("(turn 6)");
     const analyst = pipelineCalls()[0]![0].prompt;
     expect(analyst).toContain("facts-values");
-    expect(analyst).toContain("[bag-charge]");
+    expect(analyst).toContain("[promise-to-the-dead]");
   });
 
   it.each([
@@ -325,13 +325,13 @@ describe("student feedback is evidence-checked, with the single-call path as fal
           transcript: transcriptFor("Prof Matt"),
           interviewId: INTERVIEW,
           tutorId: "ppe",
-          cardIds: ["bag-charge", "fairness-three-principles"],
+          cardIds: ["promise-to-the-dead", "fairness-three-principles"],
         }),
       )
     ).text();
     const analyst = pipelineCalls()[0]![0].prompt;
     expect(analyst).toContain("facts-values");
-    expect(analyst).not.toContain("[bag-charge]");
+    expect(analyst).not.toContain("[promise-to-the-dead]");
     expect(analyst).toContain("[fairness-three-principles]");
   });
 

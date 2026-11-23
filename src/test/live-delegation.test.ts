@@ -142,20 +142,31 @@ describe("backend transcript", () => {
     ]);
   });
 
+  it("keeps a whole 20-minute interview, so early points stay in view", () => {
+    const turns = Array.from({ length: 70 }, (_, i) =>
+      delta(i % 2 ? "user" : "assistant", `turn ${i}`),
+    );
+    const messages = backendTranscript(turns);
+    expect(messages).toHaveLength(70);
+    expect(messages[0]).toEqual({ role: "assistant", content: "turn 0" });
+    expect(messages.some(({ content }) => String(content).includes("omitted"))).toBe(false);
+  });
+
   it("keeps only the recent turns and says that earlier ones are omitted", () => {
-    const turns = Array.from({ length: 30 }, (_, i) =>
+    const total = BACKEND_HISTORY_TURNS + 18;
+    const turns = Array.from({ length: total }, (_, i) =>
       delta(i % 2 ? "user" : "assistant", `turn ${i}`),
     );
     const messages = backendTranscript(turns);
     expect(messages).toHaveLength(BACKEND_HISTORY_TURNS + 1);
     expect(messages[0]).toEqual({
       role: "user",
-      content: `[Earlier discussion omitted: ${30 - BACKEND_HISTORY_TURNS} turns.]`,
+      content: "[Earlier discussion omitted: 18 turns.]",
     });
-    expect(messages.at(-1)).toEqual({ role: "user", content: "turn 29" });
+    expect(messages.at(-1)).toEqual({ role: "user", content: `turn ${total - 1}` });
 
     // When the first kept turn is the student's, the note joins it to keep roles alternating.
-    const fromStudent = backendTranscript(turns.slice(0, 29));
+    const fromStudent = backendTranscript(turns.slice(0, total - 1));
     expect(fromStudent[0]).toEqual({
       role: "user",
       content: "[Earlier discussion omitted: 17 turns.]\nturn 17",
@@ -332,10 +343,12 @@ describe("turn analyst and director in the live relay", () => {
     interview.say("Whoever paid for the land, because they bought it.");
     // The tutor starts replying, so the student's turn has ended.
     interview.say("Right, but consider footpaths.", "assistant");
-    await vi.waitFor(async () => {
-      await vi.advanceTimersByTimeAsync(0);
-      expect(console.log).toHaveBeenCalledWith(expect.stringContaining('"interview.turn"'));
-    });
+    if (email === "tester@example.com")
+      await vi.waitFor(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+        expect(console.log).toHaveBeenCalledWith(expect.stringContaining('"interview.turn"'));
+      });
+    else await vi.advanceTimersByTimeAsync(1000);
     const notes = interview.gateway.sent.filter(
       ({ type, content }) =>
         type === "session.instructions.append" && typeof content === "string" && content !== "",
@@ -352,16 +365,12 @@ describe("turn analyst and director in the live relay", () => {
     expect(notes.map(({ content }) => content)).toEqual([expect.stringMatching(/starting level/)]);
   });
 
-  it("analyses a student's turns in shadow mode, without steering their tutor", async () => {
+  it("does not analyse a student's turns, so no model call is spent on them", async () => {
     const { notes } = await exchange("student@example.com");
-    expect(mocks.generateText).toHaveBeenCalledOnce();
+    expect(mocks.generateText).not.toHaveBeenCalled();
     expect(notes).toEqual([]);
-    const logged = vi
-      .mocked(console.log)
-      .mock.calls.map(([line]) => String(line))
-      .find((line) => line.includes('"interview.turn"'));
-    expect(logged).toContain('"steering":false');
-    expect(logged).not.toContain("Whoever paid");
+    const logged = vi.mocked(console.log).mock.calls.map(([line]) => String(line));
+    expect(logged.some((line) => line.includes('"interview.turn"'))).toBe(false);
   });
 
   it("scores the finished interview with the evaluation metrics, without what was said", async () => {

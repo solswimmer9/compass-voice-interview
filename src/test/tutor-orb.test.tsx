@@ -11,6 +11,7 @@ describe("tutor theme", () => {
     expect(tutorKey("ppe")).toBe("matt");
     expect(TUTOR_THEME.river.name).toBe("Dr River");
     expect(TUTOR_THEME.matt.name).toBe("Prof Matt");
+    expect(TUTOR_THEME.toby.name).toBe("Dr Toby");
   });
 });
 
@@ -34,5 +35,7 @@ describe("TutorOrb", () => {
     expect(screen.getByTestId("tutor-orb").dataset["tutor"]).toBe("matt");
     rerender(<TutorOrb tutor="matt" status="connected" audioRef={audioRef} />);
     expect(screen.queryByText("Connecting…")).not.toBeInTheDocument();
+    rerender(<TutorOrb tutor="toby" status="connected" audioRef={audioRef} />);
+    expect(screen.getByTestId("tutor-orb").dataset["tutor"]).toBe("toby");
   });
 });

@@ -4,37 +4,38 @@ import { useAuth } from "@/components/AuthProvider";
 /** The top menu on the home, subject and feedback pages. Hidden in the interview room. */
 export function SiteNav({ back }: { back?: "home" }) {
   const { user } = useAuth();
-  const link = "text-[#f5f5f7]/80 transition hover:text-white";
   return (
-    <div className="relative z-30 px-4 pt-4">
-      <nav
-        aria-label="Main"
-        className="glass-nav mx-auto flex h-[52px] max-w-[1024px] items-center justify-between gap-5 rounded-[18px] px-6 text-[14px] tracking-[-0.016em]"
-      >
-        <Link to="/" className="font-semibold text-white" aria-label="Compass home">
-          {back ? "← Compass" : "Compass"}
+    <nav
+      className={`relative z-20 mx-auto flex max-w-3xl items-center gap-5 px-6 pt-6 text-sm ${back ? "justify-between" : "justify-end"}`}
+    >
+      {back && (
+        <Link to="/" className="text-muted-foreground transition hover:text-foreground">
+          ← Home
         </Link>
-        <span className="flex items-center gap-4 whitespace-nowrap sm:gap-6">
-          <Link to="/subjects" className={link}>
-            Subjects
+      )}
+      <span className="flex flex-wrap items-center justify-end gap-x-5 gap-y-2">
+        <Link to="/subjects" className="text-muted-foreground transition hover:text-foreground">
+          Subjects
+        </Link>
+        <Link to="/tutors" className="text-muted-foreground transition hover:text-foreground">
+          Tutors
+        </Link>
+        <Link to="/schools" className="text-muted-foreground transition hover:text-foreground">
+          Schools
+        </Link>
+        <Link to="/pricing" className="text-muted-foreground transition hover:text-foreground">
+          Pricing
+        </Link>
+        {user ? (
+          <Link to="/account" className="underline">
+            Your account
           </Link>
-          <Link to="/pricing" className={link}>
-            Pricing
+        ) : (
+          <Link to="/auth" className="underline">
+            Sign in
           </Link>
-          {user ? (
-            <Link to="/account" className={link}>
-              Your account
-            </Link>
-          ) : (
-            <Link to="/auth" className={link}>
-              Sign in
-            </Link>
-          )}
-          <Link to="/subjects" className="btn-pill btn-pill-sm hidden sm:inline-flex">
-            Start
-          </Link>
-        </span>
-      </nav>
-    </div>
+        )}
+      </span>
+    </nav>
   );
 }

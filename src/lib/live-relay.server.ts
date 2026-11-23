@@ -26,6 +26,13 @@ import { isServerTester } from "./testers.ts";
 import { limitMessage, takeGuestInterview, visitorKey } from "./rate-limit.server.ts";
 import { buildPpeSession, isPpeRequest, PPE_TUTOR_ID } from "./ppe.server.ts";
 import {
+  BIOLOGY_TUTOR_ID,
+  BIOLOGY_VOICE,
+  buildBiologySession,
+  isBiologyRequest,
+} from "./biology.server.ts";
+import { createRoadmapRunner, type RoadmapRunner } from "./interview/roadmap.ts";
+import {
   buildGeographySession,
   GEOGRAPHY_SUBJECT,
   GEOGRAPHY_TUTOR_ID,
@@ -62,8 +69,12 @@ const liveSettings = {
 export const STUDENT_PAUSE_MS = 800;
 /** Minimum wait after a handoff, so trailing transcript can arrive first. */
 export const HANDOFF_SETTLE_MS = 300;
-/** Recent turns sent to the backend for a follow-up; feedback requests get the full transcript. */
-export const BACKEND_HISTORY_TURNS = 12;
+/**
+ * Recent turns sent to the backend for a follow-up; feedback requests get the full transcript.
+ * Large enough to hold a whole 20-minute interview (usually 40 to 70 turns), so a follow-up can
+ * pick up a point the student made early on; the cap only guards against a runaway transcript.
+ */
+export const BACKEND_HISTORY_TURNS = 80;
 /** Given to the live model when the backend fails, so the student never hears about it. */
 export const DELEGATION_FALLBACK =
   "Carry on in your own words, in character as the tutor: pick out one assumption in what the student has just said and ask one short question about it.";
@@ -449,8 +460,11 @@ export function bindLiveConnection(
     stop();
   }, 5000);
   const transcripts: Transcript[] = [];
-  // Turn analyst and phase director: shadow mode for everyone, steering notes for testers.
+  // Turn analyst and phase director: testers only, where it steers the tutor.
   let liveDirector: LiveDirector | undefined;
+  // Roadmap checker for science scenarios (biology): every account, since it is what moves
+  // the tutor on through the scenario (owner's default, 22 November 2026).
+  let roadmap: RoadmapRunner | undefined;
   // What produced this interview, logged once as its run manifest when the session starts.
   let runInfo:
     | {
@@ -524,6 +538,10 @@ export function bindLiveConnection(
     }
     const auth = await authenticateAccessToken(event.accessToken);
     if (!auth) throw new Error("Your sign-in has expired. Please sign in again.");
+    // Unlimited testing is per signed-in tester account, never by web address.
+    const tester = isServerTester(auth.user.email);
+    // Before any guest try or credit, so an interview that cannot be built costs nothing.
+    await beforeCredit?.(tester);
     // A reconnect is the same interview, so it never counts as a new guest try.
     if (auth.user.is_anonymous && !resume) {
       const allowed = takeGuestInterview(visitor);
@@ -533,9 +551,6 @@ export function bindLiveConnection(
         );
       }
     }
-    // Unlimited testing is per signed-in tester account, never by web address.
-    const tester = isServerTester(auth.user.email);
-    await beforeCredit?.(tester);
     // Testers may resume freely; with no stored start time they get a fresh limit.
     if (tester) return "preview";
     if (event.environment !== "sandbox" && event.environment !== "live") {
@@ -564,7 +579,7 @@ export function bindLiveConnection(
         throw new Error("You've used your free tries. Sign in to keep practising.");
       }
       throw new Error(
-        "Your free interview has been used. See the pricing page for more interviews or lifetime access.",
+        "Your free interviews have been used. See the pricing page for more interviews or lifetime access.",
       );
     }
     interviewCredit = { id: result.interviewId, userId: auth.user.id };
@@ -696,7 +711,7 @@ export function bindLiveConnection(
 
   /**
    * Starts the turn analyst and director once the interview is authorised. `steer` sends the
-   * director's notes to the live tutor; otherwise they are only logged (shadow mode).
+   * director's notes to the live tutor; without it the director is not started, so no model calls are made.
    */
   function startDirector(plan: {
     tutorId: TutorId;
@@ -704,6 +719,8 @@ export function bindLiveConnection(
     hasStimulus: boolean;
     cardIds?: string[];
   }) {
+    // Students' shadow-mode analysis was never used and cost a model call per turn (owner, 22 Nov 2026).
+    if (!plan.steer) return;
     liveDirector = createLiveDirector({
       minutes: INTERVIEW_MINUTES,
       hasStimulus: plan.hasStimulus,
@@ -726,13 +743,31 @@ export function bindLiveConnection(
   }
 
   function noteStudentTurnEnded() {
-    if (!liveDirector) return;
+    if (!liveDirector && !roadmap) return;
     const spoken = transcripts.filter(({ listeningSound }) => !listeningSound);
     if (spoken.at(-1)?.role !== "user") return;
     const turns = groupTurns(
       spoken.map(({ role, text }) => ({ role, text, start_ms: 0, end_ms: 0 })),
     ).map(({ turn, role, text }) => ({ turn, role, text }));
-    liveDirector.studentTurnEnded(turns, interviewElapsedMs());
+    liveDirector?.studentTurnEnded(turns, interviewElapsedMs());
+    roadmap?.studentTurnEnded(turns);
+  }
+
+  /** Sends one roadmap instruction. Unlike sendCue, it leaves a pending time cue alone. */
+  function sendRoadmapNote(content: string) {
+    if (closing || gateway?.readyState !== 1) return;
+    try {
+      gateway.send(
+        JSON.stringify({
+          type: "session.instructions.append",
+          event_id: crypto.randomUUID(),
+          delegation_id: null,
+          content,
+        }),
+      );
+    } catch {
+      stop();
+    }
   }
 
   function discardPendingWork() {
@@ -786,7 +821,11 @@ export function bindLiveConnection(
       wrapUpTimer = setTimeout(() => sendCue(WRAP_UP_INSTRUCTIONS), wrapUpDelay);
     }
     closingTimer = setTimeout(
-      () => sendCue(CLOSING_INSTRUCTIONS, CLOSING_PROMPT),
+      () => {
+        // After the goodbye, a late roadmap note must not start a new question.
+        roadmap?.close();
+        sendCue(CLOSING_INSTRUCTIONS, CLOSING_PROMPT);
+      },
       Math.max(0, limit - CLOSING_LEAD_MS),
     );
   }
@@ -832,6 +871,7 @@ export function bindLiveConnection(
     clearGreeting();
     discardPendingWork();
     liveDirector?.close();
+    roadmap?.close();
     setupAbort.abort();
     close(gateway);
     close(browser);
@@ -1169,6 +1209,90 @@ export function bindLiveConnection(
         // A dropped call coming back: the same interview, no new credit, a short recap.
         const resume = parseResumeRequest(event);
         if (resume) resumeRecap = resume.recap;
+        if (isBiologyRequest(event.tutorId)) {
+          // Biology has no object interviews; its diagrams come from the scenario's steps.
+          if (objectMode) throw new Error("Unknown interview mode");
+          execution.waitUntil(
+            (async () => {
+              let session: Awaited<ReturnType<typeof buildBiologySession>> | undefined;
+              // Built after sign-in and before the credit: drafts for testers, approved
+              // scenarios for everyone else, and a build failure never costs a credit.
+              const interviewId = await authorizeStart(
+                event,
+                async (tester) => {
+                  session = await buildBiologySession(event, { includeDrafts: tester });
+                },
+                resume,
+              );
+              if (closing || !session) return;
+              config.openingInstructions = resume ? RESUME_GREETING : session.opening;
+              instructions = session.liveInstructions;
+              voice = BIOLOGY_VOICE;
+              brief = {
+                subject: "Cambridge-style Natural Sciences (biology)",
+                guide: session.backendContext,
+              };
+              const { tutorVersion, pedagogyVersion, cardIds, promptHash, scenario } = session;
+              // Versions only; never transcript text or user identifiers.
+              console.log(
+                JSON.stringify({
+                  event: "interview.session",
+                  tutorId: BIOLOGY_TUTOR_ID,
+                  tutorVersion,
+                  pedagogyVersion,
+                  cardIds,
+                  promptHash,
+                }),
+              );
+              emit({
+                type: "app.interview.started",
+                interviewId,
+                tutorId: BIOLOGY_TUTOR_ID,
+                cardIds,
+                ...(resume ? { resumed: true } : {}),
+              });
+              runInfo = {
+                interviewId,
+                tutorId: BIOLOGY_TUTOR_ID,
+                tutorVersion,
+                pedagogyVersion,
+                cardIds,
+              };
+              const name = tutorById(BIOLOGY_TUTOR_ID)?.persona.name ?? "Your tutor";
+              roadmap = createRoadmapRunner({
+                scenario,
+                // shortcut: a resumed interview restarts the roadmap and lets the checker skip
+                // steps from the recap; carry the step in the resume request if that proves shaky.
+                ...(resumeRecap ? { history: resumeRecap } : {}),
+                analyse: (prompt, signal) =>
+                  analyseTurnText(prompt, config, { runID, sessionID }, signal),
+                sendNote: sendRoadmapNote,
+                showDiagram: (diagram) =>
+                  emit({
+                    type: "app.interview.object",
+                    objectId: diagram.id,
+                    svg: diagram.svg,
+                    alt: diagram.alt,
+                    caption: `${name} has put this on the table`,
+                  }),
+                // Labels and counts only; never transcript text or user identifiers.
+                log: (entry) =>
+                  console.log(JSON.stringify({ ...entry, tutorId: BIOLOGY_TUTOR_ID })),
+              });
+              await startSession(event.sdp);
+            })().catch((error) => {
+              if (!closing)
+                emit({
+                  type: "app.error",
+                  error: {
+                    message: error instanceof Error ? error.message : "Voice startup failed",
+                  },
+                });
+              stop();
+            }),
+          );
+          return;
+        }
         if (event.tutorId !== undefined && event.tutorId !== "geography") {
           if (!isPpeRequest(event.tutorId)) {
             throw new Error("Unknown tutor");
@@ -1305,7 +1429,7 @@ export function bindLiveConnection(
             };
             startDirector({
               tutorId: GEOGRAPHY_TUTOR_ID,
-              // Testers only ("preview" is the tester interview id); everyone else is shadow mode.
+              // Testers only ("preview" is the tester interview id); everyone else runs without the director.
               steer: interviewId === "preview",
               hasStimulus: Boolean(reading || object),
               ...(cardSession ? { cardIds: cardSession.cardIds } : {}),
