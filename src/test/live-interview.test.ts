@@ -5,6 +5,7 @@ import {
   type LiveSocket,
 } from "@/lib/live-relay.server";
 import { OBJECT_REVEAL_MINUTES } from "@/lib/limits";
+import pcr from "@/content/scenarios/pcr";
 
 const mocks = vi.hoisted(() => ({
   authenticate: vi.fn(),
@@ -862,7 +863,7 @@ describe("Biology interviews with Dr Toby", () => {
       ...extra,
     });
 
-  it("gives a tester the draft PCR roadmap in Dr Toby's own voice, without a credit", async () => {
+  it("gives a tester the PCR roadmap in Dr Toby's own voice, without a credit", async () => {
     vi.stubEnv("PREVIEW_TESTER_EMAILS", "owner@example.com");
     const sent: Array<Record<string, unknown>> = [];
     mocks.connect.mockResolvedValue(gateway(sent));
@@ -883,22 +884,42 @@ describe("Biology interviews with Dr Toby", () => {
     expect(session).toMatchObject({ audio: { output: { voice: "marin" } } });
   });
 
-  it("never gives a student a draft scenario, and charges nothing when there is none", async () => {
+  it("gives a student the approved PCR roadmap for one credit", async () => {
     vi.stubEnv("PREVIEW_TESTER_EMAILS", "someone-else@example.com");
-    const { browser, send } = bound();
+    const sent: Array<Record<string, unknown>> = [];
+    mocks.connect.mockResolvedValue(gateway(sent));
+    const { send } = bound();
 
     send(startBiology());
 
-    await vi.waitFor(() =>
-      expect(browser.events).toContainEqual(
-        expect.objectContaining({
-          type: "app.error",
-          error: { message: "Dr Toby is not available yet." },
-        }),
-      ),
+    await vi.waitFor(() => expect(sent).toHaveLength(1));
+    expect(mocks.rpc).toHaveBeenCalledWith("consume_interview_credit", expect.anything());
+    expect((sent[0]?.["session"] as { instructions: string }).instructions).toContain(
+      "What can you tell me about the process of PCR?",
     );
-    expect(mocks.rpc).not.toHaveBeenCalledWith("consume_interview_credit", expect.anything());
-    expect(mocks.connect).not.toHaveBeenCalled();
+  });
+
+  it("never gives a student a draft scenario, and charges nothing when there is none", async () => {
+    vi.stubEnv("PREVIEW_TESTER_EMAILS", "someone-else@example.com");
+    pcr.status = "draft";
+    try {
+      const { browser, send } = bound();
+
+      send(startBiology());
+
+      await vi.waitFor(() =>
+        expect(browser.events).toContainEqual(
+          expect.objectContaining({
+            type: "app.error",
+            error: { message: "Dr Toby is not available yet." },
+          }),
+        ),
+      );
+      expect(mocks.rpc).not.toHaveBeenCalledWith("consume_interview_credit", expect.anything());
+      expect(mocks.connect).not.toHaveBeenCalled();
+    } finally {
+      pcr.status = "approved";
+    }
   });
 
   it("refuses an object interview for biology", async () => {

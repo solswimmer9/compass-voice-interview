@@ -41,7 +41,6 @@ export const SUBJECTS: readonly Subject[] = [
     tutor: "Dr Toby",
     initials: "DT",
     line: "Cambridge-style Natural Sciences, and good practice for medicine. He takes you through a real problem step by step, with hints when you are stuck.",
-    testersOnly: true,
   },
 ];
 
