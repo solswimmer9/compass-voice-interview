@@ -15,7 +15,7 @@ export const lightButton =
   "inline-flex items-center justify-center rounded border border-[#161616] px-[22px] py-3.5 text-sm text-[#161616] transition-colors hover:bg-white";
 
 /** Grey page with the site's width; `framed` content goes in the light panel under the nav. */
-export function MeridianPage({ children, framed }: { children: ReactNode; framed?: ReactNode }) {
+export function MeridianPage({ children, framed }: { children?: ReactNode; framed?: ReactNode }) {
   return (
     <div className="meridian min-h-[100svh] bg-[#ededeb] font-tight text-[#161616]">
       <div className="mx-auto max-w-[1320px] px-3 pt-4 sm:px-6">
@@ -40,9 +40,6 @@ export function MeridianHeader() {
       <nav aria-label="Main" className="flex flex-wrap gap-x-7 gap-y-2">
         <Link to="/subjects" className="hover:underline" activeProps={{ className: "underline" }}>
           Subjects
-        </Link>
-        <Link to="/readings" search={{ subject: "ppe" }} className="hover:underline">
-          Readings
         </Link>
         <Link to="/schools" className="hover:underline">
           For schools

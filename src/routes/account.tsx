@@ -81,7 +81,7 @@ function AccountPage() {
               <>
                 <p className="mt-3 font-serif text-3xl font-semibold">Lifetime access</p>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Unlimited interviews with Dr River and Prof Matt
+                  Unlimited interviews with Dr River, Prof Matt and Dr Toby
                 </p>
               </>
             ) : (

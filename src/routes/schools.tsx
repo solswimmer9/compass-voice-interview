@@ -18,13 +18,13 @@ export const Route = createFileRoute("/schools")({
       {
         name: "description",
         content:
-          "Buy 30 shared geography and PPE interviews for up to 30 students. £1,250 per admissions cycle, with AI feedback and a school code.",
+          "Buy 30 shared geography, PPE and biology interviews for up to 30 students. £1,250 per admissions cycle, with AI feedback and a school code.",
       },
       { property: "og:title", content: "School Interview Bundles | Oxbridge Interview Practice" },
       {
         property: "og:description",
         content:
-          "Geography and PPE interview practice for your school: 30 shared interviews with AI feedback.",
+          "Geography, PPE and biology interview practice for your school: 30 shared interviews with AI feedback.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -68,7 +68,7 @@ function SchoolsPage() {
         <Building2 className="h-8 w-8 text-accent" aria-hidden="true" />
         <h1 className="mt-5 font-serif text-4xl font-semibold">Interview practice for schools</h1>
         <p className="mt-4 max-w-xl text-muted-foreground">
-          Geography interviews with Dr River or PPE interviews with Prof Matt, each with individual
+          Geography with Dr River, PPE with Prof Matt or biology with Dr Toby, each with individual
           AI reasoning feedback.
         </p>
         <div className="mt-8 flex flex-wrap items-end gap-6">
