@@ -5,6 +5,7 @@
 // live-relay.server.ts) and hear approved cards only. Tester accounts (PREVIEW_TESTER_EMAILS) use
 // no credits and also hear draft cards, so new cards can be tried before approval.
 import { buildSession } from "../content/build-session.ts";
+import { readingById } from "./readings.ts";
 import { tutorById } from "../content/index.ts";
 import { selectCards } from "../content/select-cards.ts";
 import type { SessionContext, TopicCard, Tutor } from "../content/types.ts";
@@ -30,9 +31,12 @@ function usableCards(tutor: Tutor, access: PpeAccess): TopicCard[] {
   return tutor.cards.filter((card) => card.status === "approved" || access.includeDrafts === true);
 }
 
-/** Builds one PPE interview. Throws if no usable card exists. Pure apart from hashing. */
+/**
+ * Builds one PPE interview. A PPE practice reading (readingId) opens it, with cards after.
+ * Throws if no usable card exists. Pure apart from hashing.
+ */
 export async function buildPpeSession(
-  event: { openingTurn?: unknown; strand?: unknown },
+  event: { openingTurn?: unknown; strand?: unknown; readingId?: unknown },
   access: PpeAccess = {},
 ): Promise<SessionContext> {
   const tutor = ppeTutor();
@@ -46,7 +50,8 @@ export async function buildPpeSession(
     if (inStrand.length) cards = inStrand;
   }
   if (!cards.length) throw new Error("The PPE tutor is not available yet.");
-  return buildSession({ tutor, cards, allowDrafts: includeDrafts });
+  const reading = readingById(event.readingId, PPE_TUTOR_ID) ?? null;
+  return buildSession({ tutor, cards, reading, allowDrafts: includeDrafts });
 }
 
 /** Subject context for PPE feedback: reasoning guide, deep notes of the cards used, reading list. */

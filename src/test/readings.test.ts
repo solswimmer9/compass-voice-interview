@@ -27,11 +27,12 @@ describe("practice readings", () => {
 });
 
 describe("readings by subject", () => {
-  it("offers Geography's readings on the Geography page only", async () => {
+  it("offers each subject's readings on its own page only", async () => {
     const { readingsFor } = await import("@/lib/readings");
     const { SUBJECTS } = await import("@/lib/subjects");
     expect(readingsFor("geography").length).toBeGreaterThan(0);
-    expect(readingsFor("ppe")).toEqual([]);
+    expect(readingsFor("ppe").length).toBeGreaterThan(0);
+    expect(readingsFor("biology")).toEqual([]);
     for (const subject of SUBJECTS) {
       for (const reading of readingsFor(subject.id)) expect(reading.subject).toBe(subject.id);
     }
@@ -41,5 +42,7 @@ describe("readings by subject", () => {
     const { readingById } = await import("@/lib/readings");
     expect(readingById("escobar-hippos", "geography")?.id).toBe("escobar-hippos");
     expect(readingById("escobar-hippos", "ppe")).toBeUndefined();
+    expect(readingById("ansell-housing", "ppe")?.subject).toBe("ppe");
+    expect(readingById("ansell-housing", "geography")).toBeUndefined();
   });
 });

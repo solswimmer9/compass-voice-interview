@@ -121,7 +121,7 @@ function InterviewRoom() {
   const tutorId = subject.id;
   const objectMode = mode === "object";
   // A reading counts only for its own subject's tutor; object interviews ignore readings.
-  // (Only Dr River's server path runs reading interviews so far.)
+  // (Dr River and Prof Matt run reading interviews; other subjects have no readings yet.)
   const reading = objectMode ? undefined : readingById(readingParam, tutorId);
   const tutorName = subject.tutor;
   const subjectLabel = `${subject.name} · ${subject.tutor}`;
@@ -131,13 +131,10 @@ function InterviewRoom() {
     const accessToken = data.session?.access_token;
     if (!accessToken) throw new Error("Please sign in again before starting your interview.");
     const objectRequest = objectMode ? { mode: "object" as const } : {};
-    if (tutorId !== "geography") return { accessToken, environment, tutorId, ...objectRequest };
-    return {
-      accessToken,
-      environment,
-      ...objectRequest,
-      ...(reading ? { readingId: reading.id } : {}),
-    };
+    const readingRequest = reading ? { readingId: reading.id } : {};
+    if (tutorId !== "geography")
+      return { accessToken, environment, tutorId, ...objectRequest, ...readingRequest };
+    return { accessToken, environment, ...objectRequest, ...readingRequest };
   }, [reading, tutorId, objectMode]);
   const call = useLiveVoice({ onEvent, getStartContext });
   const account = useAccountSnapshot();

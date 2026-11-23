@@ -68,9 +68,8 @@ function ReadingsPage() {
               </h1>
               <p className="mt-4 text-muted-foreground">
                 Some colleges give you a short article 30 minutes before an interview, then spend
-                the first 10 to 15 minutes discussing it. These are articles colleges say they have
-                used. Give yourself 15 minutes with one, then {subject.tutor} will interview you on
-                it.
+                the first 10 to 15 minutes discussing it. Each article says where it comes from.
+                Give yourself 15 minutes with one, then {subject.tutor} will interview you on it.
               </p>
             </section>
 

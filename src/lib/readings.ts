@@ -1,8 +1,8 @@
 // Practice readings: articles colleges say they used in interviews, read before a practice
 // interview on them. We only link to them; we never copy the article text. Context and questions
 // are our own. Each reading belongs to one subject; a subject offers readings once it has some
-// (see readingsFor and src/lib/subjects.ts). Today only Geography has readings, and only Dr
-// River's relay path runs reading interviews, so a new subject's readings also need server work.
+// (see readingsFor and src/lib/subjects.ts). Geography and PPE have readings, and their relay
+// paths run reading interviews; any other subject's readings also need server work.
 import type { SubjectId } from "./subjects.ts";
 
 export type Reading = {
@@ -16,7 +16,7 @@ export type Reading = {
   usedIn: string;
   context: string;
   questions: string[];
-  /** Dr River's own angles to raise in the interview. Never shown on the page. */
+  /** The tutor's own angles to raise in the interview. Never shown on the page. */
   tutorThoughts: string[];
 };
 
@@ -121,6 +121,54 @@ export const READINGS: Reading[] = [
       "The essay's strongest point may be that cheap energy lifted billions out of poverty. Then ask the student to test whose 'progress' it counts: are the people who gained most the same people most exposed to the costs?",
       "Words matter here. 'Crisis', 'emergency' and 'by-product' each frame what action seems reasonable. Ask the student what each word licenses.",
       "Stay strictly neutral on the politics. Test the student's reasoning equally whichever side they take.",
+    ],
+  },
+  {
+    subject: "ppe",
+    id: "ansell-housing",
+    title: "The UK's Political Housing Crisis",
+    source: "Ben Ansell, Substack",
+    url: "https://benansell.substack.com/p/the-uks-political-housing-crisis",
+    usedIn: "Picked for PPE applicants",
+    context:
+      "Ben Ansell, an Oxford professor of politics, asks why Britain builds so few homes when almost everyone agrees there is a housing shortage. Using large YouGov surveys and a modelling method called MRP, he estimates support for new homes in every constituency. Only around 38% of people support more homes being built locally, and support is lowest where most people own their homes and vote Conservative. It is a sharp example of how what voters want can stop a government from fixing a problem everyone can see.",
+    questions: [
+      "What is Ansell's main argument, and what evidence does he use for it?",
+      "Why might homeowners oppose new houses near them, even if they agree the country needs more?",
+      "Is it fair for people who already live somewhere to decide whether others can move there?",
+      "If most voters oppose local building, should a democratic government build anyway?",
+      "MRP estimates opinion in places the survey barely covered. How far would you trust it?",
+    ],
+    tutorThoughts: [
+      "Everyone can agree the country needs more homes and still oppose them locally. Is that hypocrisy, or a reasonable response to who bears the costs (traffic, building work, crowded services) and who gets the benefits?",
+      "Homeowners gain when prices rise, and they vote more. Push on whether a democracy can fix a problem when the people who would gain from fixing it are under-represented: renters, young people, people who have not moved there yet.",
+      "Challenge the method: MRP fills in places from demographics, so it partly assumes the pattern it finds. What would the student need to see before trusting a single constituency's number?",
+      "Ask what would change the politics: paying local residents, building new towns, taking planning away from councils. Each answer has its own trade-off between local consent and national need.",
+      "Stay strictly neutral on parties. Test the reasoning equally whichever side the student takes.",
+    ],
+  },
+  {
+    subject: "ppe",
+    id: "eu-discontent",
+    title: "The geography of EU discontent",
+    source: "Regional Studies (Dijkstra, Poelman and Rodríguez-Pose)",
+    url: "https://www.tandfonline.com/doi/full/10.1080/00343404.2019.1654603",
+    usedIn: "Picked for PPE applicants",
+    context:
+      "Three economists map votes for parties opposed to the European Union across more than 63,000 local areas in all 28 member states. The usual story is that 'left-behind' people, older, poorer and less educated, drive the anti-EU vote. They find something more specific: what matters most is long-term economic and industrial decline in a place, along with low education and few jobs. Once decline is accounted for, richer places vote more anti-EU than poorer ones. It is free to read; the abstract, introduction and conclusions are enough for 15 minutes.",
+    questions: [
+      "What is the paper's main finding, and how does it differ from the 'left-behind people' story?",
+      "Why might a place that used to be prosperous turn against the EU more than a place that was always poor?",
+      "The paper shows a link between decline and anti-EU voting. Does that prove decline causes it?",
+      "Is a vote driven by economic decline less legitimate than one driven by views about sovereignty or identity?",
+      "If you were a government, what would this paper suggest you do, and what might it miss?",
+    ],
+    tutorThoughts: [
+      "The surprise is that it is declining places, not simply poor people, that turn against the EU. Ask why losing something might matter more than never having had it.",
+      "Correlation is not causation: the authors argue reverse causation is unlikely, but test whether the student can think of anything else that could explain both decline and the vote.",
+      "There is an awkward question about voters' reasons: if economic decline predicts the vote, are voters wrong about the cause of their problems, or is the EU fairly blamed? Be careful the student does not dismiss voters as simply mistaken.",
+      "Districts are places, not people. Ask what this kind of data can and cannot say about why any one person voted as they did.",
+      "Stay strictly neutral on Brexit and the EU. Test the reasoning equally whichever side the student takes.",
     ],
   },
 ];
