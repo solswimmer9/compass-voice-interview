@@ -15,6 +15,7 @@ import reader from "@/assets/home/reader.webp";
 import writer from "@/assets/home/writer.webp";
 import caps from "@/assets/home/caps.webp";
 import maths from "@/assets/home/maths.webp";
+import medicine from "@/assets/home/medicine.webp";
 
 export const Route = createFileRoute("/")({
   // The interview used to live on this page (/?tutor=ppe&start=true, /?reading=...). Old links
@@ -105,22 +106,22 @@ const STEPS = [
   },
 ];
 
-// shortcut: Dr Anna has no portrait yet, so her card shows the rose; add img once there is one.
-const COMING_SOON: { subject: string; tutor: string; line: string; img?: string; alt?: string }[] =
-  [
-    {
-      subject: "Maths",
-      tutor: "Prof Hannah",
-      line: "Proofs, puzzles and the step you cannot skip, worked through out loud at the board.",
-      img: maths,
-      alt: "Sketch of a student writing equations on a blackboard",
-    },
-    {
-      subject: "Medicine",
-      tutor: "Dr Anna",
-      line: "Ethics, evidence and the patient in front of you, reasoned through out loud.",
-    },
-  ];
+const COMING_SOON: { subject: string; tutor: string; line: string; img: string; alt: string }[] = [
+  {
+    subject: "Maths",
+    tutor: "Prof Hannah",
+    line: "Proofs, puzzles and the step you cannot skip, worked through out loud at the board.",
+    img: maths,
+    alt: "Sketch of a student writing equations on a blackboard",
+  },
+  {
+    subject: "Medicine",
+    tutor: "Dr Anna",
+    line: "Ethics, evidence and the patient in front of you, reasoned through out loud.",
+    img: medicine,
+    alt: "Sketch of a doctor carrying books down a corridor",
+  },
+];
 
 const FAQS = [
   {
@@ -343,15 +344,11 @@ function Home() {
           {COMING_SOON.map((t) => (
             <li key={t.subject} className="lift reveal rounded-[14px] bg-[#f7f7f5] p-3.5 pb-7">
               <div className="relative h-[280px] overflow-hidden rounded-lg">
-                {t.img ? (
-                  <img
-                    src={t.img}
-                    alt={t.alt}
-                    className="mx-auto block h-full mix-blend-multiply grayscale"
-                  />
-                ) : (
-                  <Rose count={10} size={210} step={13} />
-                )}
+                <img
+                  src={t.img}
+                  alt={t.alt}
+                  className="mx-auto block h-full mix-blend-multiply grayscale"
+                />
               </div>
               <p className={`${mono} mx-2.5 mb-1.5 mt-5 text-xs text-[#5a5a57]`}>
                 {t.subject.toUpperCase()} · COMING SOON
